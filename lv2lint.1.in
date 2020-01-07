@@ -1,4 +1,4 @@
-.TH LV2LINT "1" "Oct 12, 2019"
+.TH LV2LINT "1" "Jan 06, 2020"
 
 .SH NAME
 lv2lint \- an LV2 lintian
@@ -56,6 +56,12 @@ Show verbose test item documentation
 \fB\-I\fR INCLUDE_DIR
 .IP
 Apart from default LV2 plugin install paths, use include directory to search for plugins
+
+.HP
+\fB\-M\fR (no)pack
+.IP
+Modes to enable/disable, e.g. (pack)ager mode skips some fatal tests for distribution
+packages important only for freely distributed binaries.
 
 .HP
 \fB\-S\fR (no)warn|note|pass|all

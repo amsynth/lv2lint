@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the Artistic License 2.0 as published by
@@ -93,6 +93,7 @@ _test_linking(app_t *app)
 {
 	static const ret_t ret_symbols = {
 		.lnt = LINT_WARN,
+		.pck = LINT_NOTE,
 		.msg = "binary links to non-whitelisted shared libraries: %s",
 		.uri = LV2_CORE__binary,
 		.dsc = "The ideal plugin dynamically links maximally to libc, libm, librt, "
@@ -100,6 +101,7 @@ _test_linking(app_t *app)
 	},
 	ret_libstdcpp = {
 		.lnt = LINT_WARN,
+		.pck = LINT_NOTE,
 		.msg = "binary links to C++ libraries: %s",
 		.uri = LV2_CORE__binary,
 		.dsc = "C++ ABI incompatibilities between host and plugin are to be expected."
@@ -1570,8 +1572,11 @@ test_plugin(app_t *app)
 		res->urn = NULL;
 		app->urn = &res->urn;
 		res->ret = test->cb(app);
-		if(res->ret && (res->ret->lnt & app->show) )
+		const lint_t lnt = lv2lint_extract(app, res->ret);
+		if(lnt & app->show)
+		{
 			msg = true;
+		}
 	}
 
 	const bool show_passes = LINT_PASS & app->show;

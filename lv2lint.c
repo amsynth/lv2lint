@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the Artistic License 2.0 as published by
@@ -517,6 +517,7 @@ _usage(char **argv)
 		"   [-g] GREETER                 custom mail greeter\n"
 #endif
 
+		"   [-M] (no)pack                skip some tests for distribution packagers\n"
 		"   [-S] (no)warn|note|pass|all  show warnings, notes, passes or all\n"
 		"   [-E] (no)warn|note|all       treat warnings, notes or all as errors\n\n"
 		, argv[0]);
@@ -788,6 +789,7 @@ main(int argc, char **argv)
 	app.atty = isatty(1);
 	app.show = LINT_FAIL | LINT_WARN; // always report failed and warned tests
 	app.mask = LINT_FAIL; // always fail at failed tests
+	app.pck = false;
 	const char *include_dir = NULL;
 	LilvNode *bundle_node = NULL;
 #ifdef ENABLE_ONLINE_TESTS
@@ -812,15 +814,15 @@ main(int argc, char **argv)
 
 	fprintf(stderr,
 		"%s "LV2LINT_VERSION"\n"
-		"Copyright (c) 2016-2019 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
+		"Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
 		"Released under Artistic License 2.0 by Open Music Kontrollers\n",
 		argv[0]);
 
 	int c;
 #ifdef ENABLE_ONLINE_TESTS
-	while( (c = getopt(argc, argv, "vhdomg:S:E:I:") ) != -1)
+	while( (c = getopt(argc, argv, "vhdomg:M:S:E:I:") ) != -1)
 #else
-	while( (c = getopt(argc, argv, "vhdS:E:I:") ) != -1)
+	while( (c = getopt(argc, argv, "vhdM:S:E:I:") ) != -1)
 #endif
 	{
 		switch(c)
@@ -849,6 +851,18 @@ main(int argc, char **argv)
 				app.greet = optarg;
 				break;
 #endif
+			case 'M':
+				if(!strcmp(optarg, "pack"))
+				{
+					app.pck = true;
+				}
+
+				else if(!strcmp(optarg, "nopack"))
+				{
+					app.pck = false;
+				}
+
+				break;
 			case 'S':
 				if(!strcmp(optarg, "warn"))
 				{
@@ -1647,7 +1661,8 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 			}
 		}
 
-		switch(ret->lnt & app->show)
+		const lint_t lnt = lv2lint_extract(app, ret);
+		switch(lnt & app->show)
 		{
 			case LINT_FAIL:
 				_report_body(app, "FAIL", ANSI_COLOR_RED, test, ret, repl, docu);
@@ -1672,11 +1687,24 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 
 		if(flag && *flag)
 		{
-			*flag = (ret->lnt & app->mask) ? false : true;
+			*flag = (lnt & app->mask) ? false : true;
 		}
 	}
 	else if(show_passes)
 	{
 		_report_head(app, "PASS", ANSI_COLOR_GREEN, test);
 	}
+}
+
+lint_t
+lv2lint_extract(app_t *app, const ret_t *ret)
+{
+	if(!ret)
+	{
+		return LINT_NONE;
+	}
+
+	return app->pck && (ret->pck != LINT_NONE)
+		? ret->pck
+		: ret->lnt;
 }

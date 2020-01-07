@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the Artistic License 2.0 as published by
@@ -66,6 +66,7 @@ typedef struct _res_t res_t;
 typedef const ret_t *(*test_cb_t)(app_t *app);
 
 typedef enum _lint_t {
+	LINT_NONE     = 0,
 	LINT_NOTE     = (1 << 1),
 	LINT_WARN     = (1 << 2),
 	LINT_FAIL     = (1 << 3),
@@ -78,6 +79,7 @@ struct _urid_t {
 
 struct _ret_t {
 	lint_t lnt;
+	lint_t pck;
 	const char *msg;
 	const char *uri;
 	const char *dsc;
@@ -118,6 +120,7 @@ struct _app_t {
 	var_t dflt;
 	lint_t show;
 	lint_t mask;
+	bool pck;
 	urid_t *urids;
 	LV2_URID nurids;
 	char **urn;
@@ -309,5 +312,8 @@ lv2lint_printf(app_t *app, const char *fmt, ...);
 
 void
 lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, bool *flag);
+
+lint_t
+lv2lint_extract(app_t *app, const ret_t *ret);
 
 #endif

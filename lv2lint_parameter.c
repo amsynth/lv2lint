@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the Artistic License 2.0 as published by
@@ -406,8 +406,11 @@ test_parameter(app_t *app)
 		res->urn = NULL;
 		app->urn = &res->urn;
 		res->ret = test->cb(app);
-		if(res->ret && (res->ret->lnt & app->show) )
+		const lint_t lnt = lv2lint_extract(app, res->ret);
+		if(lnt & app->show)
+		{
 			msg = true;
+		}
 	}
 
 	const bool show_passes = LINT_PASS & app->show;
