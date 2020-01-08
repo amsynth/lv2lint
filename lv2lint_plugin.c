@@ -260,6 +260,15 @@ _test_license(app_t *app)
 	const ret_t *ret = NULL;
 
 	LilvNode *license_node = lilv_world_get(app->world, lilv_plugin_get_uri(app->plugin), app->uris.doap_license, NULL);
+	if (!license_node)
+	{
+		LilvNode *project_node = lilv_plugin_get_project(app->plugin);
+		if (project_node)
+		{
+			license_node = lilv_world_get(app->world, project_node, app->uris.doap_license, NULL);
+		}
+	}
+
 	if(license_node)
 	{
 		if(lilv_node_is_uri(license_node))
@@ -297,7 +306,7 @@ _test_license(app_t *app)
 }
 
 #define FOAF_DSC "You likely have not defined an lv2:project with " \
-	"a valid foaf:maintainer or your plugin is not a subclass of doap:project."
+	"a valid doap:maintainer or your plugin is not a subclass of doap:Project."
 
 static const ret_t *
 _test_author_name(app_t *app)
@@ -681,19 +690,19 @@ _test_class(app_t *app)
 {
 	static const ret_t ret_class_not_found = {
 		.lnt = LINT_FAIL,
-		.msg = "lv2:class not found",
+		.msg = "type not found",
 		.uri = LV2_CORE__Plugin,
 		.dsc = NULL
 	},
 	ret_class_is_base_class = {
 		.lnt = LINT_WARN,
-		.msg = "lv2:class is base class",
+		.msg = "type is just lv2:Plugin",
 		.uri = LV2_CORE__Plugin,
 		.dsc = "If you give the plugin a proper class, hosts can better sort them."
 	},
 	ret_class_not_valid = {
 		.lnt = LINT_FAIL,
-		.msg = "lv2:class <%s> not valid",
+		.msg = "type <%s> not valid",
 		.uri = LV2_CORE__Plugin,
 		.dsc = NULL
 	};

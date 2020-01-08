@@ -318,7 +318,15 @@ _test_range(app_t *app)
 	if(  lilv_port_is_a(app->plugin, app->port, app->uris.lv2_ControlPort)
 			|| lilv_port_is_a(app->plugin, app->port, app->uris.lv2_CVPort) )
 	{
-		if( !( (app->min.f32 <= app->dflt.f32) && (app->dflt.f32 <= app->max.f32) ) )
+		float min = app->min.f32;
+		float max = app->max.f32;
+		if(lilv_port_has_property(app->plugin, app->port, app->uris.lv2_sampleRate))
+		{
+			min *= 44100.0;
+			max *= 44100.0;
+		}
+
+		if( !( (min <= app->dflt.f32) && (app->dflt.f32 <= max) ) )
 		{
 			ret = &ret_range;
 		}

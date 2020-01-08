@@ -115,6 +115,7 @@ _map_uris(app_t *app)
 	app->uris.lv2_inPlaceBroken = lilv_new_uri(app->world, LV2_CORE__inPlaceBroken);
 	app->uris.lv2_hardRTCapable = lilv_new_uri(app->world, LV2_CORE__hardRTCapable);
 	app->uris.lv2_documentation = lilv_new_uri(app->world, LV2_CORE__documentation);
+	app->uris.lv2_sampleRate = lilv_new_uri(app->world, LV2_CORE__sampleRate);
 
 	app->uris.atom_AtomPort = lilv_new_uri(app->world, LV2_ATOM__AtomPort);
 	app->uris.atom_Bool = lilv_new_uri(app->world, LV2_ATOM__Bool);
@@ -252,6 +253,7 @@ _unmap_uris(app_t *app)
 	lilv_node_free(app->uris.lv2_inPlaceBroken);
 	lilv_node_free(app->uris.lv2_hardRTCapable);
 	lilv_node_free(app->uris.lv2_documentation);
+	lilv_node_free(app->uris.lv2_sampleRate);
 
 	lilv_node_free(app->uris.atom_AtomPort);
 	lilv_node_free(app->uris.atom_Bool);
@@ -509,6 +511,7 @@ _usage(char **argv)
 		"OPTIONS\n"
 		"   [-v]                         print version information\n"
 		"   [-h]                         print usage information\n"
+		"   [-q]                         quiet mode, show only a summary\n"
 		"   [-d]                         show verbose test item documentation\n"
 		"   [-I] INCLUDE_DIR             use include directory to search for plugins\n"
 #ifdef ENABLE_ONLINE_TESTS
@@ -812,17 +815,11 @@ main(int argc, char **argv)
 		"---\n\n";
 #endif
 
-	fprintf(stderr,
-		"%s "LV2LINT_VERSION"\n"
-		"Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
-		"Released under Artistic License 2.0 by Open Music Kontrollers\n",
-		argv[0]);
-
 	int c;
 #ifdef ENABLE_ONLINE_TESTS
-	while( (c = getopt(argc, argv, "vhdomg:M:S:E:I:") ) != -1)
+	while( (c = getopt(argc, argv, "vhqdomg:M:S:E:I:") ) != -1)
 #else
-	while( (c = getopt(argc, argv, "vhdM:S:E:I:") ) != -1)
+	while( (c = getopt(argc, argv, "vhqdM:S:E:I:") ) != -1)
 #endif
 	{
 		switch(c)
@@ -833,6 +830,9 @@ main(int argc, char **argv)
 			case 'h':
 				_usage(argv);
 				return 0;
+			case 'q':
+				app.quiet = true;
+				break;
 			case 'd':
 				app.debug = true;
 				break;
@@ -948,6 +948,15 @@ main(int argc, char **argv)
 			default:
 				return -1;
 		}
+	}
+
+	if (!app.quiet)
+	{
+		fprintf(stderr,
+			"%s "LV2LINT_VERSION"\n"
+			"Copyright (c) 2016-2019 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
+			"Released under Artistic License 2.0 by Open Music Kontrollers\n",
+			argv[0]);
 	}
 
 	if(optind == argc) // no URI given
