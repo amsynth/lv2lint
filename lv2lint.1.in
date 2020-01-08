@@ -33,6 +33,11 @@ Print version and license information
 Print usage information
 
 .HP
+\fB\-q\fR
+.IP
+Quiet mode, show only a summary
+
+.HP
 \fB\-d\fR
 .IP
 Show verbose test item documentation
