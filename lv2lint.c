@@ -954,7 +954,7 @@ main(int argc, char **argv)
 	{
 		fprintf(stderr,
 			"%s "LV2LINT_VERSION"\n"
-			"Copyright (c) 2016-2019 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
+			"Copyright (c) 2016-2020Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
 			"Released under Artistic License 2.0 by Open Music Kontrollers\n",
 			argv[0]);
 	}

@@ -36,11 +36,9 @@ when using this tool, please report back, so it can be fixed.*
 
 * <https://git.open-music-kontrollers.ch/lv2/lv2lint>
 
-<!--
 ### Packages
 
 * [ArchLinux](https://www.archlinux.org/packages/community/x86_64/lv2lint/)
--->
 
 ### Bugs and feature requests
 
@@ -62,7 +60,7 @@ when using this tool, please report back, so it can be fixed.*
 
 lv2lint can optionally test your plugin URIs for existence. If you want that,
 you need to enable it at compile time (-Donline-tests=true) and link to libcurl.
-You will also need to enable it at run-time (-o).
+You will also need to enable it at run-time (-o), e.g. double-opt-in.
 
 lv2lint can optionally test your plugin symbol visibility and link dependencies.
 If you want that, you need to enable it at compile time (-Delf-tests=true) and
@@ -84,8 +82,12 @@ link to libelf.
 
 ### Usage
 
-An __acceptable plugin__ *SHOULD* pass without triggering any fails, this is also the
-default configuration:
+Information about the command line arguments are described in the man page:
+
+	man 1 lv2lint
+
+An __acceptable plugin__ *SHOULD* pass without triggering any fails, this is
+also the default configuration:
 
 	lv2lint http://lv2plug.in/plugins/eg-scope#Stereo
 
@@ -101,6 +103,12 @@ If you get any warnings or notes, you can enable debugging output to help you
 
 	lv2lint -d -Ewarn -Enote http://lv2plug.in/plugins/eg-scope#Stereo
 fix the problems:
+
+By default, lv2lint runs in packager mode and skips some tests. The latter are
+important only for plugins that are distributed in binary form. To activate
+those tests, run in (nopack)ager mode:
+
+	lv2lint -Mnopack http://lv2plug.in/plugins/eg-scope#Stereo
 
 ### License
 
