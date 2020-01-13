@@ -20,7 +20,7 @@ when using this tool, please report back, so it can be fixed.*
 
 #### Stable release
 
-* [lv2lint-0.2.0.zip](https://dl.open-music-kontrollers.ch/lv2lint/stable/lv2lint-0.2.0.zip) ([sig](https://dl.open-music-kontrollers.ch/lv2lint/stable/lv2lint-0.2.0.zip.sig))
+* [lv2lint-0.4.0.zip](https://dl.open-music-kontrollers.ch/lv2lint/stable/lv2lint-0.4.0.zip) ([sig](https://dl.open-music-kontrollers.ch/lv2lint/stable/lv2lint-0.4.0.zip.sig))
 
 #### Unstable (nightly) release
 
@@ -30,7 +30,7 @@ when using this tool, please report back, so it can be fixed.*
 
 #### Stable release
 
-* [lv2lint-0.2.0.tar.xz](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.2.0.tar.xz)
+* [lv2lint-0.4.0.tar.xz](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.4.0.tar.xz)
 
 #### Git repository
 
