@@ -482,8 +482,20 @@ _queue_draw(LV2_Inline_Display_Handle instance)
 }
 
 static void
-_version(void)
+_header(char **argv)
 {
+	fprintf(stderr,
+		"%s "LV2LINT_VERSION"\n"
+		"Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
+		"Released under Artistic License 2.0 by Open Music Kontrollers\n",
+		argv[0]);
+}
+
+static void
+_version(char **argv)
+{
+	_header(argv);
+
 	fprintf(stderr,
 		"--------------------------------------------------------------------\n"
 		"This is free software: you can redistribute it and/or modify\n"
@@ -503,6 +515,8 @@ _version(void)
 static void
 _usage(char **argv)
 {
+	_header(argv);
+
 	fprintf(stderr,
 		"--------------------------------------------------------------------\n"
 		"USAGE\n"
@@ -825,7 +839,7 @@ main(int argc, char **argv)
 		switch(c)
 		{
 			case 'v':
-				_version();
+				_version(argv);
 				return 0;
 			case 'h':
 				_usage(argv);
@@ -950,19 +964,15 @@ main(int argc, char **argv)
 		}
 	}
 
-	if (!app.quiet)
-	{
-		fprintf(stderr,
-			"%s "LV2LINT_VERSION"\n"
-			"Copyright (c) 2016-2020Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
-			"Released under Artistic License 2.0 by Open Music Kontrollers\n",
-			argv[0]);
-	}
-
 	if(optind == argc) // no URI given
 	{
 		_usage(argv);
 		return -1;
+	}
+
+	if(!app.quiet)
+	{
+		_header(argv);
 	}
 
 #ifdef ENABLE_ONLINE_TESTS
