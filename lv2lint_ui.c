@@ -358,13 +358,13 @@ _test_toolkit(app_t *app)
 		.uri = LV2_UI__ui,
 		.dsc = NULL
 	},
-	ret_toolkit_show_interface = { //FIXME only warn if required
-		.lnt = LINT_WARN,
-		.msg = "usage of official external UI is discouraged",
-		.uri = LV2_UI__showInterface,
-		.dsc = "Please adhere to best practices and use platform native UIs only."
+	ret_toolkit_unknown = {
+		.lnt = LINT_FAIL,
+		.msg = "UI toolkit <%s> unkown",
+		.uri = LV2_UI__ui,
+		.dsc = NULL
 	},
-	ret_toolkit_external = { //FIXME only warn if required
+	ret_toolkit_external = {
 		.lnt = LINT_WARN,
 		.msg = "usage of unofficial external UI is discouraged",
 		.uri = LV2_EXTERNAL_UI__Widget,
@@ -372,16 +372,16 @@ _test_toolkit(app_t *app)
 			"If you really have to use an external UI, please use the official "
 			"way to do so with the ui:idleInterface and ui:showInterface extensions."
 	},
-	ret_toolkit_unknown = {
-		.lnt = LINT_FAIL,
-		.msg = "UI toolkit <%s> unkown",
-		.uri = LV2_UI__ui,
-		.dsc = NULL
-	},
 	ret_toolkit_non_native = {
 		.lnt = LINT_WARN,
 		.msg = "usage of non-native toolkit <%s> is dicouraged",
 		.uri = LV2_UI__ui,
+		.dsc = "Please adhere to best practices and use platform native UIs only."
+	},
+	ret_toolkit_show_interface = {
+		.lnt = LINT_WARN,
+		.msg = "usage of official external UI is discouraged",
+		.uri = LV2_UI__showInterface,
 		.dsc = "Please adhere to best practices and use platform native UIs only."
 	};
 
@@ -392,48 +392,52 @@ _test_toolkit(app_t *app)
 	LilvNodes *ui_class_nodes = lilv_world_find_nodes(app->world, NULL, app->uris.rdfs_subClassOf, app->uris.ui_UI);
 
 #if defined(_WIN32)
-	const bool is_windows_ui = lilv_ui_is_a(app->ui, app->uris.ui_WindowsUI);
+	const bool is_native = lilv_ui_is_a(app->ui, app->uris.ui_WindowsUI);
 #elif defined(__APPLE__)
-	const bool is_cocoa_ui = lilv_ui_is_a(app->ui, app->uris.ui_CocoaUI);
+	const bool is_native = lilv_ui_is_a(app->ui, app->uris.ui_CocoaUI);
 #else
-	const bool is_x11_ui = lilv_ui_is_a(app->ui, app->uris.ui_X11UI);
+	const bool is_native = lilv_ui_is_a(app->ui, app->uris.ui_X11UI);
 #endif
 
 	const bool has_show_extension = lilv_world_ask(app->world,
 		lilv_ui_get_uri(app->ui), app->uris.lv2_extensionData, app->uris.ui_showInterface);
 	const bool is_external = lilv_node_equals(ui_class_node, app->uris.ext_Widget);
+	const bool is_show_ui = app->ui_show_iface || has_show_extension;
 
 	bool is_known = false;
+	if(ui_class_node)
+	{
+		if(lilv_node_equals(ui_class_node, app->uris.ui_UI))
+		{
+			is_known = true;
+		}
+	}
 	if(ui_class_node && ui_class_nodes)
 	{
 		if(lilv_nodes_contains(ui_class_nodes, ui_class_node))
+		{
 			is_known = true;
+		}
 	}
 
 	if(!ui_class_node)
 	{
 		ret = &ret_toolkit_invalid;
 	}
-	else if(app->ui_show_iface || has_show_extension)
-	{
-		ret = &ret_toolkit_show_interface;
-	}
-	else if(is_external)
-	{
-		ret = &ret_toolkit_external;
-	}
 	else if(!is_known)
 	{
 		*app->urn = strdup(lilv_node_as_uri(ui_class_node));
 		ret = &ret_toolkit_unknown;
 	}
-#if defined(_WIN32)
-	else if(!is_windows_ui)
-#elif defined(__APPLE__)
-	else if(!is_cocoa_ui)
-#else
-	else if(!is_x11_ui)
-#endif
+	else if(is_external)
+	{
+		ret = &ret_toolkit_external;
+	}
+	else if(is_show_ui && !is_native)
+	{
+		ret = &ret_toolkit_show_interface;
+	}
+	else if(!is_native)
 	{
 		*app->urn = strdup(lilv_node_as_uri(ui_class_node));
 		ret = &ret_toolkit_non_native;
