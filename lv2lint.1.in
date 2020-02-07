@@ -67,7 +67,7 @@ for plugins
 \fB\-M\fR (no)pack (Default: pack)
 .IP
 Modes to enable/disable, e.g. (pack)ager mode skips some fatal tests for
-distribution packagers important only for freely distributed binaries.
+distribution packagers that are important only for freely distributed binaries.
 
 If you are a distribution packager, preferebly run with '-M pack' (Default).
 If you want to build binaries for distributing, preferably run with -M nopack.

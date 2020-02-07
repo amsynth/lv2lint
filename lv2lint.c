@@ -806,7 +806,7 @@ main(int argc, char **argv)
 	app.atty = isatty(1);
 	app.show = LINT_FAIL | LINT_WARN; // always report failed and warned tests
 	app.mask = LINT_FAIL; // always fail at failed tests
-	app.pck = false;
+	app.pck = true;
 	const char *include_dir = NULL;
 	LilvNode *bundle_node = NULL;
 #ifdef ENABLE_ONLINE_TESTS
