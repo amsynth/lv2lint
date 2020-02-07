@@ -358,13 +358,13 @@ _test_toolkit(app_t *app)
 		.uri = LV2_UI__ui,
 		.dsc = NULL
 	},
-	ret_toolkit_show_interface = {
+	ret_toolkit_show_interface = { //FIXME only warn if required
 		.lnt = LINT_WARN,
 		.msg = "usage of official external UI is discouraged",
 		.uri = LV2_UI__showInterface,
 		.dsc = "Please adhere to best practices and use platform native UIs only."
 	},
-	ret_toolkit_external = {
+	ret_toolkit_external = { //FIXME only warn if required
 		.lnt = LINT_WARN,
 		.msg = "usage of unofficial external UI is discouraged",
 		.uri = LV2_EXTERNAL_UI__Widget,
