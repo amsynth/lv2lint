@@ -606,6 +606,13 @@ bool
 test_visibility(const char *path, const char *description, char **symbols)
 {
 	static const char *whitelist [] = {
+		// LV2
+		"lv2_descriptor",
+		"lv2ui_descriptor",
+		"lv2_dyn_manifest_open",
+		"lv2_dyn_manifest_get_subjects",
+		"lv2_dyn_manifest_get_data",
+		"lv2_dyn_manifest_close",
 		// C
 		"_init",
 		"_fini",
