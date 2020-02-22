@@ -546,6 +546,42 @@ _test_unit(app_t *app)
 	return ret;
 }
 
+static const ret_t *
+_test_symbol(app_t *app)
+{
+	static const ret_t ret_not_unique = {
+		.lnt = LINT_FAIL,
+		.msg = "lv2:symbol not unique",
+		.uri = LV2_CORE__symbol,
+		.dsc = "Port symbols MUST be unique."
+	};
+	const ret_t *ret = NULL;
+
+	const LilvNode *symbol1 = lilv_port_get_symbol(app->plugin, app->port);
+
+	const uint32_t num_ports = lilv_plugin_get_num_ports(app->plugin);
+	for(unsigned i=0; i<num_ports; i++)
+	{
+		const LilvPort *port = lilv_plugin_get_port_by_index(app->plugin, i);
+
+		if(port == app->port)
+		{
+			continue; // skip self
+		}
+
+		const LilvNode *symbol2 = lilv_port_get_symbol(app->plugin, port);
+
+		if(lilv_node_equals(symbol1, symbol2))
+		{
+			ret = &ret_not_unique;
+
+			break;
+		}
+	}
+
+	return ret;
+}
+
 static const test_t tests [] = {
 	{"Class",          _test_class},
 	{"PortProperties", _test_properties},
@@ -558,6 +594,7 @@ static const test_t tests [] = {
 	{"Comment",        _test_comment},
 	{"Group",          _test_group},
 	{"Units",          _test_unit},
+	{"Symbol",         _test_symbol},
 };
 
 static const unsigned tests_n = sizeof(tests) / sizeof(test_t);
