@@ -61,7 +61,7 @@ Show verbose test item documentation
 \fB\-I\fR INCLUDE_DIR
 .IP
 Apart from default LV2 plugin install paths, use include directory to search
-for plugins
+for plugins (can be used multiple times)
 
 .HP
 \fB\-M\fR (no)pack (Default: pack)

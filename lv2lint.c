@@ -527,7 +527,8 @@ _usage(char **argv)
 		"   [-h]                         print usage information\n"
 		"   [-q]                         quiet mode, show only a summary\n"
 		"   [-d]                         show verbose test item documentation\n"
-		"   [-I] INCLUDE_DIR             use include directory to search for plugins\n"
+		"   [-I] INCLUDE_DIR             use include directory to search for plugins"
+		                                 "(can be used multiple times)\n"
 #ifdef ENABLE_ONLINE_TESTS
 		"   [-o]                         run online test items\n"
 		"   [-m]                         create mail to plugin author\n"
@@ -814,8 +815,8 @@ main(int argc, char **argv)
 	app.show = LINT_FAIL | LINT_WARN; // always report failed and warned tests
 	app.mask = LINT_FAIL; // always fail at failed tests
 	app.pck = true;
-	const char *include_dir = NULL;
-	LilvNode *bundle_node = NULL;
+	unsigned n_include_dirs = 0;
+	char **include_dirs = NULL;
 #ifdef ENABLE_ONLINE_TESTS
 	app.greet = "Dear LV2 plugin developer\n"
 		"\n"
@@ -858,7 +859,24 @@ main(int argc, char **argv)
 				app.debug = true;
 				break;
 			case 'I':
-				include_dir = optarg;
+				include_dirs = realloc(include_dirs,
+					(n_include_dirs + 1) * sizeof(const char *));
+
+				size_t len = strlen(optarg) + 1;
+
+				if(optarg[len - 2] == '/')
+				{
+					include_dirs[n_include_dirs] = malloc(len);
+					snprintf(include_dirs[n_include_dirs], len, "%s", optarg);
+				}
+				else
+				{
+					len++;
+					include_dirs[n_include_dirs] = malloc(len);
+					snprintf(include_dirs[n_include_dirs], len, "%s/", optarg);
+				}
+
+				n_include_dirs++;
 				break;
 #ifdef ENABLE_ONLINE_TESTS
 			case 'o':
@@ -1000,15 +1018,24 @@ main(int argc, char **argv)
 
 	lilv_world_load_all(app.world);
 
-	if(include_dir)
+	for(unsigned i = 0; i < n_include_dirs; i++)
 	{
-		bundle_node = lilv_new_file_uri(app.world, NULL, include_dir);
-	}
+		char *include_dir = include_dirs ? include_dirs[i] : NULL;
 
-	if(bundle_node)
-	{
-		lilv_world_load_bundle(app.world, bundle_node);
-		lilv_world_load_resource(app.world, bundle_node);
+		if(!include_dir)
+		{
+			continue;
+		}
+
+		LilvNode *bundle_node = lilv_new_file_uri(app.world, NULL, include_dir);
+
+		if(bundle_node)
+		{
+			lilv_world_load_bundle(app.world, bundle_node);
+			lilv_world_load_resource(app.world, bundle_node);
+
+			lilv_node_free(bundle_node);
+		}
 	}
 
 	LV2_URID_Map *map = mapper_get_map(mapper);
@@ -1477,11 +1504,31 @@ main(int argc, char **argv)
 	_unmap_uris(&app);
 	_free_urids(&app);
 
-	if(bundle_node)
+	for(unsigned i = 0; i < n_include_dirs; i++)
 	{
-		lilv_world_unload_resource(app.world, bundle_node);
-		lilv_world_unload_bundle(app.world, bundle_node);
-		lilv_node_free(bundle_node);
+		char *include_dir = include_dirs ? include_dirs[i] : NULL;
+
+		if(!include_dir)
+		{
+			continue;
+		}
+
+		LilvNode *bundle_node = lilv_new_file_uri(app.world, NULL, include_dir);
+
+		if(bundle_node)
+		{
+			lilv_world_unload_resource(app.world, bundle_node);
+			lilv_world_unload_bundle(app.world, bundle_node);
+
+			lilv_node_free(bundle_node);
+		}
+
+		free(include_dir);
+	}
+
+	if(include_dirs)
+	{
+		free(include_dirs);
 	}
 
 	mapper_free(mapper);
