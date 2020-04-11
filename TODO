@@ -2,20 +2,8 @@
 	* Check whether plugin requires urid:map
 	* Check for lv2:control port designations
 
-* buf-size
-	* DONE
-
-* data-access
-	* DONE
-
 * dynmanifest
 	* Warn about it, if possible
-
-* event
-	* DONE
-
-* instance-access
-	* DONE
 
 * log
 	* Propose its usage
@@ -65,14 +53,5 @@
 * ui
 	* Actually instantiate UI
 
-* units
-	* DONE
-
-* urid
-	* DONE
-
-* uri-map
-	* DONE
-
-* worker
-	* DONE
+* ideas
+	* ship latest lv2 spec as a fallback, in case target system has an oldish one
