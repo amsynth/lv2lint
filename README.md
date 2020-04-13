@@ -89,26 +89,26 @@ Information about the command line arguments are described in the man page:
 An __acceptable plugin__ *SHOULD* pass without triggering any fails, this is
 also the default configuration:
 
-	lv2lint http://lv2plug.in/plugins/eg-scope#Stereo
+	lv2lint -I ${MY_BUNDLE_DIR} http://lv2plug.in/plugins/eg-scope#Stereo
 
 A __good plugin__ *SHOULD* pass without triggering any warnings:
 
-	lv2lint -Ewarn http://lv2plug.in/plugins/eg-scope#Stereo
+	lv2lint -I ${MY_BUNDLE_DIR} -E warn http://lv2plug.in/plugins/eg-scope#Stereo
 
 A __perfect plugin__ *SHOULD* pass without triggering any warnings or notes:
 
-	lv2lint -Ewarn -Enote http://lv2plug.in/plugins/eg-scope#Stereo
+	lv2lint -I ${MY_BUNDLE_DIR} -E warn -E note http://lv2plug.in/plugins/eg-scope#Stereo
 
 If you get any warnings or notes, you can enable debugging output to help you
 
-	lv2lint -d -Ewarn -Enote http://lv2plug.in/plugins/eg-scope#Stereo
+	lv2lint -d -I ${MY_BUNDLE_DIR} -E warn -E note http://lv2plug.in/plugins/eg-scope#Stereo
 fix the problems:
 
 By default, lv2lint runs in packager mode and skips some tests. The latter are
-important only for plugins that are distributed in binary form. To activate
-those tests, run in (nopack)ager mode:
+important only for plugins that are distributed in binary form by the developer directly.
+To activate those tests, run in (nopack)ager mode:
 
-	lv2lint -Mnopack http://lv2plug.in/plugins/eg-scope#Stereo
+	lv2lint -I ${MY_BUNDLE_DIR} -M nopack http://lv2plug.in/plugins/eg-scope#Stereo
 
 ### License
 
