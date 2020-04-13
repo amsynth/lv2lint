@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.6.0] - 13 Apr 2020
+
+### Added
+
+* test for unique port symbols
+* support for multiple include dirs
+* support for include dirs without trailing slash
+
+### Changed
+
+* distribution packager mode on by default
+
+### Fixed
+
+* warn of ui:showInterface only for non-native UIs
+* whitelist symbol visibility of all global LV2 functions
+
 ## [0.4.0] - 13 Jan 2020
 
 ### Added
