@@ -70,7 +70,7 @@ _test_symbols(app_t *app)
 			if(path)
 			{
 				char *symbols = NULL;
-				if(!test_visibility(path, "lv2_descriptor", &symbols))
+				if(!test_visibility(app, path, "lv2_descriptor", &symbols))
 				{
 					*app->urn = symbols;
 					ret = &ret_symbols;

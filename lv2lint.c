@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <fnmatch.h>
 
 #include <lv2lint.h>
 
@@ -528,7 +529,11 @@ _usage(char **argv)
 		"   [-q]                         quiet mode, show only a summary\n"
 		"   [-d]                         show verbose test item documentation\n"
 		"   [-I] INCLUDE_DIR             use include directory to search for plugins"
-		                                 "(can be used multiple times)\n"
+		                                 " (can be used multiple times)\n"
+#ifdef ENABLE_ELF_TESTS
+		"   [-W] SYMBOL_PATTERN          symbol pattern (shell wirldcards) to whitelist"
+		                                 " (can be used multiple times)\n"
+#endif
 #ifdef ENABLE_ONLINE_TESTS
 		"   [-o]                         run online test items\n"
 		"   [-m]                         create mail to plugin author\n"
@@ -604,7 +609,7 @@ _append_to(char **dst, const char *src)
 }
 
 bool
-test_visibility(const char *path, const char *description, char **symbols)
+test_visibility(app_t *app, const char *path, const char *description, char **symbols)
 {
 	static const char *whitelist [] = {
 		// LV2
@@ -634,7 +639,6 @@ test_visibility(const char *path, const char *description, char **symbols)
 		"rust_eh_personality"
 	};
 	const unsigned n_whitelist = sizeof(whitelist) / sizeof(const char *);
-
 	bool desc = false;
 	unsigned invalid = 0;
 
@@ -686,6 +690,28 @@ test_visibility(const char *path, const char *description, char **symbols)
 									{
 										whitelist_match = true;
 										break;
+									}
+								}
+
+								if(!whitelist_match)
+								{
+									for(unsigned j = 0; j < app->n_whitelist_symbols; j++)
+									{
+										char *whitelist_symbol = app->whitelist_symbols
+											? app->whitelist_symbols[j]
+											: NULL;
+
+										if(!whitelist_symbol)
+										{
+											continue;
+										}
+
+										if(fnmatch(whitelist_symbol, name,
+											FNM_CASEFOLD | FNM_EXTMATCH) == 0)
+										{
+											whitelist_match = true;
+											break;
+										}
 									}
 								}
 
@@ -829,6 +855,8 @@ _append_include_dir(app_t *app, char *include_dir)
 		{
 			app->include_dirs[app->n_include_dirs] = dst;
 			snprintf(app->include_dirs[app->n_include_dirs], len, "%s", include_dir);
+
+			app->n_include_dirs++;
 		}
 	}
 	else
@@ -840,10 +868,10 @@ _append_include_dir(app_t *app, char *include_dir)
 		{
 			app->include_dirs[app->n_include_dirs] = dst;
 			snprintf(app->include_dirs[app->n_include_dirs], len, "%s/", include_dir);
+
+			app->n_include_dirs++;
 		}
 	}
-
-	app->n_include_dirs++;
 }
 
 static void
@@ -901,6 +929,54 @@ _free_include_dirs(app_t *app)
 	}
 }
 
+#ifdef ENABLE_ELF_TESTS
+static void
+_append_whitelist_symbol(app_t *app, char *whitelist_symbol)
+{
+	char **whitelist_symbols = realloc(app->whitelist_symbols,
+		(app->n_whitelist_symbols + 1) * sizeof(const char *));
+	if(!whitelist_symbols)
+	{
+		return;
+	}
+
+	app->whitelist_symbols = whitelist_symbols;
+
+	size_t len = strlen(whitelist_symbol) + 1;
+
+	char *dst = malloc(len);
+
+	if(dst)
+	{
+		app->whitelist_symbols[app->n_whitelist_symbols] = dst;
+		snprintf(app->whitelist_symbols[app->n_whitelist_symbols], len, "%s", whitelist_symbol);
+
+		app->n_whitelist_symbols++;
+	}
+}
+
+static void
+_free_whitelist_symbols(app_t *app)
+{
+	for(unsigned i = 0; i < app->n_whitelist_symbols; i++)
+	{
+		char *whitelist_symbol = app->whitelist_symbols ? app->whitelist_symbols[i] : NULL;
+
+		if(!whitelist_symbol)
+		{
+			continue;
+		}
+
+		free(whitelist_symbol);
+	}
+
+	if(app->whitelist_symbols)
+	{
+		free(app->whitelist_symbols);
+	}
+}
+#endif
+
 int
 main(int argc, char **argv)
 {
@@ -930,11 +1006,14 @@ main(int argc, char **argv)
 #endif
 
 	int c;
+	while( (c = getopt(argc, argv, "vhqdM:S:E:I:"
 #ifdef ENABLE_ONLINE_TESTS
-	while( (c = getopt(argc, argv, "vhqdomg:M:S:E:I:") ) != -1)
-#else
-	while( (c = getopt(argc, argv, "vhqdM:S:E:I:") ) != -1)
+		"omg:"
 #endif
+#ifdef ENABLE_ELF_TESTS
+		"W:"
+#endif
+		) ) != -1)
 	{
 		switch(c)
 		{
@@ -953,6 +1032,11 @@ main(int argc, char **argv)
 			case 'I':
 				_append_include_dir(&app, optarg);
 				break;
+#ifdef ENABLE_ELF_TESTS
+			case 'W':
+				_append_whitelist_symbol(&app, optarg);
+				break;
+#endif
 #ifdef ENABLE_ONLINE_TESTS
 			case 'o':
 				app.online = true;
@@ -1559,6 +1643,9 @@ main(int argc, char **argv)
 	_unmap_uris(&app);
 	_free_urids(&app);
 	_free_include_dirs(&app);
+#ifdef ENABLE_ELF_TESTS
+	_free_whitelist_symbols(&app);
+#endif
 	mapper_free(mapper);
 
 	lilv_world_free(app.world);

@@ -28,13 +28,16 @@ incs = [mapper_inc]
 
 if curl_dep.found() and online_tests
 	add_project_arguments('-DENABLE_ONLINE_TESTS', language : 'c')
-	conf_data.set('MAN', '')
+	conf_data.set('ONLINE_TESTS', '')
 else
-	conf_data.set('MAN', './')
+	conf_data.set('ONLINE_TESTS', './')
 endif
 
 if elf_dep.found() and elf_tests
 	add_project_arguments('-DENABLE_ELF_TESTS', language : 'c')
+	conf_data.set('ELF_TESTS', '')
+else
+	conf_data.set('ELF_TESTS', './')
 endif
 
 srcs = [

@@ -42,20 +42,25 @@ Quiet mode, show only a summary
 .IP
 Show verbose test item documentation
 
-@MAN@.HP
-@MAN@\fB\-o\fR
-@MAN@.IP
-@MAN@Run online test items
+@ONLINE_TESTS@.HP
+@ONLINE_TESTS@\fB\-o\fR
+@ONLINE_TESTS@.IP
+@ONLINE_TESTS@Run online test items
 
-@MAN@.HP
-@MAN@\fB\-m\fR
-@MAN@.IP
-@MAN@Create mail to plugin author
+@ONLINE_TESTS@.HP
+@ONLINE_TESTS@\fB\-m\fR
+@ONLINE_TESTS@.IP
+@ONLINE_TESTS@Create mail to plugin author
 
-@MAN@.HP
-@MAN@\fB\-g\fR GREETER
-@MAN@.IP
-@MAN@Custom mail greeter
+@ONLINE_TESTS@.HP
+@ONLINE_TESTS@\fB\-g\fR GREETER
+@ONLINE_TESTS@.IP
+@ONLINE_TESTS@Custom mail greeter
+
+@ELF_TESTS@.HP
+@ELF_TESTS@\fB\-W\fR SYMBOL
+@ELF_TESTS@.IP
+@ELF_TESTS@Symbol pattern (shell wildcard) to whitelist (can be used multiple times)
 
 .HP
 \fB\-I\fR INCLUDE_DIR

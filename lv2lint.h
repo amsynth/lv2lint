@@ -126,6 +126,8 @@ struct _app_t {
 	char **urn;
 	unsigned n_include_dirs;
 	char **include_dirs;
+	unsigned n_whitelist_symbols;
+	char **whitelist_symbols;
 	bool atty;
 	bool debug;
 	bool quiet;
@@ -300,7 +302,7 @@ test_url(app_t *app, const char *url);
 
 #ifdef ENABLE_ELF_TESTS
 bool
-test_visibility(const char *path, const char *description, char **symbols);
+test_visibility(app_t *app, const char *path, const char *description, char **symbols);
 
 bool
 test_shared_libraries(const char *path, const char *const *whitelist,
