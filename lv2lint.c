@@ -21,7 +21,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
-#include <fnmatch.h>
+#if defined(HAS_FNMATCH)
+#	include <fnmatch.h>
+#endif
 
 #include <lv2lint.h>
 
@@ -706,8 +708,12 @@ test_visibility(app_t *app, const char *path, const char *description, char **sy
 											continue;
 										}
 
+#if defined(HAS_FNMATCH)
 										if(fnmatch(whitelist_symbol, name,
 											FNM_CASEFOLD | FNM_EXTMATCH) == 0)
+#else
+										if(strcasecmp(whitelist_symbol, name) == 0)
+#endif
 										{
 											whitelist_match = true;
 											break;

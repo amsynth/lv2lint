@@ -33,11 +33,15 @@ else
 	conf_data.set('ONLINE_TESTS', './')
 endif
 
+if cc.has_header('fnmatch.h') and cc.has_function('fnmatch')
+	add_project_arguments('-DHAS_FNMATCH', language : 'c')
+	conf_data.set('FNMATCH', '')
+else
+	conf_data.set('FNMATCH', './')
+endif
+
 if elf_dep.found() and elf_tests
 	add_project_arguments('-DENABLE_ELF_TESTS', language : 'c')
-	conf_data.set('ELF_TESTS', '')
-else
-	conf_data.set('ELF_TESTS', './')
 endif
 
 srcs = [
