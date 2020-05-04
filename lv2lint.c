@@ -807,6 +807,100 @@ _state_set_value(const char *symbol __unused, void *data __unused,
 	//FIXME
 }
 
+static void
+_append_include_dir(app_t *app, char *include_dir)
+{
+	char **include_dirs = realloc(app->include_dirs,
+		(app->n_include_dirs + 1) * sizeof(const char *));
+	if(!include_dirs)
+	{
+		return;
+	}
+
+	app->include_dirs = include_dirs;
+
+	size_t len = strlen(include_dir) + 1;
+
+	if(include_dir[len - 2] == '/')
+	{
+		char *dst = malloc(len);
+
+		if(dst)
+		{
+			app->include_dirs[app->n_include_dirs] = dst;
+			snprintf(app->include_dirs[app->n_include_dirs], len, "%s", include_dir);
+		}
+	}
+	else
+	{
+		len++;
+		char *dst = malloc(len);
+
+		if(dst)
+		{
+			app->include_dirs[app->n_include_dirs] = dst;
+			snprintf(app->include_dirs[app->n_include_dirs], len, "%s/", include_dir);
+		}
+	}
+
+	app->n_include_dirs++;
+}
+
+static void
+_load_include_dirs(app_t *app)
+{
+	for(unsigned i = 0; i < app->n_include_dirs; i++)
+	{
+		char *include_dir = app->include_dirs ? app->include_dirs[i] : NULL;
+
+		if(!include_dir)
+		{
+			continue;
+		}
+
+		LilvNode *bundle_node = lilv_new_file_uri(app->world, NULL, include_dir);
+
+		if(bundle_node)
+		{
+			lilv_world_load_bundle(app->world, bundle_node);
+			lilv_world_load_resource(app->world, bundle_node);
+
+			lilv_node_free(bundle_node);
+		}
+	}
+}
+
+static void
+_free_include_dirs(app_t *app)
+{
+	for(unsigned i = 0; i < app->n_include_dirs; i++)
+	{
+		char *include_dir = app->include_dirs ? app->include_dirs[i] : NULL;
+
+		if(!include_dir)
+		{
+			continue;
+		}
+
+		LilvNode *bundle_node = lilv_new_file_uri(app->world, NULL, include_dir);
+
+		if(bundle_node)
+		{
+			lilv_world_unload_resource(app->world, bundle_node);
+			lilv_world_unload_bundle(app->world, bundle_node);
+
+			lilv_node_free(bundle_node);
+		}
+
+		free(include_dir);
+	}
+
+	if(app->include_dirs)
+	{
+		free(app->include_dirs);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -815,8 +909,6 @@ main(int argc, char **argv)
 	app.show = LINT_FAIL | LINT_WARN; // always report failed and warned tests
 	app.mask = LINT_FAIL; // always fail at failed tests
 	app.pck = true;
-	unsigned n_include_dirs = 0;
-	char **include_dirs = NULL;
 #ifdef ENABLE_ONLINE_TESTS
 	app.greet = "Dear LV2 plugin developer\n"
 		"\n"
@@ -859,24 +951,7 @@ main(int argc, char **argv)
 				app.debug = true;
 				break;
 			case 'I':
-				include_dirs = realloc(include_dirs,
-					(n_include_dirs + 1) * sizeof(const char *));
-
-				size_t len = strlen(optarg) + 1;
-
-				if(optarg[len - 2] == '/')
-				{
-					include_dirs[n_include_dirs] = malloc(len);
-					snprintf(include_dirs[n_include_dirs], len, "%s", optarg);
-				}
-				else
-				{
-					len++;
-					include_dirs[n_include_dirs] = malloc(len);
-					snprintf(include_dirs[n_include_dirs], len, "%s/", optarg);
-				}
-
-				n_include_dirs++;
+				_append_include_dir(&app, optarg);
 				break;
 #ifdef ENABLE_ONLINE_TESTS
 			case 'o':
@@ -1015,28 +1090,8 @@ main(int argc, char **argv)
 		return -1;
 
 	_map_uris(&app);
-
 	lilv_world_load_all(app.world);
-
-	for(unsigned i = 0; i < n_include_dirs; i++)
-	{
-		char *include_dir = include_dirs ? include_dirs[i] : NULL;
-
-		if(!include_dir)
-		{
-			continue;
-		}
-
-		LilvNode *bundle_node = lilv_new_file_uri(app.world, NULL, include_dir);
-
-		if(bundle_node)
-		{
-			lilv_world_load_bundle(app.world, bundle_node);
-			lilv_world_load_resource(app.world, bundle_node);
-
-			lilv_node_free(bundle_node);
-		}
-	}
+	_load_include_dirs(&app);
 
 	LV2_URID_Map *map = mapper_get_map(mapper);
 	LV2_URID_Unmap *unmap = mapper_get_unmap(mapper);
@@ -1503,34 +1558,7 @@ main(int argc, char **argv)
 
 	_unmap_uris(&app);
 	_free_urids(&app);
-
-	for(unsigned i = 0; i < n_include_dirs; i++)
-	{
-		char *include_dir = include_dirs ? include_dirs[i] : NULL;
-
-		if(!include_dir)
-		{
-			continue;
-		}
-
-		LilvNode *bundle_node = lilv_new_file_uri(app.world, NULL, include_dir);
-
-		if(bundle_node)
-		{
-			lilv_world_unload_resource(app.world, bundle_node);
-			lilv_world_unload_bundle(app.world, bundle_node);
-
-			lilv_node_free(bundle_node);
-		}
-
-		free(include_dir);
-	}
-
-	if(include_dirs)
-	{
-		free(include_dirs);
-	}
-
+	_free_include_dirs(&app);
 	mapper_free(mapper);
 
 	lilv_world_free(app.world);

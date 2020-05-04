@@ -124,6 +124,8 @@ struct _app_t {
 	urid_t *urids;
 	LV2_URID nurids;
 	char **urn;
+	unsigned n_include_dirs;
+	char **include_dirs;
 	bool atty;
 	bool debug;
 	bool quiet;
