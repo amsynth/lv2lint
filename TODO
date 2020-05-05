@@ -50,3 +50,5 @@
 
 * ideas
 	* ship latest lv2 spec as a fallback, in case target system has an oldish one
+	* check whether the LV2 spec has been loaded at all somehow (borked LV2_PATH)
+	* check for borked LV2_PATH
