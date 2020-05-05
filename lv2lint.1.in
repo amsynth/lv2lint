@@ -57,10 +57,15 @@ Show verbose test item documentation
 @ONLINE_TESTS@.IP
 @ONLINE_TESTS@Custom mail greeter
 
-@FNMATCH@.HP
-@FNMATCH@\fB\-W\fR SYMBOL
-@FNMATCH@.IP
-@FNMATCH@Symbol pattern (shell wildcard) to whitelist (can be used multiple times)
+@ELF_TESTS@.HP
+@ELF_TESTS@\fB\-s\fR SYMBOL_PATTERN
+@ELF_TESTS@.IP
+@ELF_TESTS@Symbol pattern (shell wildcard) to whitelist (can be used multiple times)
+
+@ELF_TESTS@.HP
+@ELF_TESTS@\fB\-l\fR LIBRARY_PATTERN
+@ELF_TESTS@.IP
+@ELF_TESTS@Library pattern (shell wildcard) to whitelist (can be used multiple times)
 
 .HP
 \fB\-I\fR INCLUDE_DIR

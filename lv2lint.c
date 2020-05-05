@@ -533,7 +533,9 @@ _usage(char **argv)
 		"   [-I] INCLUDE_DIR             use include directory to search for plugins"
 		                                 " (can be used multiple times)\n"
 #ifdef ENABLE_ELF_TESTS
-		"   [-W] SYMBOL_PATTERN          symbol pattern (shell wirldcards) to whitelist"
+		"   [-s] SYMBOL_PATTERN          symbol pattern (shell wildcards) to whitelist"
+		                                 " (can be used multiple times)\n"
+		"   [-l] LIBRARY_PATTERN         library pattern (shell wildcards) to whitelist"
 		                                 " (can be used multiple times)\n"
 #endif
 #ifdef ENABLE_ONLINE_TESTS
@@ -747,7 +749,7 @@ test_visibility(app_t *app, const char *path, const char *description, char **sy
 }
 
 bool
-test_shared_libraries(const char *path, const char *const *whitelist,
+test_shared_libraries(app_t *app, const char *path, const char *const *whitelist,
 	unsigned n_whitelist, const char *const *blacklist, unsigned n_blacklist,
 	char **libraries)
 {
@@ -797,6 +799,30 @@ test_shared_libraries(const char *path, const char *const *whitelist,
 									break;
 								}
 							}
+
+							for(unsigned j = 0; j < app->n_whitelist_libs; j++)
+							{
+								char *whitelist_lib = app->whitelist_libs
+									? app->whitelist_libs[j]
+									: NULL;
+
+								if(!whitelist_lib)
+								{
+									continue;
+								}
+
+#if defined(HAS_FNMATCH)
+								if(fnmatch(whitelist_lib, name,
+									FNM_CASEFOLD | FNM_EXTMATCH) == 0)
+#else
+								if(strcasecmp(whitelist_lib, name) == 0)
+#endif
+								{
+									whitelist_match = true;
+									break;
+								}
+							}
+
 							for(unsigned j = 0; j < n_blacklist; j++)
 							{
 								if(!strncmp(name, blacklist[j], strlen(blacklist[j])))
@@ -811,7 +837,7 @@ test_shared_libraries(const char *path, const char *const *whitelist,
 								_append_to(libraries, name);
 								invalid++;
 							}
-							if(n_blacklist && blacklist_match)
+							if(n_blacklist && blacklist_match && !whitelist_match)
 							{
 								_append_to(libraries, name);
 								invalid++;
@@ -981,6 +1007,52 @@ _free_whitelist_symbols(app_t *app)
 		free(app->whitelist_symbols);
 	}
 }
+
+static void
+_append_whitelist_lib(app_t *app, char *whitelist_lib)
+{
+	char **whitelist_libs = realloc(app->whitelist_libs,
+		(app->n_whitelist_libs + 1) * sizeof(const char *));
+	if(!whitelist_libs)
+	{
+		return;
+	}
+
+	app->whitelist_libs = whitelist_libs;
+
+	size_t len = strlen(whitelist_lib) + 1;
+
+	char *dst = malloc(len);
+
+	if(dst)
+	{
+		app->whitelist_libs[app->n_whitelist_libs] = dst;
+		snprintf(app->whitelist_libs[app->n_whitelist_libs], len, "%s", whitelist_lib);
+
+		app->n_whitelist_libs++;
+	}
+}
+
+static void
+_free_whitelist_libs(app_t *app)
+{
+	for(unsigned i = 0; i < app->n_whitelist_libs; i++)
+	{
+		char *whitelist_lib = app->whitelist_libs ? app->whitelist_libs[i] : NULL;
+
+		if(!whitelist_lib)
+		{
+			continue;
+		}
+
+		free(whitelist_lib);
+	}
+
+	if(app->whitelist_libs)
+	{
+		free(app->whitelist_libs);
+	}
+}
 #endif
 
 int
@@ -1017,7 +1089,7 @@ main(int argc, char **argv)
 		"omg:"
 #endif
 #ifdef ENABLE_ELF_TESTS
-		"W:"
+		"s:l:"
 #endif
 		) ) != -1)
 	{
@@ -1039,8 +1111,11 @@ main(int argc, char **argv)
 				_append_include_dir(&app, optarg);
 				break;
 #ifdef ENABLE_ELF_TESTS
-			case 'W':
+			case 's':
 				_append_whitelist_symbol(&app, optarg);
+				break;
+			case 'l':
+				_append_whitelist_lib(&app, optarg);
 				break;
 #endif
 #ifdef ENABLE_ONLINE_TESTS
@@ -1651,6 +1726,7 @@ main(int argc, char **argv)
 	_free_include_dirs(&app);
 #ifdef ENABLE_ELF_TESTS
 	_free_whitelist_symbols(&app);
+	_free_whitelist_libs(&app);
 #endif
 	mapper_free(mapper);
 

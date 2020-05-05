@@ -128,6 +128,8 @@ struct _app_t {
 	char **include_dirs;
 	unsigned n_whitelist_symbols;
 	char **whitelist_symbols;
+	unsigned n_whitelist_libs;
+	char **whitelist_libs;
 	bool atty;
 	bool debug;
 	bool quiet;
@@ -305,7 +307,7 @@ bool
 test_visibility(app_t *app, const char *path, const char *description, char **symbols);
 
 bool
-test_shared_libraries(const char *path, const char *const *whitelist,
+test_shared_libraries(app_t *app, const char *path, const char *const *whitelist,
 	unsigned n_whitelist, const char *const *blacklist, unsigned n_blacklist,
 	char **libraries);
 #endif

@@ -134,12 +134,18 @@ _test_linking(app_t *app)
 			if(path)
 			{
 				char *libraries = NULL;
-				if(!test_shared_libraries(path, whitelist, n_whitelist, NULL, 0, &libraries))
+				if(!test_shared_libraries(app, path,
+					whitelist, n_whitelist,
+					NULL, 0,
+					&libraries))
 				{
 					*app->urn = libraries;
 					ret = &ret_symbols;
 				}
-				else if(!test_shared_libraries(path, NULL, 0, graylist, n_graylist, &libraries))
+				else if(!test_shared_libraries(app, path,
+					NULL, 0,
+					graylist, n_graylist,
+					&libraries))
 				{
 					*app->urn = libraries;
 					ret = &ret_libstdcpp;
