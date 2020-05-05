@@ -20,6 +20,7 @@
 #include <lv2lint.h>
 
 #include <lv2/lv2plug.in/ns/ext/event/event.h>
+#include <lv2/lv2plug.in/ns/ext/urid/urid.h>
 #include <lv2/lv2plug.in/ns/ext/morph/morph.h>
 #include <lv2/lv2plug.in/ns/ext/port-groups/port-groups.h>
 #include <lv2/lv2plug.in/ns/extensions/units/units.h>
@@ -336,6 +337,32 @@ _test_range(app_t *app)
 }
 
 static const ret_t *
+_test_atom_port(app_t *app)
+{
+	static const ret_t ret_atom_port_requires_urid_map = {
+		.lnt = LINT_FAIL,
+		.msg = "atom:AtomPort requires urid:map feature",
+		.uri = LV2_URID__map,
+		.dsc = NULL
+	};
+
+	const ret_t *ret = NULL;
+
+	if(lilv_port_is_a(app->plugin, app->port, app->uris.atom_AtomPort))
+	{
+		const bool has_urid_map = lilv_plugin_has_feature(app->plugin,
+			app->uris.urid_map);
+
+		if(!has_urid_map)
+		{
+			ret = &ret_atom_port_requires_urid_map;
+		}
+	}
+
+	return ret;
+}
+
+static const ret_t *
 _test_event_port(app_t *app)
 {
 	static const ret_t ret_event_port_deprecated = {
@@ -590,6 +617,7 @@ static const test_t tests [] = {
 	{"Maximum",        _test_maximum},
 	{"Range",          _test_range},
 	{"Event Port",     _test_event_port},
+	{"Atom Port",      _test_atom_port},
 	{"Morph Port",     _test_morph_port},
 	{"Comment",        _test_comment},
 	{"Group",          _test_group},

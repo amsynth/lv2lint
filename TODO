@@ -1,5 +1,4 @@
 * atom
-	* Check whether plugin requires urid:map
 	* Check for lv2:control port designations
 
 * dynmanifest
@@ -10,9 +9,6 @@
 
 * lv2core
 	* TODO
-
-* midi
-	* Check whether plugin requires urid:map
 
 * morph
 	* Implement dynamic part of it
@@ -25,7 +21,6 @@
 
 * patch
 	* Check whether plugin properly handles patch:Get/Set/Put messages
-	* Check whether plugin requires urid:map
 	* Check whether all patch:writables are initialized in state:state with
 		enabled state:loadDefaultState
 
