@@ -26,6 +26,54 @@
 #include <lv2/lv2plug.in/ns/extensions/ui/ui.h>
 
 static const ret_t *
+_test_lv2_path(app_t *app)
+{
+	static const ret_t ret_no_ui_class = {
+		.lnt = LINT_FAIL,
+		.msg = "failed to find ui:X11UI's label with LV2_PATH='%s'",
+		.uri = LV2_UI__X11UI,
+		.dsc = "You likely have a borked LV2_PATH, make sure the whole LV2 spec\n"
+			"is part of your LV2_PATH."
+	},
+	ret_no_plugin_class = {
+		.lnt = LINT_FAIL,
+		.msg = "failed to find core:InstrumentPlugin's label with LV2_PATH='%s'",
+		.uri = LV2_CORE__InstrumentPlugin,
+		.dsc = "You likely have a borked LV2_PATH, make sure the whole LV2 spec\n"
+			"is part of your LV2_PATH."
+	};
+
+	const ret_t *ret = NULL;
+
+	LilvNode *ui_class_node = lilv_world_get(app->world,
+		app->uris.ui_X11UI, app->uris.rdfs_label, NULL);
+	LilvNode *plugin_class_node = lilv_world_get(app->world,
+		app->uris.lv2_InstrumentPlugin, app->uris.rdfs_label, NULL);
+
+	if(!ui_class_node)
+	{
+		*app->urn = strdup(getenv("LV2_PATH"));
+		ret = &ret_no_ui_class;
+	}
+	else if(!plugin_class_node)
+	{
+		*app->urn = strdup(getenv("LV2_PATH"));
+		ret = &ret_no_plugin_class;
+	}
+
+	if(ui_class_node)
+	{
+		lilv_node_free(ui_class_node);
+	}
+	if(plugin_class_node)
+	{
+		lilv_node_free(plugin_class_node);
+	}
+
+	return ret;
+}
+
+static const ret_t *
 _test_instantiation(app_t *app)
 {
 	static const ret_t ret_instantiation = {
@@ -1528,6 +1576,7 @@ _test_patch(app_t *app)
 }
 
 static const test_t tests [] = {
+	{"LV2_PATH",        _test_lv2_path},
 	{"Instantiation",   _test_instantiation},
 #ifdef ENABLE_ELF_TESTS
 	{"Symbols",         _test_symbols},

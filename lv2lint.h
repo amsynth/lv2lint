@@ -177,6 +177,7 @@ struct _app_t {
 		LilvNode *lv2_hardRTCapable;
 		LilvNode *lv2_documentation;
 		LilvNode *lv2_sampleRate;
+		LilvNode *lv2_InstrumentPlugin;
 
 		LilvNode *atom_AtomPort;
 		LilvNode *atom_Bool;

@@ -119,6 +119,7 @@ _map_uris(app_t *app)
 	app->uris.lv2_hardRTCapable = lilv_new_uri(app->world, LV2_CORE__hardRTCapable);
 	app->uris.lv2_documentation = lilv_new_uri(app->world, LV2_CORE__documentation);
 	app->uris.lv2_sampleRate = lilv_new_uri(app->world, LV2_CORE__sampleRate);
+	app->uris.lv2_InstrumentPlugin = lilv_new_uri(app->world, LV2_CORE__InstrumentPlugin);
 
 	app->uris.atom_AtomPort = lilv_new_uri(app->world, LV2_ATOM__AtomPort);
 	app->uris.atom_Bool = lilv_new_uri(app->world, LV2_ATOM__Bool);
@@ -257,6 +258,7 @@ _unmap_uris(app_t *app)
 	lilv_node_free(app->uris.lv2_hardRTCapable);
 	lilv_node_free(app->uris.lv2_documentation);
 	lilv_node_free(app->uris.lv2_sampleRate);
+	lilv_node_free(app->uris.lv2_InstrumentPlugin);
 
 	lilv_node_free(app->uris.atom_AtomPort);
 	lilv_node_free(app->uris.atom_Bool);
