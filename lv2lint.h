@@ -55,7 +55,7 @@ typedef enum _ansi_color_t {
 	ANSI_COLOR_MAX
 } ansi_color_t;
 
-const char *colors [2][ANSI_COLOR_MAX];
+extern const char *colors [2][ANSI_COLOR_MAX];
 
 typedef union _var_t var_t;
 typedef struct _urid_t urid_t;
