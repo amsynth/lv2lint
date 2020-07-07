@@ -534,6 +534,7 @@ _usage(char **argv)
 		"   [-d]                         show verbose test item documentation\n"
 		"   [-I] INCLUDE_DIR             use include directory to search for plugins"
 		                                 " (can be used multiple times)\n"
+		"   [-t] TEST_PATTERN            test name pattern (shell wildcards) to whitelist\n"
 #ifdef ENABLE_ELF_TESTS
 		"   [-s] SYMBOL_PATTERN          symbol pattern (shell wildcards) to whitelist"
 		                                 " (can be used multiple times)\n"
@@ -963,6 +964,79 @@ _free_include_dirs(app_t *app)
 	}
 }
 
+static void
+_append_whitelist_test(app_t *app, char *whitelist_test)
+{
+	char **whitelist_tests = realloc(app->whitelist_tests,
+		(app->n_whitelist_tests + 1) * sizeof(const char *));
+	if(!whitelist_tests)
+	{
+		return;
+	}
+
+	app->whitelist_tests = whitelist_tests;
+
+	size_t len = strlen(whitelist_test) + 1;
+
+	char *dst = malloc(len);
+
+	if(dst)
+	{
+		app->whitelist_tests[app->n_whitelist_tests] = dst;
+		snprintf(app->whitelist_tests[app->n_whitelist_tests], len, "%s", whitelist_test);
+
+		app->n_whitelist_tests++;
+	}
+}
+
+static void
+_free_whitelist_tests(app_t *app)
+{
+	for(unsigned i = 0; i < app->n_whitelist_tests; i++)
+	{
+		char *whitelist_test = app->whitelist_tests ? app->whitelist_tests[i] : NULL;
+
+		if(!whitelist_test)
+		{
+			continue;
+		}
+
+		free(whitelist_test);
+	}
+
+	if(app->whitelist_tests)
+	{
+		free(app->whitelist_tests);
+	}
+}
+
+bool
+lv2lint_test_is_whitelisted(app_t *app, const test_t *test)
+{
+	for(unsigned j = 0; j < app->n_whitelist_tests; j++)
+	{
+		char *whitelist_test = app->whitelist_tests
+			? app->whitelist_tests[j]
+			: NULL;
+
+		if(!whitelist_test)
+		{
+			continue;
+		}
+
+#if defined(HAS_FNMATCH)
+		if(fnmatch(whitelist_test, test->id, FNM_CASEFOLD | FNM_EXTMATCH) == 0)
+#else
+		if(strcasecmp(whitelist_test, test->id) == 0)
+#endif
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 #ifdef ENABLE_ELF_TESTS
 static void
 _append_whitelist_symbol(app_t *app, char *whitelist_symbol)
@@ -1086,7 +1160,7 @@ main(int argc, char **argv)
 #endif
 
 	int c;
-	while( (c = getopt(argc, argv, "vhqdM:S:E:I:"
+	while( (c = getopt(argc, argv, "vhqdM:S:E:I:t:"
 #ifdef ENABLE_ONLINE_TESTS
 		"omg:"
 #endif
@@ -1111,6 +1185,9 @@ main(int argc, char **argv)
 				break;
 			case 'I':
 				_append_include_dir(&app, optarg);
+				break;
+			case 't':
+				_append_whitelist_test(&app, optarg);
 				break;
 #ifdef ENABLE_ELF_TESTS
 			case 's':
@@ -1726,6 +1803,7 @@ main(int argc, char **argv)
 	_unmap_uris(&app);
 	_free_urids(&app);
 	_free_include_dirs(&app);
+	_free_whitelist_tests(&app);
 #ifdef ENABLE_ELF_TESTS
 	_free_whitelist_symbols(&app);
 	_free_whitelist_libs(&app);

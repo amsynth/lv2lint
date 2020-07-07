@@ -130,6 +130,8 @@ struct _app_t {
 	char **whitelist_symbols;
 	unsigned n_whitelist_libs;
 	char **whitelist_libs;
+	unsigned n_whitelist_tests;
+	char **whitelist_tests;
 	bool atty;
 	bool debug;
 	bool quiet;
@@ -324,5 +326,8 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 
 lint_t
 lv2lint_extract(app_t *app, const ret_t *ret);
+
+bool
+lv2lint_test_is_whitelisted(app_t *app, const test_t *test);
 
 #endif

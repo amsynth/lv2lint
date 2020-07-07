@@ -380,10 +380,10 @@ _test_unit(app_t *app)
 }
 
 static const test_t tests [] = {
-	{"Label",   _test_label},
-	{"Comment", _test_comment},
-	{"Range",   _test_range},
-	{"Unit",    _test_unit},
+	{"Parameter Label",   _test_label},
+	{"Parameter Comment", _test_comment},
+	{"Parameter Range",   _test_range},
+	{"Parameter Unit",    _test_unit},
 	//TODO scalePoint
 };
 
@@ -405,7 +405,7 @@ test_parameter(app_t *app)
 
 		res->urn = NULL;
 		app->urn = &res->urn;
-		res->ret = test->cb(app);
+		res->ret = lv2lint_test_is_whitelisted(app, test) ? NULL : test->cb(app);
 		const lint_t lnt = lv2lint_extract(app, res->ret);
 		if(lnt & app->show)
 		{

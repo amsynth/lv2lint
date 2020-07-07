@@ -484,18 +484,18 @@ _test_ui_url(app_t *app)
 
 static const test_t tests [] = {
 #ifdef ENABLE_ELF_TESTS
-	{"Symbols",          _test_symbols},
+	{"UI Symbols",          _test_symbols},
 #endif
-	{"Instance Access",  _test_instance_access},
-	{"Data Access",      _test_data_access},
-	{"Mixed DSP/UI",     _test_mixed},
-	//{"UI Binary",        _test_binary}, FIXME lilv does not support lv2:binary for UIs, yet
-	{"UI SO Name",       _test_resident},
-	{"Extension Data",   _test_extension_data},
-	{"Idle Interface",   _test_idle_interface},
-	{"Show Interface",   _test_show_interface},
-	{"Resize Interface", _test_resize_interface},
-	{"Toolkit",          _test_toolkit},
+	{"UI Instance Access",  _test_instance_access},
+	{"UI Data Access",      _test_data_access},
+	{"UI Mixed DSP/UI",     _test_mixed},
+	//{"UI Binary",           _test_binary}, FIXME lilv does not support lv2:binary for UIs, yet
+	{"UI SOName",           _test_resident},
+	{"UI Extension Data",   _test_extension_data},
+	{"UI Idle Interface",   _test_idle_interface},
+	{"UI Show Interface",   _test_show_interface},
+	{"UI Resize Interface", _test_resize_interface},
+	{"UI Toolkit",          _test_toolkit},
 #ifdef ENABLE_ONLINE_TESTS
 	{"UI URL",           _test_ui_url},
 #endif
@@ -586,7 +586,7 @@ test_ui(app_t *app)
 
 		res->urn = NULL;
 		app->urn = &res->urn;
-		res->ret = test->cb(app);
+		res->ret = lv2lint_test_is_whitelisted(app, test) ? NULL : test->cb(app);
 		const lint_t lnt = lv2lint_extract(app, res->ret);
 		if(lnt & app->show)
 		{

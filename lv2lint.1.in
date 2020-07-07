@@ -1,4 +1,4 @@
-.TH LV2LINT "1" "Apr 13, 2020"
+.TH LV2LINT "1" "Jul 07, 2020"
 
 .SH NAME
 lv2lint \- an LV2 lintian
@@ -66,6 +66,11 @@ Show verbose test item documentation
 @ELF_TESTS@\fB\-l\fR LIBRARY_PATTERN
 @ELF_TESTS@.IP
 @ELF_TESTS@Library pattern (shell wildcard) to whitelist (can be used multiple times)
+
+.HP
+\fB\-t\fR TEST_PATTERN
+.IP
+Test name pattern (shell wildcards) to whitelist (can be used multiple times)
 
 .HP
 \fB\-I\fR INCLUDE_DIR

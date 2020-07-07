@@ -1576,42 +1576,42 @@ _test_patch(app_t *app)
 }
 
 static const test_t tests [] = {
-	{"LV2_PATH",        _test_lv2_path},
-	{"Instantiation",   _test_instantiation},
+	{"Plugin LV2_PATH",        _test_lv2_path},
+	{"Plugin Instantiation",   _test_instantiation},
 #ifdef ENABLE_ELF_TESTS
-	{"Symbols",         _test_symbols},
-	{"Linking",         _test_linking},
+	{"Plugin Symbols",         _test_symbols},
+	{"Plugin Linking",         _test_linking},
 #endif
-	{"Verification",    _test_verification},
-	{"Name",            _test_name},
-	{"License",         _test_license},
-	{"Author Name",     _test_author_name},
-	{"Author Email",    _test_author_email},
-	{"Author Homepage", _test_author_homepage},
-	{"Version Minor",   _test_version_minor},
-	{"Version Micro",   _test_version_micro},
-	{"Project",         _test_project},
-	{"Class",           _test_class},
-	{"Features",        _test_features},
-	{"Extension Data",  _test_extensions},
-	{"Worker",          _test_worker},
-	{"Options Iface",   _test_options_iface},
-	{"Options Feature", _test_options_feature},
-	{"URI-Map",         _test_uri_map},
-	{"State",           _test_state},
-	{"Comment",         _test_comment},
-	{"Shortdesc",       _test_shortdesc},
-	{"Inline Display",  _test_idisp},
-	{"Hard RT Capable", _test_hard_rt_capable},
-	{"In Place Broken", _test_in_place_broken},
-	{"Is Live",         _test_is_live},
-	//{"Bounded Block",   _test_bounded_block_length}, //TODO check for opts:opt
-	{"Fixed Block",     _test_fixed_block_length},
-	{"PowerOf2 Block",  _test_power_of_2_block_length},
+	{"Plugin Verification",    _test_verification},
+	{"Plugin Name",            _test_name},
+	{"Plugin License",         _test_license},
+	{"Plugin Author Name",     _test_author_name},
+	{"Plugin Author Email",    _test_author_email},
+	{"Plugin Author Homepage", _test_author_homepage},
+	{"Plugin Version Minor",   _test_version_minor},
+	{"Plugin Version Micro",   _test_version_micro},
+	{"Plugin Project",         _test_project},
+	{"Plugin Class",           _test_class},
+	{"Plugin Features",        _test_features},
+	{"Plugin Extension Data",  _test_extensions},
+	{"Plugin Worker",          _test_worker},
+	{"Plugin Options Iface",   _test_options_iface},
+	{"Plugin Options Feature", _test_options_feature},
+	{"Plugin URI-Map",         _test_uri_map},
+	{"Plugin State",           _test_state},
+	{"Plugin Comment",         _test_comment},
+	{"Plugin Shortdesc",       _test_shortdesc},
+	{"Plugin Inline Display",  _test_idisp},
+	{"Plugin Hard RT Capable", _test_hard_rt_capable},
+	{"Plugin In Place Broken", _test_in_place_broken},
+	{"Plugin Is Live",         _test_is_live},
+	//{"Plugin Bounded Block",   _test_bounded_block_length}, //TODO check for opts:opt
+	{"Plugin Fixed Block",     _test_fixed_block_length},
+	{"Plugin PowerOf2 Block",  _test_power_of_2_block_length},
 #ifdef ENABLE_ONLINE_TESTS
-	{"Plugin URL",      _test_plugin_url},
+	{"Plugin URL",             _test_plugin_url},
 #endif
-	{"Patch",           _test_patch},
+	{"Plugin Patch",           _test_patch},
 };
 
 static const unsigned tests_n = sizeof(tests) / sizeof(test_t);
@@ -1635,7 +1635,7 @@ test_plugin(app_t *app)
 
 		res->urn = NULL;
 		app->urn = &res->urn;
-		res->ret = test->cb(app);
+		res->ret = lv2lint_test_is_whitelisted(app, test) ? NULL : test->cb(app);
 		const lint_t lnt = lv2lint_extract(app, res->ret);
 		if(lnt & app->show)
 		{

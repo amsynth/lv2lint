@@ -610,19 +610,19 @@ _test_symbol(app_t *app)
 }
 
 static const test_t tests [] = {
-	{"Class",          _test_class},
-	{"PortProperties", _test_properties},
-	{"Default",        _test_default},
-	{"Minimum",        _test_minimum},
-	{"Maximum",        _test_maximum},
-	{"Range",          _test_range},
-	{"Event Port",     _test_event_port},
-	{"Atom Port",      _test_atom_port},
-	{"Morph Port",     _test_morph_port},
-	{"Comment",        _test_comment},
-	{"Group",          _test_group},
-	{"Units",          _test_unit},
-	{"Symbol",         _test_symbol},
+	{"Port Class",          _test_class},
+	{"Port Properties",     _test_properties},
+	{"Port Default",        _test_default},
+	{"Port Minimum",        _test_minimum},
+	{"Port Maximum",        _test_maximum},
+	{"Port Range",          _test_range},
+	{"Port Event Port",     _test_event_port},
+	{"Port Atom Port",      _test_atom_port},
+	{"Port Morph Port",     _test_morph_port},
+	{"Port Comment",        _test_comment},
+	{"Port Group",          _test_group},
+	{"Port Units",          _test_unit},
+	{"Port Symbol",         _test_symbol},
 };
 
 static const unsigned tests_n = sizeof(tests) / sizeof(test_t);
@@ -643,7 +643,7 @@ test_port(app_t *app)
 
 		res->urn = NULL;
 		app->urn = &res->urn;
-		res->ret = test->cb(app);
+		res->ret = lv2lint_test_is_whitelisted(app, test) ? NULL : test->cb(app);
 		const lint_t lnt = lv2lint_extract(app, res->ret);
 		if(lnt & app->show)
 		{
