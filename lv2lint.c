@@ -534,8 +534,10 @@ _usage(char **argv)
 		"   [-d]                         show verbose test item documentation\n"
 		"   [-I] INCLUDE_DIR             use include directory to search for plugins"
 		                                 " (can be used multiple times)\n"
-		"   [-u] URI_PATTERN             URI pattern (shell wildcards) for whitelist patterns\n"
-		"   [-t] TEST_PATTERN            test name pattern (shell wildcards) to whitelist\n"
+		"   [-u] URI_PATTERN             URI pattern (shell wildcards) to merge with whitelist patterns"
+		                                 " (can be used multiple times)\n"
+		"   [-t] TEST_PATTERN            test name pattern (shell wildcards) to whitelist"
+		                                 " (can be used multiple times)\n"
 #ifdef ENABLE_ELF_TESTS
 		"   [-s] SYMBOL_PATTERN          symbol pattern (shell wildcards) to whitelist"
 		                                 " (can be used multiple times)\n"

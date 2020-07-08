@@ -68,6 +68,12 @@ Show verbose test item documentation
 @ELF_TESTS@Library pattern (shell wildcard) to whitelist (can be used multiple times)
 
 .HP
+\fB\-u\fR URI_PATTERN
+.IP
+URI pattern (shell wildcards) to merge with test, symbol and library whitelist
+patterns (can be used multiple times)
+
+.HP
 \fB\-t\fR TEST_PATTERN
 .IP
 Test name pattern (shell wildcards) to whitelist (can be used multiple times)
