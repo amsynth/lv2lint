@@ -58,6 +58,7 @@ typedef enum _ansi_color_t {
 extern const char *colors [2][ANSI_COLOR_MAX];
 
 typedef union _var_t var_t;
+typedef struct _white_t white_t;
 typedef struct _urid_t urid_t;
 typedef struct _app_t app_t;
 typedef struct _test_t test_t;
@@ -72,6 +73,12 @@ typedef enum _lint_t {
 	LINT_FAIL     = (1 << 3),
 	LINT_PASS     = (1 << 4)
 } lint_t;
+
+struct _white_t {
+	const char *uri;
+	const char *pattern;
+	white_t *next;
+};
 
 struct _urid_t {
 	char *uri;
@@ -100,6 +107,7 @@ union _var_t {
 
 struct _app_t {
 	LilvWorld *world;
+	const char *plugin_uri;
 	const LilvPlugin *plugin;
 	LilvInstance *instance;
 	const LV2UI_Descriptor *descriptor;
@@ -130,8 +138,7 @@ struct _app_t {
 	char **whitelist_symbols;
 	unsigned n_whitelist_libs;
 	char **whitelist_libs;
-	unsigned n_whitelist_tests;
-	char **whitelist_tests;
+	white_t *whitelist_tests;
 	bool atty;
 	bool debug;
 	bool quiet;
@@ -328,6 +335,6 @@ lint_t
 lv2lint_extract(app_t *app, const ret_t *ret);
 
 bool
-lv2lint_test_is_whitelisted(app_t *app, const test_t *test);
+lv2lint_test_is_whitelisted(app_t *app, const char *uri, const test_t *test);
 
 #endif

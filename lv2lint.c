@@ -534,6 +534,7 @@ _usage(char **argv)
 		"   [-d]                         show verbose test item documentation\n"
 		"   [-I] INCLUDE_DIR             use include directory to search for plugins"
 		                                 " (can be used multiple times)\n"
+		"   [-u] URI_PATTERN             URI pattern (shell wildcards) for whitelist patterns\n"
 		"   [-t] TEST_PATTERN            test name pattern (shell wildcards) to whitelist\n"
 #ifdef ENABLE_ELF_TESTS
 		"   [-s] SYMBOL_PATTERN          symbol pattern (shell wildcards) to whitelist"
@@ -868,6 +869,82 @@ _state_set_value(const char *symbol __unused, void *data __unused,
 	//FIXME
 }
 
+static white_t *
+_white_append(white_t *parent, const char *uri, const char *pattern)
+{
+	white_t *white = calloc(1, sizeof(white_t));
+
+	if(!white)
+	{
+		return parent;
+	}
+
+	white->uri = uri;
+	white->pattern = pattern;
+	white->next = parent;
+
+	return white;
+}
+
+static white_t *
+_white_remove(white_t *parent)
+{
+	white_t *next = NULL;
+
+	if(parent)
+	{
+		next = parent->next;
+		free(parent);
+	}
+
+	return next;
+}
+
+static white_t *
+_white_free(white_t *white)
+{
+	while(white)
+	{
+		white = _white_remove(white);
+	}
+
+	return NULL;
+}
+
+static bool
+_pattern_match(const char *pattern, const char *str)
+{
+	if(pattern == NULL)
+	{
+		return true;
+	}
+
+#if defined(HAS_FNMATCH)
+	if(fnmatch(pattern, str, FNM_CASEFOLD | FNM_EXTMATCH) == 0)
+#else
+	if(strcasecmp(pattern, str) == 0)
+#endif
+	{
+		return true;
+	}
+
+	return false;
+}
+
+static bool
+_white_match(white_t *white, const char *uri, const char *str)
+{
+	for( ; white; white = white->next)
+	{
+		if(_pattern_match(white->uri, uri) && _pattern_match(white->pattern, str))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void
 _append_include_dir(app_t *app, char *include_dir)
 {
@@ -965,76 +1042,21 @@ _free_include_dirs(app_t *app)
 }
 
 static void
-_append_whitelist_test(app_t *app, char *whitelist_test)
+_append_whitelist_test(app_t *app, const char *uri, const char *pattern)
 {
-	char **whitelist_tests = realloc(app->whitelist_tests,
-		(app->n_whitelist_tests + 1) * sizeof(const char *));
-	if(!whitelist_tests)
-	{
-		return;
-	}
-
-	app->whitelist_tests = whitelist_tests;
-
-	size_t len = strlen(whitelist_test) + 1;
-
-	char *dst = malloc(len);
-
-	if(dst)
-	{
-		app->whitelist_tests[app->n_whitelist_tests] = dst;
-		snprintf(app->whitelist_tests[app->n_whitelist_tests], len, "%s", whitelist_test);
-
-		app->n_whitelist_tests++;
-	}
+	app->whitelist_tests = _white_append(app->whitelist_tests, uri, pattern);
 }
 
 static void
 _free_whitelist_tests(app_t *app)
 {
-	for(unsigned i = 0; i < app->n_whitelist_tests; i++)
-	{
-		char *whitelist_test = app->whitelist_tests ? app->whitelist_tests[i] : NULL;
-
-		if(!whitelist_test)
-		{
-			continue;
-		}
-
-		free(whitelist_test);
-	}
-
-	if(app->whitelist_tests)
-	{
-		free(app->whitelist_tests);
-	}
+	app->whitelist_tests = _white_free(app->whitelist_tests);
 }
 
 bool
-lv2lint_test_is_whitelisted(app_t *app, const test_t *test)
+lv2lint_test_is_whitelisted(app_t *app, const char *uri, const test_t *test)
 {
-	for(unsigned j = 0; j < app->n_whitelist_tests; j++)
-	{
-		char *whitelist_test = app->whitelist_tests
-			? app->whitelist_tests[j]
-			: NULL;
-
-		if(!whitelist_test)
-		{
-			continue;
-		}
-
-#if defined(HAS_FNMATCH)
-		if(fnmatch(whitelist_test, test->id, FNM_CASEFOLD | FNM_EXTMATCH) == 0)
-#else
-		if(strcasecmp(whitelist_test, test->id) == 0)
-#endif
-		{
-			return true;
-		}
-	}
-
-	return false;
+	return _white_match(app->whitelist_tests, uri, test->id);
 }
 
 #ifdef ENABLE_ELF_TESTS
@@ -1135,6 +1157,7 @@ int
 main(int argc, char **argv)
 {
 	static app_t app;
+	const char *uri = NULL;
 	app.atty = isatty(1);
 	app.show = LINT_FAIL | LINT_WARN; // always report failed and warned tests
 	app.mask = LINT_FAIL; // always fail at failed tests
@@ -1160,7 +1183,7 @@ main(int argc, char **argv)
 #endif
 
 	int c;
-	while( (c = getopt(argc, argv, "vhqdM:S:E:I:t:"
+	while( (c = getopt(argc, argv, "vhqdM:S:E:I:u:t:"
 #ifdef ENABLE_ONLINE_TESTS
 		"omg:"
 #endif
@@ -1186,8 +1209,11 @@ main(int argc, char **argv)
 			case 'I':
 				_append_include_dir(&app, optarg);
 				break;
+			case 'u':
+				uri = optarg;
+				break;
 			case 't':
-				_append_whitelist_test(&app, optarg);
+				_append_whitelist_test(&app, uri, optarg);
 				break;
 #ifdef ENABLE_ELF_TESTS
 			case 's':
@@ -1508,8 +1534,8 @@ main(int argc, char **argv)
 	{
 		for(int i=optind; i<argc; i++)
 		{
-			const char *plugin_uri = argv[i];
-			LilvNode *plugin_uri_node = lilv_new_uri(app.world, plugin_uri);
+			app.plugin_uri = argv[i];
+			LilvNode *plugin_uri_node = lilv_new_uri(app.world, app.plugin_uri);
 			if(plugin_uri_node)
 			{
 				app.plugin = lilv_plugins_get_by_uri(plugins, plugin_uri_node);
@@ -1721,7 +1747,7 @@ main(int argc, char **argv)
 							}
 
 							if(asprintf(&subj, "[%s "LV2LINT_VERSION"] bug report for <%s> version %u.%u",
-								argv[0], plugin_uri, minor_version, micro_version) != -1)
+								argv[0], app.plugin_uri, minor_version, micro_version) != -1)
 							{
 								char *subj_esc = curl_easy_escape(app.curl, subj, strlen(subj));
 								if(subj_esc)

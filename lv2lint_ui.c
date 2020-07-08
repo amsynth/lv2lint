@@ -586,7 +586,9 @@ test_ui(app_t *app)
 
 		res->urn = NULL;
 		app->urn = &res->urn;
-		res->ret = lv2lint_test_is_whitelisted(app, test) ? NULL : test->cb(app);
+		res->ret = lv2lint_test_is_whitelisted(app, ui_uri, test)
+			? NULL
+			: test->cb(app);
 		const lint_t lnt = lv2lint_extract(app, res->ret);
 		if(lnt & app->show)
 		{
