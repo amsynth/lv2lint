@@ -403,11 +403,10 @@ test_parameter(app_t *app)
 		const test_t *test = &tests[i];
 		res_t *res = &rets[i];
 
+		res->is_whitelisted = lv2lint_test_is_whitelisted(app, app->plugin_uri, test);
 		res->urn = NULL;
 		app->urn = &res->urn;
-		res->ret = lv2lint_test_is_whitelisted(app, app->plugin_uri, test)
-			? NULL
-			: test->cb(app);
+		res->ret = test->cb(app);
 		const lint_t lnt = lv2lint_extract(app, res->ret);
 		if(lnt & app->show)
 		{

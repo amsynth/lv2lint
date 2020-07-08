@@ -2038,17 +2038,25 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 		}
 
 		const lint_t lnt = lv2lint_extract(app, ret);
-		switch(lnt & app->show)
+
+		if(res->is_whitelisted)
 		{
-			case LINT_FAIL:
-				_report_body(app, "FAIL", ANSI_COLOR_RED, test, ret, repl, docu);
-				break;
-			case LINT_WARN:
-				_report_body(app, "WARN", ANSI_COLOR_YELLOW, test, ret, repl, docu);
-				break;
-			case LINT_NOTE:
-				_report_body(app, "NOTE", ANSI_COLOR_CYAN, test, ret, repl, docu);
-				break;
+			_report_body(app, "SKIP", ANSI_COLOR_GREEN, test, ret, repl, docu);
+		}
+		else
+		{
+			switch(lnt & app->show)
+			{
+				case LINT_FAIL:
+					_report_body(app, "FAIL", ANSI_COLOR_RED, test, ret, repl, docu);
+					break;
+				case LINT_WARN:
+					_report_body(app, "WARN", ANSI_COLOR_YELLOW, test, ret, repl, docu);
+					break;
+				case LINT_NOTE:
+					_report_body(app, "NOTE", ANSI_COLOR_CYAN, test, ret, repl, docu);
+					break;
+			}
 		}
 
 		if(docu)
@@ -2059,6 +2067,11 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 		if(repl)
 		{
 			free(repl);
+		}
+
+		if(res->is_whitelisted)
+		{
+			return; // short-circuit here
 		}
 
 		if(flag && *flag)

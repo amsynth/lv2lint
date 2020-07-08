@@ -95,6 +95,7 @@ struct _ret_t {
 struct _res_t {
 	const ret_t *ret;
 	char *urn;
+	bool is_whitelisted;
 };
 
 union _var_t {
