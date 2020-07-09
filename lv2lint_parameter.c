@@ -379,12 +379,70 @@ _test_unit(app_t *app)
 	return ret;
 }
 
+static const ret_t *
+_test_scale_points(app_t *app)
+{
+	static const ret_t ret_not_unique_val = {
+		.lnt = LINT_FAIL,
+		.msg = "lv2:scalePoint has not unique values",
+		.uri = LV2_CORE__scalePoint,
+		.dsc = "Scale point values SHOULD be unique."
+	};
+	const ret_t *ret = NULL;
+
+	LilvNodes *sps = lilv_world_find_nodes(app->world, app->parameter,
+		app->uris.lv2_scalePoint, NULL);
+	if(sps)
+	{
+		LILV_FOREACH(nodes, iter1, sps)
+		{
+			const LilvNode *sp1 = lilv_nodes_get(sps, iter1);
+			LilvNode *val1 = lilv_world_get(app->world, sp1, app->uris.rdf_value, NULL);
+			LilvNode *lbl1 = lilv_world_get(app->world, sp1, app->uris.rdfs_label, NULL);
+
+			LILV_FOREACH(nodes, iter2, sps)
+			{
+				const LilvNode *sp2 = lilv_nodes_get(sps, iter2);
+
+				LilvNode *lbl2 = lilv_world_get(app->world, sp2, app->uris.rdfs_label, NULL);
+				if(lilv_node_equals(lbl1, lbl2))
+				{
+					lilv_node_free(lbl2);
+					continue;
+				}
+				lilv_node_free(lbl2);
+
+				LilvNode *val2 = lilv_world_get(app->world, sp2, app->uris.rdf_value, NULL);
+				if(lilv_node_equals(val1, val2))
+				{
+					ret = &ret_not_unique_val;
+					lilv_node_free(val2);
+					break;
+				}
+				lilv_node_free(val2);
+			}
+
+			lilv_node_free(val1);
+			lilv_node_free(lbl1);
+
+			if(ret)
+			{
+				break;
+			}
+		}
+
+		lilv_nodes_free(sps);
+	}
+
+	return ret;
+}
+
 static const test_t tests [] = {
-	{"Parameter Label",   _test_label},
-	{"Parameter Comment", _test_comment},
-	{"Parameter Range",   _test_range},
-	{"Parameter Unit",    _test_unit},
-	//TODO scalePoint
+	{"Parameter Label",        _test_label},
+	{"Parameter Comment",      _test_comment},
+	{"Parameter Range",        _test_range},
+	{"Parameter Unit",         _test_unit},
+	{"Parameter Scale Points", _test_scale_points},
 };
 
 static const unsigned tests_n = sizeof(tests) / sizeof(test_t);

@@ -632,26 +632,26 @@ _test_scale_points(app_t *app)
 		LILV_FOREACH(scale_points, iter1, sps)
 		{
 			const LilvScalePoint *sp1 = lilv_scale_points_get(sps, iter1);
-			const LilvNode *lbl1 = lilv_scale_point_get_label(sp1);
 			const LilvNode *val1 = lilv_scale_point_get_value(sp1);
+			const LilvNode *lbl1 = lilv_scale_point_get_label(sp1);
 
 			LILV_FOREACH(scale_points, iter2, sps)
 			{
 				const LilvScalePoint *sp2 = lilv_scale_points_get(sps, iter2);
-				const LilvNode *lbl2 = lilv_scale_point_get_label(sp2);
-				const LilvNode *val2 = lilv_scale_point_get_value(sp2);
 
 				if(sp1 == sp2)
 				{
 					continue; // ignore self
 				}
 
+				const LilvNode *val2 = lilv_scale_point_get_value(sp2);
 				if(lilv_node_equals(val1, val2))
 				{
 					ret = &ret_not_unique_val;
 					break;
 				}
 
+				const LilvNode *lbl2 = lilv_scale_point_get_label(sp2);
 				if(lilv_node_equals(lbl1, lbl2))
 				{
 					ret = &ret_not_unique_lbl;

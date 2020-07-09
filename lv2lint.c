@@ -89,6 +89,7 @@ _map_uris(app_t *app)
 	app->uris.rdfs_subClassOf = lilv_new_uri(app->world, LILV_NS_RDFS"subClassOf");
 
 	app->uris.rdf_type = lilv_new_uri(app->world, LILV_NS_RDF"type");
+	app->uris.rdf_value = lilv_new_uri(app->world, LILV_NS_RDF"value");
 
 	app->uris.doap_description = lilv_new_uri(app->world, LILV_NS_DOAP"description");
 	app->uris.doap_license = lilv_new_uri(app->world, LILV_NS_DOAP"license");
@@ -120,6 +121,7 @@ _map_uris(app_t *app)
 	app->uris.lv2_documentation = lilv_new_uri(app->world, LV2_CORE__documentation);
 	app->uris.lv2_sampleRate = lilv_new_uri(app->world, LV2_CORE__sampleRate);
 	app->uris.lv2_InstrumentPlugin = lilv_new_uri(app->world, LV2_CORE__InstrumentPlugin);
+	app->uris.lv2_scalePoint = lilv_new_uri(app->world, LV2_CORE__scalePoint);
 
 	app->uris.atom_AtomPort = lilv_new_uri(app->world, LV2_ATOM__AtomPort);
 	app->uris.atom_Bool = lilv_new_uri(app->world, LV2_ATOM__Bool);
@@ -229,6 +231,7 @@ _unmap_uris(app_t *app)
 	lilv_node_free(app->uris.rdfs_subClassOf);
 
 	lilv_node_free(app->uris.rdf_type);
+	lilv_node_free(app->uris.rdf_value);
 
 	lilv_node_free(app->uris.doap_description);
 	lilv_node_free(app->uris.doap_license);
@@ -260,6 +263,7 @@ _unmap_uris(app_t *app)
 	lilv_node_free(app->uris.lv2_documentation);
 	lilv_node_free(app->uris.lv2_sampleRate);
 	lilv_node_free(app->uris.lv2_InstrumentPlugin);
+	lilv_node_free(app->uris.lv2_scalePoint);
 
 	lilv_node_free(app->uris.atom_AtomPort);
 	lilv_node_free(app->uris.atom_Bool);

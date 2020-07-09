@@ -157,6 +157,7 @@ struct _app_t {
 		LilvNode *rdfs_subClassOf;
 
 		LilvNode *rdf_type;
+		LilvNode *rdf_value;
 
 		LilvNode *doap_description;
 		LilvNode *doap_license;
@@ -188,6 +189,7 @@ struct _app_t {
 		LilvNode *lv2_documentation;
 		LilvNode *lv2_sampleRate;
 		LilvNode *lv2_InstrumentPlugin;
+		LilvNode *lv2_scalePoint;
 
 		LilvNode *atom_AtomPort;
 		LilvNode *atom_Bool;
