@@ -415,20 +415,20 @@ _test_author_email(app_t *app)
 {
 	static const ret_t ret_email_not_found = {
 		.lnt = LINT_WARN,
-		.msg = "foaf:email not found",
+		.msg = "foaf:mbox not found",
 		.uri = LV2_CORE__project,
 		.dsc = FOAF_DSC
 	},
 	ret_email_not_a_uri = {
 		.lnt = LINT_FAIL,
-		.msg = "foaf:email not a URI",
-		.uri = LILV_NS_FOAF"email",
+		.msg = "foaf:mbox not a URI",
+		.uri = LILV_NS_FOAF"mbox",
 		.dsc = FOAF_DSC
 	},
 	ret_email_empty = {
 		.lnt = LINT_FAIL,
-		.msg = "foaf:email empty",
-		.uri = LILV_NS_FOAF"email",
+		.msg = "foaf:mbox empty",
+		.uri = LILV_NS_FOAF"mbox",
 		.dsc = FOAF_DSC
 	};
 
