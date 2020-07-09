@@ -217,6 +217,7 @@ struct _app_t {
 		LilvNode *state_interface;
 		LilvNode *state_threadSafeRestore;
 		LilvNode *state_makePath;
+		LilvNode *state_freePath;
 
 		LilvNode *work_schedule;
 		LilvNode *work_interface;

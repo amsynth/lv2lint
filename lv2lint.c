@@ -149,6 +149,7 @@ _map_uris(app_t *app)
 	app->uris.state_interface = lilv_new_uri(app->world, LV2_STATE__interface);
 	app->uris.state_threadSafeRestore = lilv_new_uri(app->world, LV2_STATE_PREFIX"threadSafeRestore");
 	app->uris.state_makePath = lilv_new_uri(app->world, LV2_STATE__makePath);
+	app->uris.state_freePath = lilv_new_uri(app->world, LV2_STATE__freePath);
 
 	app->uris.work_schedule = lilv_new_uri(app->world, LV2_WORKER__schedule);
 	app->uris.work_interface = lilv_new_uri(app->world, LV2_WORKER__interface);
@@ -282,6 +283,7 @@ _unmap_uris(app_t *app)
 	lilv_node_free(app->uris.state_interface);
 	lilv_node_free(app->uris.state_threadSafeRestore);
 	lilv_node_free(app->uris.state_makePath);
+	lilv_node_free(app->uris.state_freePath);
 
 	lilv_node_free(app->uris.work_schedule);
 	lilv_node_free(app->uris.work_interface);
@@ -458,6 +460,15 @@ _mkpath(LV2_State_Make_Path_Handle instance __unused, const char *abstract_path)
 		absolute_path = NULL;
 
 	return absolute_path;
+}
+
+static void
+_freepath(LV2_State_Free_Path_Handle instance __unused, char *absolute_path)
+{
+	if(absolute_path)
+	{
+		free(absolute_path);
+	}
 }
 
 static LV2_Resize_Port_Status
@@ -1380,6 +1391,10 @@ main(int argc, char **argv)
 		.handle = &app,
 		.path = _mkpath
 	};
+	LV2_State_Free_Path freepath = {
+		.handle = &app,
+		.free_path = _freepath
+	};
 	LV2_Resize_Port_Resize rsz = {
 		.data = &app,
 		.resize = _resize
@@ -1482,6 +1497,10 @@ main(int argc, char **argv)
 		.URI = LV2_STATE__makePath,
 		.data = &mkpath
 	};
+	const LV2_Feature feat_freepath = {
+		.URI = LV2_STATE__freePath,
+		.data = &freepath
+	};
 	const LV2_Feature feat_rsz = {
 		.URI = LV2_RESIZE_PORT__resize,
 		.data = &rsz
@@ -1543,7 +1562,7 @@ main(int argc, char **argv)
 				app.plugin = lilv_plugins_get_by_uri(plugins, plugin_uri_node);
 				if(app.plugin)
 				{
-#define MAX_FEATURES 20
+#define MAX_FEATURES 21
 					const LV2_Feature *features [MAX_FEATURES];
 					bool requires_bounded_block_length = false;
 
@@ -1568,6 +1587,8 @@ main(int argc, char **argv)
 									features[f++] = &feat_log;
 								else if(lilv_node_equals(feature, app.uris.state_makePath))
 									features[f++] = &feat_mkpath;
+								else if(lilv_node_equals(feature, app.uris.state_freePath))
+									features[f++] = &feat_freepath;
 								else if(lilv_node_equals(feature, app.uris.rsz_resize))
 									features[f++] = &feat_rsz;
 								else if(lilv_node_equals(feature, app.uris.opts_options))
