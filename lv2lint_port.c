@@ -609,6 +609,68 @@ _test_symbol(app_t *app)
 	return ret;
 }
 
+static const ret_t *
+_test_scale_points(app_t *app)
+{
+	static const ret_t ret_not_unique_val = {
+		.lnt = LINT_FAIL,
+		.msg = "lv2:scalePoint has not unique values",
+		.uri = LV2_CORE__scalePoint,
+		.dsc = "Scale point values SHOULD be unique."
+	},
+	ret_not_unique_lbl = {
+		.lnt = LINT_WARN,
+		.msg = "lv2:scalePoint has not unique labels",
+		.uri = LV2_CORE__scalePoint,
+		.dsc = "Scale point labels SHOULD be unique."
+	};
+	const ret_t *ret = NULL;
+
+	LilvScalePoints *sps = lilv_port_get_scale_points(app->plugin, app->port);
+	if(sps)
+	{
+		LILV_FOREACH(scale_points, iter1, sps)
+		{
+			const LilvScalePoint *sp1 = lilv_scale_points_get(sps, iter1);
+			const LilvNode *lbl1 = lilv_scale_point_get_label(sp1);
+			const LilvNode *val1 = lilv_scale_point_get_value(sp1);
+
+			LILV_FOREACH(scale_points, iter2, sps)
+			{
+				const LilvScalePoint *sp2 = lilv_scale_points_get(sps, iter2);
+				const LilvNode *lbl2 = lilv_scale_point_get_label(sp2);
+				const LilvNode *val2 = lilv_scale_point_get_value(sp2);
+
+				if(sp1 == sp2)
+				{
+					continue; // ignore self
+				}
+
+				if(lilv_node_equals(val1, val2))
+				{
+					ret = &ret_not_unique_val;
+					break;
+				}
+
+				if(lilv_node_equals(lbl1, lbl2))
+				{
+					ret = &ret_not_unique_lbl;
+					break;
+				}
+			}
+
+			if(ret)
+			{
+				break;
+			}
+		}
+
+		lilv_scale_points_free(sps);
+	}
+
+	return ret;
+}
+
 static const test_t tests [] = {
 	{"Port Class",          _test_class},
 	{"Port Properties",     _test_properties},
@@ -623,6 +685,7 @@ static const test_t tests [] = {
 	{"Port Group",          _test_group},
 	{"Port Units",          _test_unit},
 	{"Port Symbol",         _test_symbol},
+	{"Port Scale Points",   _test_scale_points},
 };
 
 static const unsigned tests_n = sizeof(tests) / sizeof(test_t);

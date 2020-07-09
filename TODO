@@ -48,7 +48,7 @@
 * ui
 	* Actually instantiate UI
 
-* scalePoints
+* scalePoints (parameters)
 	* Check  for duplicate labels and/or values
 
 * ideas
