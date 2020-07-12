@@ -149,7 +149,7 @@ _test_fork(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const LilvNode* node = lilv_ui_get_binary_uri(app->ui);
+	const LilvNode* node = lilv_plugin_get_library_uri(app->plugin);
 	if(node && lilv_node_is_uri(node))
 	{
 		const char *uri = lilv_node_as_uri(node);
