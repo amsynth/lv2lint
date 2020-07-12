@@ -115,6 +115,7 @@ struct _app_t {
 	const LilvPort *port;
 	const LilvNode *parameter;
 	const LilvUI *ui;
+	const char *ui_uri;
 	LilvNodes *writables;
 	LilvNodes *readables;
 	const LV2_Worker_Interface *work_iface;
@@ -135,9 +136,7 @@ struct _app_t {
 	char **urn;
 	unsigned n_include_dirs;
 	char **include_dirs;
-	unsigned n_whitelist_symbols;
-	char **whitelist_symbols;
-	unsigned n_whitelist_libs;
+	white_t *whitelist_symbols;
 	white_t *whitelist_libs;
 	white_t *whitelist_tests;
 	bool atty;
@@ -318,7 +317,8 @@ test_url(app_t *app, const char *url);
 
 #ifdef ENABLE_ELF_TESTS
 bool
-test_visibility(app_t *app, const char *path, const char *description, char **symbols);
+test_visibility(app_t *app, const char *path, const char *uri,
+	const char *description, char **symbols);
 
 bool
 test_shared_libraries(app_t *app, const char *path, const char *uri,

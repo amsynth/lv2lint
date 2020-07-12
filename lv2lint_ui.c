@@ -59,7 +59,7 @@ _test_symbols(app_t *app)
 			if(path)
 			{
 				char *symbols = NULL;
-				if(!test_visibility(app, path, "lv2ui_descriptor", &symbols))
+				if(!test_visibility(app, path, app->ui_uri, "lv2ui_descriptor", &symbols))
 				{
 					*app->urn = symbols;
 					ret = &ret_symbols;
@@ -518,7 +518,7 @@ test_ui(app_t *app)
 	const LilvNode *ui_uri_node = lilv_ui_get_uri(app->ui);
 	const LilvNode *ui_binary_node = lilv_ui_get_binary_uri(app->ui);
 
-	const char *ui_uri = lilv_node_as_uri(ui_uri_node);
+	app->ui_uri = lilv_node_as_uri(ui_uri_node);
 	const char *ui_binary_uri = lilv_node_as_uri(ui_binary_node);
 	char *ui_binary_path = lilv_file_uri_parse(ui_binary_uri, NULL);
 
@@ -555,7 +555,7 @@ test_ui(app_t *app)
 		{
 			break; // sentinel
 		}
-		else if(!strcmp(ld->URI, ui_uri))
+		else if(!strcmp(ld->URI, app->ui_uri))
 		{
 			app->descriptor = ld;
 			break;
@@ -564,7 +564,7 @@ test_ui(app_t *app)
 
 	if(!app->descriptor)
 	{
-		fprintf(stderr, "Failed to find descriptor for <%s> in %s\n", ui_uri, ui_binary_path);
+		fprintf(stderr, "Failed to find descriptor for <%s> in %s\n", app->ui_uri, ui_binary_path);
 		dlclose(lib);
 		goto jump;
 	}
@@ -584,7 +584,7 @@ test_ui(app_t *app)
 		const test_t *test = &tests[i];
 		res_t *res = &rets[i];
 
-		res->is_whitelisted = lv2lint_test_is_whitelisted(app, ui_uri, test);
+		res->is_whitelisted = lv2lint_test_is_whitelisted(app, app->ui_uri, test);
 		res->urn = NULL;
 		app->urn = &res->urn;
 		res->ret = test->cb(app);

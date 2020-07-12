@@ -710,7 +710,8 @@ _append_to(char **dst, const char *src)
 }
 
 bool
-test_visibility(app_t *app, const char *path, const char *description, char **symbols)
+test_visibility(app_t *app, const char *path, const char *uri,
+	const char *description, char **symbols)
 {
 	static const char *whitelist [] = {
 		// LV2
@@ -796,27 +797,9 @@ test_visibility(app_t *app, const char *path, const char *description, char **sy
 
 								if(!whitelist_match)
 								{
-									for(unsigned j = 0; j < app->n_whitelist_symbols; j++)
+									if(_white_match(app->whitelist_symbols, uri, name))
 									{
-										char *whitelist_symbol = app->whitelist_symbols
-											? app->whitelist_symbols[j]
-											: NULL;
-
-										if(!whitelist_symbol)
-										{
-											continue;
-										}
-
-#if defined(HAS_FNMATCH)
-										if(fnmatch(whitelist_symbol, name,
-											FNM_CASEFOLD | FNM_EXTMATCH) == 0)
-#else
-										if(strcasecmp(whitelist_symbol, name) == 0)
-#endif
-										{
-											whitelist_match = true;
-											break;
-										}
+										whitelist_match = true;
 									}
 								}
 
@@ -1062,49 +1045,15 @@ lv2lint_test_is_whitelisted(app_t *app, const char *uri, const test_t *test)
 
 #ifdef ENABLE_ELF_TESTS
 static void
-_append_whitelist_symbol(app_t *app, char *whitelist_symbol)
+_append_whitelist_symbol(app_t *app, const char *uri, char *pattern)
 {
-	char **whitelist_symbols = realloc(app->whitelist_symbols,
-		(app->n_whitelist_symbols + 1) * sizeof(const char *));
-	if(!whitelist_symbols)
-	{
-		return;
-	}
-
-	app->whitelist_symbols = whitelist_symbols;
-
-	size_t len = strlen(whitelist_symbol) + 1;
-
-	char *dst = malloc(len);
-
-	if(dst)
-	{
-		app->whitelist_symbols[app->n_whitelist_symbols] = dst;
-		snprintf(app->whitelist_symbols[app->n_whitelist_symbols], len, "%s", whitelist_symbol);
-
-		app->n_whitelist_symbols++;
-	}
+	app->whitelist_symbols = _white_append(app->whitelist_symbols, uri, pattern);
 }
 
 static void
 _free_whitelist_symbols(app_t *app)
 {
-	for(unsigned i = 0; i < app->n_whitelist_symbols; i++)
-	{
-		char *whitelist_symbol = app->whitelist_symbols ? app->whitelist_symbols[i] : NULL;
-
-		if(!whitelist_symbol)
-		{
-			continue;
-		}
-
-		free(whitelist_symbol);
-	}
-
-	if(app->whitelist_symbols)
-	{
-		free(app->whitelist_symbols);
-	}
+	app->whitelist_symbols = _white_free(app->whitelist_symbols);
 }
 
 static void
@@ -1184,7 +1133,7 @@ main(int argc, char **argv)
 				break;
 #ifdef ENABLE_ELF_TESTS
 			case 's':
-				_append_whitelist_symbol(&app, optarg);
+				_append_whitelist_symbol(&app, uri, optarg);
 				break;
 			case 'l':
 				_append_whitelist_lib(&app, uri, optarg);
