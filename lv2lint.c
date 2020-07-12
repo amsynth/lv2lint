@@ -282,6 +282,12 @@ _unmap_uris(app_t *app)
 	lilv_node_free(app->uris.atom_Vector);
 	lilv_node_free(app->uris.atom_Sequence);
 
+	lilv_node_free(app->uris.xsd_int);
+	lilv_node_free(app->uris.xsd_uint);
+	lilv_node_free(app->uris.xsd_long);
+	lilv_node_free(app->uris.xsd_float);
+	lilv_node_free(app->uris.xsd_double);
+
 	lilv_node_free(app->uris.state_loadDefaultState);
 	lilv_node_free(app->uris.state_state);
 	lilv_node_free(app->uris.state_interface);
@@ -1982,8 +1988,6 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 				if(asprintf(&repl, ret->msg, res->urn) == -1)
 					repl = NULL;
 			}
-
-			free(res->urn);
 		}
 
 		char *docu = NULL;

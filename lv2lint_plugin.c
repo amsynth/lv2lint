@@ -1693,6 +1693,13 @@ test_plugin(app_t *app)
 		}
 	}
 
+	for(unsigned i=0; i<tests_n; i++)
+	{
+		res_t *res = &rets[i];
+
+		free(res->urn);
+	}
+
 	const uint32_t num_ports = lilv_plugin_get_num_ports(app->plugin);
 	for(unsigned i=0; i<num_ports; i++)
 	{

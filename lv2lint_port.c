@@ -253,6 +253,7 @@ _test_default(app_t *app)
 		LilvNode *default_node = lilv_port_get(app->plugin, app->port, app->uris.lv2_default);
 		ret = _test_num(app, default_node, is_integer, is_toggled, &app->dflt.f32,
 			LV2_CORE__default);
+		//lilv_node_free(default_node);
 	}
 
 	return ret;
@@ -276,6 +277,7 @@ _test_minimum(app_t *app)
 		LilvNode *minimum_node = lilv_port_get(app->plugin, app->port, app->uris.lv2_minimum);
 		ret = _test_num(app, minimum_node, is_integer, is_toggled, &app->min.f32,
 			LV2_CORE__minimum);
+		//lilv_node_free(minimum_node);
 	}
 
 	return ret;
@@ -299,6 +301,7 @@ _test_maximum(app_t *app)
 		LilvNode *maximum_node = lilv_port_get(app->plugin, app->port, app->uris.lv2_maximum);
 		ret = _test_num(app, maximum_node, is_integer, is_toggled, &app->max.f32,
 			LV2_CORE__maximum);
+		//lilv_node_free(maximum_node);
 	}
 
 	return ret;
@@ -410,7 +413,7 @@ _test_morph_port(app_t *app)
 		.dsc = NULL
 	};
 
-	LilvNodes *morph_supported_types = lilv_port_get(app->plugin, app->port,
+	LilvNodes *morph_supported_types = lilv_port_get_value(app->plugin, app->port,
 		app->uris.morph_supportsType);
 	const unsigned n_morph_supported_types = morph_supported_types
 		? lilv_nodes_size(morph_supported_types)
@@ -732,6 +735,13 @@ test_port(app_t *app)
 
 			lv2lint_report(app, test, res, show_passes, &flag);
 		}
+	}
+
+	for(unsigned i=0; i<tests_n; i++)
+	{
+		res_t *res = &rets[i];
+
+		free(res->urn);
 	}
 
 	return flag;

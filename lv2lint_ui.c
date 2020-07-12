@@ -653,6 +653,13 @@ test_ui(app_t *app)
 		}
 	}
 
+	for(unsigned i=0; i<tests_n; i++)
+	{
+		res_t *res = &rets[i];
+
+		free(res->urn);
+	}
+
 jump:
 	if(ui_binary_path)
 	{
