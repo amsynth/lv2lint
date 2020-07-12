@@ -611,6 +611,82 @@ test_url(app_t *app, const char *url)
 }
 #endif
 
+static white_t *
+_white_append(white_t *parent, const char *uri, const char *pattern)
+{
+	white_t *white = calloc(1, sizeof(white_t));
+
+	if(!white)
+	{
+		return parent;
+	}
+
+	white->uri = uri;
+	white->pattern = pattern;
+	white->next = parent;
+
+	return white;
+}
+
+static white_t *
+_white_remove(white_t *parent)
+{
+	white_t *next = NULL;
+
+	if(parent)
+	{
+		next = parent->next;
+		free(parent);
+	}
+
+	return next;
+}
+
+static white_t *
+_white_free(white_t *white)
+{
+	while(white)
+	{
+		white = _white_remove(white);
+	}
+
+	return NULL;
+}
+
+static bool
+_pattern_match(const char *pattern, const char *str)
+{
+	if(pattern == NULL)
+	{
+		return true;
+	}
+
+#if defined(HAS_FNMATCH)
+	if(fnmatch(pattern, str, FNM_CASEFOLD | FNM_EXTMATCH) == 0)
+#else
+	if(strcasecmp(pattern, str) == 0)
+#endif
+	{
+		return true;
+	}
+
+	return false;
+}
+
+static bool
+_white_match(const white_t *white, const char *uri, const char *str)
+{
+	for( ; white; white = white->next)
+	{
+		if(_pattern_match(white->uri, uri) && _pattern_match(white->pattern, str))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 #ifdef ENABLE_ELF_TESTS
 static void
 _append_to(char **dst, const char *src)
@@ -770,8 +846,9 @@ test_visibility(app_t *app, const char *path, const char *description, char **sy
 }
 
 bool
-test_shared_libraries(app_t *app, const char *path, const char *const *whitelist,
-	unsigned n_whitelist, const char *const *blacklist, unsigned n_blacklist,
+test_shared_libraries(app_t *app, const char *path, const char *uri,
+	const char *const *whitelist, unsigned n_whitelist,
+	const char *const *blacklist, unsigned n_blacklist,
 	char **libraries)
 {
 	unsigned invalid = 0;
@@ -821,27 +898,10 @@ test_shared_libraries(app_t *app, const char *path, const char *const *whitelist
 								}
 							}
 
-							for(unsigned j = 0; j < app->n_whitelist_libs; j++)
+							if(_white_match(app->whitelist_libs, uri, name))
 							{
-								char *whitelist_lib = app->whitelist_libs
-									? app->whitelist_libs[j]
-									: NULL;
-
-								if(!whitelist_lib)
-								{
-									continue;
-								}
-
-#if defined(HAS_FNMATCH)
-								if(fnmatch(whitelist_lib, name,
-									FNM_CASEFOLD | FNM_EXTMATCH) == 0)
-#else
-								if(strcasecmp(whitelist_lib, name) == 0)
-#endif
-								{
-									whitelist_match = true;
-									break;
-								}
+								whitelist_match = true;
+								break;
 							}
 
 							for(unsigned j = 0; j < n_blacklist; j++)
@@ -884,82 +944,6 @@ _state_set_value(const char *symbol __unused, void *data __unused,
 	const void *value __unused, uint32_t size __unused, uint32_t type __unused)
 {
 	//FIXME
-}
-
-static white_t *
-_white_append(white_t *parent, const char *uri, const char *pattern)
-{
-	white_t *white = calloc(1, sizeof(white_t));
-
-	if(!white)
-	{
-		return parent;
-	}
-
-	white->uri = uri;
-	white->pattern = pattern;
-	white->next = parent;
-
-	return white;
-}
-
-static white_t *
-_white_remove(white_t *parent)
-{
-	white_t *next = NULL;
-
-	if(parent)
-	{
-		next = parent->next;
-		free(parent);
-	}
-
-	return next;
-}
-
-static white_t *
-_white_free(white_t *white)
-{
-	while(white)
-	{
-		white = _white_remove(white);
-	}
-
-	return NULL;
-}
-
-static bool
-_pattern_match(const char *pattern, const char *str)
-{
-	if(pattern == NULL)
-	{
-		return true;
-	}
-
-#if defined(HAS_FNMATCH)
-	if(fnmatch(pattern, str, FNM_CASEFOLD | FNM_EXTMATCH) == 0)
-#else
-	if(strcasecmp(pattern, str) == 0)
-#endif
-	{
-		return true;
-	}
-
-	return false;
-}
-
-static bool
-_white_match(white_t *white, const char *uri, const char *str)
-{
-	for( ; white; white = white->next)
-	{
-		if(_pattern_match(white->uri, uri) && _pattern_match(white->pattern, str))
-		{
-			return true;
-		}
-	}
-
-	return false;
 }
 
 static void
@@ -1124,49 +1108,15 @@ _free_whitelist_symbols(app_t *app)
 }
 
 static void
-_append_whitelist_lib(app_t *app, char *whitelist_lib)
+_append_whitelist_lib(app_t *app, const char *uri, char *pattern)
 {
-	char **whitelist_libs = realloc(app->whitelist_libs,
-		(app->n_whitelist_libs + 1) * sizeof(const char *));
-	if(!whitelist_libs)
-	{
-		return;
-	}
-
-	app->whitelist_libs = whitelist_libs;
-
-	size_t len = strlen(whitelist_lib) + 1;
-
-	char *dst = malloc(len);
-
-	if(dst)
-	{
-		app->whitelist_libs[app->n_whitelist_libs] = dst;
-		snprintf(app->whitelist_libs[app->n_whitelist_libs], len, "%s", whitelist_lib);
-
-		app->n_whitelist_libs++;
-	}
+	app->whitelist_libs = _white_append(app->whitelist_libs, uri, pattern);
 }
 
 static void
 _free_whitelist_libs(app_t *app)
 {
-	for(unsigned i = 0; i < app->n_whitelist_libs; i++)
-	{
-		char *whitelist_lib = app->whitelist_libs ? app->whitelist_libs[i] : NULL;
-
-		if(!whitelist_lib)
-		{
-			continue;
-		}
-
-		free(whitelist_lib);
-	}
-
-	if(app->whitelist_libs)
-	{
-		free(app->whitelist_libs);
-	}
+	app->whitelist_libs = _white_free(app->whitelist_libs);
 }
 #endif
 
@@ -1237,7 +1187,7 @@ main(int argc, char **argv)
 				_append_whitelist_symbol(&app, optarg);
 				break;
 			case 'l':
-				_append_whitelist_lib(&app, optarg);
+				_append_whitelist_lib(&app, uri, optarg);
 				break;
 #endif
 #ifdef ENABLE_ONLINE_TESTS

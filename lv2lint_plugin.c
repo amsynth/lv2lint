@@ -182,7 +182,7 @@ _test_linking(app_t *app)
 			if(path)
 			{
 				char *libraries = NULL;
-				if(!test_shared_libraries(app, path,
+				if(!test_shared_libraries(app, path, app->plugin_uri,
 					whitelist, n_whitelist,
 					NULL, 0,
 					&libraries))
@@ -190,7 +190,7 @@ _test_linking(app_t *app)
 					*app->urn = libraries;
 					ret = &ret_symbols;
 				}
-				else if(!test_shared_libraries(app, path,
+				else if(!test_shared_libraries(app, path, app->plugin_uri,
 					NULL, 0,
 					graylist, n_graylist,
 					&libraries))
