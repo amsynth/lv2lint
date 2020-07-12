@@ -76,6 +76,41 @@ _test_symbols(app_t *app)
 
 	return ret;
 }
+
+static const ret_t *
+_test_fork(app_t *app)
+{
+	static const ret_t ret_fork = {
+		.lnt = LINT_WARN,
+		.msg = "binary has a symbol reference to the 'fork' function",
+		.uri = LV2_CORE__binary,
+		.dsc = "Plugin UI binaries must not call 'fork', as it may interrupt "
+			"the whole realtime plugin graph and lead to unwanted xruns."
+	};
+
+	const ret_t *ret = NULL;
+
+	const LilvNode* node = lilv_ui_get_binary_uri(app->ui);
+	if(node && lilv_node_is_uri(node))
+	{
+		const char *uri = lilv_node_as_uri(node);
+		if(uri)
+		{
+			char *path = lilv_file_uri_parse(uri, NULL);
+			if(path)
+			{
+				if(check_for_symbol(app, path, "fork"))
+				{
+					ret = &ret_fork;
+				}
+
+				lilv_free(path);
+			}
+		}
+	}
+
+	return ret;
+}
 #endif
 
 static const ret_t *
@@ -485,6 +520,7 @@ _test_ui_url(app_t *app)
 static const test_t tests [] = {
 #ifdef ENABLE_ELF_TESTS
 	{"UI Symbols",          _test_symbols},
+	{"UI Fork",             _test_fork},
 #endif
 	{"UI Instance Access",  _test_instance_access},
 	{"UI Data Access",      _test_data_access},

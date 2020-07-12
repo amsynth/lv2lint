@@ -137,6 +137,41 @@ _test_symbols(app_t *app)
 }
 
 static const ret_t *
+_test_fork(app_t *app)
+{
+	static const ret_t ret_fork = {
+		.lnt = LINT_WARN,
+		.msg = "binary has a symbol reference to the 'fork' function",
+		.uri = LV2_CORE__binary,
+		.dsc = "Plugin binaries must not call 'fork', as it may interrupt "
+			"the whole realtime plugin graph and lead to unwanted xruns."
+	};
+
+	const ret_t *ret = NULL;
+
+	const LilvNode* node = lilv_ui_get_binary_uri(app->ui);
+	if(node && lilv_node_is_uri(node))
+	{
+		const char *uri = lilv_node_as_uri(node);
+		if(uri)
+		{
+			char *path = lilv_file_uri_parse(uri, NULL);
+			if(path)
+			{
+				if(check_for_symbol(app, path, "fork"))
+				{
+					ret = &ret_fork;
+				}
+
+				lilv_free(path);
+			}
+		}
+	}
+
+	return ret;
+}
+
+static const ret_t *
 _test_linking(app_t *app)
 {
 	static const ret_t ret_symbols = {
@@ -1580,6 +1615,7 @@ static const test_t tests [] = {
 	{"Plugin Instantiation",   _test_instantiation},
 #ifdef ENABLE_ELF_TESTS
 	{"Plugin Symbols",         _test_symbols},
+	{"Plugin Fork",            _test_fork},
 	{"Plugin Linking",         _test_linking},
 #endif
 	{"Plugin Verification",    _test_verification},

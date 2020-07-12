@@ -321,6 +321,9 @@ test_visibility(app_t *app, const char *path, const char *uri,
 	const char *description, char **symbols);
 
 bool
+check_for_symbol(app_t *app, const char *path, const char *description);
+
+bool
 test_shared_libraries(app_t *app, const char *path, const char *uri,
 	const char *const *whitelist, unsigned n_whitelist,
 	const char *const *blacklist, unsigned n_blacklist,

@@ -829,6 +829,58 @@ test_visibility(app_t *app, const char *path, const char *uri,
 }
 
 bool
+check_for_symbol(app_t *app __attribute__((unused)), const char *path,
+	const char *description)
+{
+	bool desc = false;
+
+	const int fd = open(path, O_RDONLY);
+	if(fd != -1)
+	{
+		elf_version(EV_CURRENT);
+
+		Elf *elf = elf_begin(fd, ELF_C_READ, NULL);
+		if(elf)
+		{
+			for(Elf_Scn *scn = elf_nextscn(elf, NULL);
+				scn;
+				scn = elf_nextscn(elf, scn))
+			{
+				GElf_Shdr shdr;
+				memset(&shdr, 0x0, sizeof(GElf_Shdr));
+				gelf_getshdr(scn, &shdr);
+
+				if( (shdr.sh_type == SHT_SYMTAB) || (shdr.sh_type == SHT_DYNSYM) )
+				{
+					// found a symbol table
+					Elf_Data *data = elf_getdata(scn, NULL);
+					const unsigned count = shdr.sh_size / shdr.sh_entsize;
+
+					// iterate over symbol names
+					for(unsigned i = 0; i < count; i++)
+					{
+						GElf_Sym sym;
+						memset(&sym, 0x0, sizeof(GElf_Sym));
+						gelf_getsym(data, i, &sym);
+
+						const char *name = elf_strptr(elf, shdr.sh_link, sym.st_name);
+						if(!strcmp(name, description))
+						{
+							desc = true;
+							break;
+						}
+					}
+				}
+			}
+			elf_end(elf);
+		}
+		close(fd);
+	}
+
+	return desc;
+}
+
+bool
 test_shared_libraries(app_t *app, const char *path, const char *uri,
 	const char *const *whitelist, unsigned n_whitelist,
 	const char *const *blacklist, unsigned n_blacklist,
