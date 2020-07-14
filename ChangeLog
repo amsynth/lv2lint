@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.8.0] - 15 Jul 2020
+
+### Added
+
+* support for whitelisting globally visible symbols
+* support for whitelisting linked libraries
+* support for whitelisting whole tests
+* support for state:freePath feature
+* check for urid:map when there is an atom:AtomPort
+* check to discover borked LV2_PATH
+* check for duplicate scale point labels/values in control port
+* check for duplicate scale point values in parameters
+* check for fork symbol reference
+
+### Changed
+
+* minimal LV2 version to 1.18.0
+
+## Fixed
+
+* various memleaks
+
 ## [0.6.0] - 13 Apr 2020
 
 ### Added
