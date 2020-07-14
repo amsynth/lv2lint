@@ -70,8 +70,10 @@ Show verbose test item documentation
 .HP
 \fB\-u\fR URI_PATTERN
 .IP
-URI pattern (shell wildcards) to merge with test, symbol and library whitelist
-patterns (can be used multiple times)
+URI pattern (shell wildcards) to be prefixed to test, symbol and library whitelist
+patterns (can be used multiple times). The latter whitelist pattern will then
+only be effective when also the current URI pattern matches (e.g. for plugin
+itself or one of its UIs)
 
 .HP
 \fB\-t\fR TEST_PATTERN

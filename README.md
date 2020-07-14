@@ -30,7 +30,7 @@ when using this tool, please report back, so it can be fixed.*
 
 #### Stable release
 
-* [lv2lint-0.6.0.tar.xz](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.6.0.tar.xz)
+* [lv2lint-0.6.0.tar.xz](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.6.0.tar.xz)([sig](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.6.0.tar.xz.asc))
 
 #### Git repository
 
@@ -100,15 +100,30 @@ A __perfect plugin__ *SHOULD* pass without triggering any warnings or notes:
 	lv2lint -I ${MY_BUNDLE_DIR} -E warn -E note http://lv2plug.in/plugins/eg-scope#Stereo
 
 If you get any warnings or notes, you can enable debugging output to help you
+fix the problems:
 
 	lv2lint -d -I ${MY_BUNDLE_DIR} -E warn -E note http://lv2plug.in/plugins/eg-scope#Stereo
-fix the problems:
 
 By default, lv2lint runs in packager mode and skips some tests. The latter are
 important only for plugins that are distributed in binary form by the developer directly.
 To activate those tests, run in (nopack)ager mode:
 
 	lv2lint -I ${MY_BUNDLE_DIR} -M nopack http://lv2plug.in/plugins/eg-scope#Stereo
+
+If you want to skip some tests (because you know that they fail), you can do
+so by specifying patterns for tests and plugin/and or ui URI on the command line.
+
+E.g. to skip tests about missing version information:
+
+	lv2lint -I ${MY_BUNDLE_DIR} -t '*version*' urn:example:myplug#mono
+
+E.g. to skip all tests that are not ui-related
+
+	lv2lint -I ${MY_BUNDLE_DIR} -u urn:example:myplug#mono -t '*' urn:example:myplug#mono
+
+E.g. to skip all tests that are ui-related:
+
+	lv2lint -I ${MY_BUNDLE_DIR} -u urn:example:myplug#ui -t '*' urn:example:myplug#mono
 
 ### License
 
