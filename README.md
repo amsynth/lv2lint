@@ -20,7 +20,7 @@ when using this tool, please report back, so it can be fixed.*
 
 #### Stable release
 
-* [lv2lint-0.6.0.zip](https://dl.open-music-kontrollers.ch/lv2lint/stable/lv2lint-0.6.0.zip) ([sig](https://dl.open-music-kontrollers.ch/lv2lint/stable/lv2lint-0.6.0.zip.sig))
+* [lv2lint-0.8.0.zip](https://dl.open-music-kontrollers.ch/lv2lint/stable/lv2lint-0.8.0.zip) ([sig](https://dl.open-music-kontrollers.ch/lv2lint/stable/lv2lint-0.8.0.zip.sig))
 
 #### Unstable (nightly) release
 
@@ -30,7 +30,7 @@ when using this tool, please report back, so it can be fixed.*
 
 #### Stable release
 
-* [lv2lint-0.6.0.tar.xz](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.6.0.tar.xz)([sig](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.6.0.tar.xz.asc))
+* [lv2lint-0.8.0.tar.xz](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.8.0.tar.xz)([sig](https://git.open-music-kontrollers.ch/lv2/lv2lint/snapshot/lv2lint-0.8.0.tar.xz.asc))
 
 #### Git repository
 
@@ -117,13 +117,17 @@ E.g. to skip tests about missing version information:
 
 	lv2lint -I ${MY_BUNDLE_DIR} -t '*version*' urn:example:myplug#mono
 
-E.g. to skip all tests that are not ui-related
+E.g. to skip all tests that are dsp-related (and only honor ui-related ones):
 
 	lv2lint -I ${MY_BUNDLE_DIR} -u urn:example:myplug#mono -t '*' urn:example:myplug#mono
 
-E.g. to skip all tests that are ui-related:
+E.g. to skip all tests that are ui-related (and only honor dsp-related ones):
 
 	lv2lint -I ${MY_BUNDLE_DIR} -u urn:example:myplug#ui -t '*' urn:example:myplug#mono
+
+E.g. to skip tests about extension data only on the ui:
+
+	lv2lint -I ${MY_BUNDLE_DIR} -u urn:example:myplug#ui -t '*extension*data*' urn:example:myplug#mono
 
 ### License
 
