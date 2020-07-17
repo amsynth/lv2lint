@@ -50,14 +50,16 @@ _test_lv2_path(app_t *app)
 	LilvNode *plugin_class_node = lilv_world_get(app->world,
 		app->uris.lv2_InstrumentPlugin, app->uris.rdfs_label, NULL);
 
+	const char *lv2_path = getenv("LV2_PATH");
+
 	if(!ui_class_node)
 	{
-		*app->urn = strdup(getenv("LV2_PATH"));
+		*app->urn = strdup(lv2_path ? lv2_path : "");
 		ret = &ret_no_ui_class;
 	}
 	else if(!plugin_class_node)
 	{
-		*app->urn = strdup(getenv("LV2_PATH"));
+		*app->urn = strdup(lv2_path ? lv2_path : "");
 		ret = &ret_no_plugin_class;
 	}
 
