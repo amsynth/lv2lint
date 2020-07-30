@@ -50,7 +50,7 @@ _test_class(app_t *app)
 
 				if(!lilv_nodes_contains(class, node))
 				{
-					*app->urn = strdup(lilv_node_as_uri(node));
+					*app->urn = lv2lint_node_as_uri_strdup(node);
 					ret = &ret_class_not_valid;
 					break;
 				}
@@ -88,7 +88,7 @@ _test_properties(app_t *app)
 
 				if(!lilv_nodes_contains(properties, node))
 				{
-					*app->urn = strdup(lilv_node_as_uri(node));
+					*app->urn = lv2lint_node_as_uri_strdup(node);
 					ret = &ret_properties_not_valid;
 					break;
 				}
@@ -171,18 +171,18 @@ _test_num(app_t *app, LilvNode *node, bool is_integer, bool is_toggled,
 			{
 				if(rintf(lilv_node_as_float(node)) == lilv_node_as_float(node))
 				{
-					*app->urn = strdup(uri);
+					*app->urn = lv2lint_strdup(uri);
 					ret = &ret_num_not_an_int;
 				}
 				else
 				{
-					*app->urn = strdup(uri);
+					*app->urn = lv2lint_strdup(uri);
 					ret = &ret_num_not_a_whole_value;
 				}
 			}
 			else // bool
 			{
-				*app->urn = strdup(uri);
+				*app->urn = lv2lint_strdup(uri);
 				ret = &ret_num_not_an_int;
 			}
 		}
@@ -192,12 +192,12 @@ _test_num(app_t *app, LilvNode *node, bool is_integer, bool is_toggled,
 			{
 				if( (lilv_node_as_int(node) == 0) || (lilv_node_as_int(node) == 1) )
 				{
-					*app->urn = strdup(uri);
+					*app->urn = lv2lint_strdup(uri);
 					ret = &ret_num_not_a_bool;
 				}
 				else
 				{
-					*app->urn = strdup(uri);
+					*app->urn = lv2lint_strdup(uri);
 					ret = &ret_num_not_a_boolean_value;
 				}
 			}
@@ -205,12 +205,12 @@ _test_num(app_t *app, LilvNode *node, bool is_integer, bool is_toggled,
 			{
 				if( (lilv_node_as_float(node) == 0.f) || (lilv_node_as_float(node) == 1.f) )
 				{
-					*app->urn = strdup(uri);
+					*app->urn = lv2lint_strdup(uri);
 					ret = &ret_num_not_a_bool;
 				}
 				else
 				{
-					*app->urn = strdup(uri);
+					*app->urn = lv2lint_strdup(uri);
 					ret = &ret_num_not_a_boolean_value;
 				}
 			}
@@ -221,7 +221,7 @@ _test_num(app_t *app, LilvNode *node, bool is_integer, bool is_toggled,
 		}
 		else if(!lilv_node_is_float(node))
 		{
-			*app->urn = strdup(uri);
+			*app->urn = lv2lint_strdup(uri);
 			ret = &ret_num_not_a_float;
 		}
 
@@ -229,7 +229,7 @@ _test_num(app_t *app, LilvNode *node, bool is_integer, bool is_toggled,
 	}
 	else // !node
 	{
-		*app->urn = strdup(uri);
+		*app->urn = lv2lint_strdup(uri);
 		ret = &ret_num_not_found;
 	}
 

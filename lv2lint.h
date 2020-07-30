@@ -345,4 +345,13 @@ lv2lint_extract(app_t *app, const ret_t *ret);
 bool
 lv2lint_test_is_whitelisted(app_t *app, const char *uri, const test_t *test);
 
+char *
+lv2lint_node_as_string_strdup(const LilvNode *node);
+
+char *
+lv2lint_node_as_uri_strdup(const LilvNode *node);
+
+char *
+lv2lint_strdup(const char *str);
+
 #endif

@@ -2000,7 +2000,7 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 		{
 			if(ret->dsc)
 			{
-				docu = strdup(ret->dsc);
+				docu = lv2lint_strdup(ret->dsc);
 			}
 			else
 			{
@@ -2010,10 +2010,7 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 					LilvNode *docu_node = lilv_world_get(app->world, subj_node, app->uris.lv2_documentation, NULL);
 					if(docu_node)
 					{
-						if(lilv_node_is_string(docu_node))
-						{
-							docu = strdup(lilv_node_as_string(docu_node));
-						}
+						docu = lv2lint_node_as_string_strdup(docu_node);
 
 						lilv_node_free(docu_node);
 					}
@@ -2082,4 +2079,58 @@ lv2lint_extract(app_t *app, const ret_t *ret)
 	return app->pck && (ret->pck != LINT_NONE)
 		? ret->pck
 		: ret->lnt;
+}
+
+char *
+lv2lint_node_as_string_strdup(const LilvNode *node)
+{
+	if(!node)
+	{
+		return NULL;
+	}
+
+	if(!lilv_node_is_string(node))
+	{
+		return NULL;
+	}
+
+	const char *str = lilv_node_as_string(node);
+
+	if (!str)
+	{
+		return NULL;
+	}
+
+	return lv2lint_strdup(str);
+}
+
+char *
+lv2lint_node_as_uri_strdup(const LilvNode *node)
+{
+	if(!node)
+	{
+		return NULL;
+	}
+
+	if(!lilv_node_is_uri(node))
+	{
+		return NULL;
+	}
+
+	const char *uri = lilv_node_as_uri(node);
+
+	return lv2lint_strdup(uri);
+}
+
+char *
+lv2lint_strdup(const char *str)
+{
+	static const char *empty = "";
+
+	if(!str)
+	{
+		str = empty;
+	}
+
+	return strdup(str);
 }

@@ -259,7 +259,7 @@ _test_extension_data(app_t *app)
 			: NULL;
 		if(ext)
 		{
-			*app->urn = strdup(uri);
+			*app->urn = lv2lint_strdup(uri);
 			ret = &ret_extensions_data_not_null;
 		}
 	}
@@ -461,7 +461,7 @@ _test_toolkit(app_t *app)
 	}
 	else if(!is_known)
 	{
-		*app->urn = strdup(lilv_node_as_uri(ui_class_node));
+		*app->urn = lv2lint_node_as_uri_strdup(ui_class_node);
 		ret = &ret_toolkit_unknown;
 	}
 	else if(is_external)
@@ -474,7 +474,7 @@ _test_toolkit(app_t *app)
 	}
 	else if(!is_native)
 	{
-		*app->urn = strdup(lilv_node_as_uri(ui_class_node));
+		*app->urn = lv2lint_node_as_uri_strdup(ui_class_node);
 		ret = &ret_toolkit_non_native;
 	}
 

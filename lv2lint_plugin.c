@@ -54,12 +54,12 @@ _test_lv2_path(app_t *app)
 
 	if(!ui_class_node)
 	{
-		*app->urn = strdup(lv2_path ? lv2_path : "");
+		*app->urn = lv2lint_strdup(lv2_path);
 		ret = &ret_no_ui_class;
 	}
 	else if(!plugin_class_node)
 	{
-		*app->urn = strdup(lv2_path ? lv2_path : "");
+		*app->urn = lv2lint_strdup(lv2_path);
 		ret = &ret_no_plugin_class;
 	}
 
@@ -810,7 +810,8 @@ _test_class(app_t *app)
 		}
 		else if(!_test_class_match(base, class))
 		{
-			*app->urn = strdup(lilv_node_as_uri(lilv_plugin_class_get_uri(class)));
+			const LilvNode *class_uri = lilv_plugin_class_get_uri(class);
+			*app->urn = lv2lint_node_as_uri_strdup(class_uri);
 			ret = &ret_class_not_valid;
 		}
 	}
@@ -847,7 +848,7 @@ _test_features(app_t *app)
 
 				if(!lilv_nodes_contains(features, node))
 				{
-					*app->urn = strdup(lilv_node_as_uri(node));
+					*app->urn = lv2lint_node_as_uri_strdup(node);
 					ret = &ret_features_not_valid;
 					break;
 				}
@@ -894,7 +895,7 @@ _test_extensions(app_t *app)
 		const void *ext = lilv_instance_get_extension_data(app->instance, uri);
 		if(ext)
 		{
-			*app->urn = strdup(uri);
+			*app->urn = lv2lint_strdup(uri);
 			ret = &ret_extensions_data_not_null;
 		}
 	}
@@ -912,7 +913,7 @@ _test_extensions(app_t *app)
 
 				if(!lilv_nodes_contains(extensions, node))
 				{
-					*app->urn = strdup(lilv_node_as_uri(node));
+					*app->urn = lv2lint_node_as_uri_strdup(node);
 					ret = &ret_extensions_not_valid;
 					break;
 				}
@@ -923,7 +924,7 @@ _test_extensions(app_t *app)
 					const void *ext = lilv_instance_get_extension_data(app->instance, uri);
 					if(!ext)
 					{
-						*app->urn = strdup(uri);
+						*app->urn = lv2lint_node_as_uri_strdup(node);
 						ret = &ret_extensions_data_not_valid;
 						break;
 					}
