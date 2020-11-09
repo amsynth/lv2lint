@@ -668,7 +668,7 @@ _pattern_match(const char *pattern, const char *str)
 	}
 
 #if defined(HAS_FNMATCH)
-	if(fnmatch(pattern, str, FNM_CASEFOLD | FNM_EXTMATCH) == 0)
+	if(fnmatch(pattern, str, FNM_CASEFOLD) == 0)
 #else
 	if(strcasecmp(pattern, str) == 0)
 #endif
