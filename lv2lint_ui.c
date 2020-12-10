@@ -120,7 +120,7 @@ _test_instance_access(app_t *app)
 		.lnt = LINT_WARN,
 		.msg = "usage of instance-access is highly discouraged",
 		.uri = LV2_INSTANCE_ACCESS_URI,
-		.dsc = "This plugin cannot be sandboxed ans it cannot be run in a separate "
+		.dsc = "This plugin cannot be sandboxed and it cannot be run in a separate "
 			"process or on a different machine. Please adhere to good practices and "
 			"apply the recommended MVC (model-view-control) method."
 	};
@@ -147,7 +147,7 @@ _test_data_access(app_t *app)
 		.lnt = LINT_WARN,
 		.msg = "usage of data-access is highly discouraged",
 		.uri = LV2_DATA_ACCESS_URI,
-		.dsc = "This plugin cannot be sandboxed ans it cannot be run in a separate "
+		.dsc = "This plugin cannot be sandboxed and it cannot be run in a separate "
 			"process or on a different machine. Please adhere to good practices and "
 			"apply the recommended MVC (model-view-control) method."
 	};
