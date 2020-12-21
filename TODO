@@ -23,6 +23,8 @@
 	* Check whether plugin properly handles patch:Get/Set/Put messages
 	* Check whether all patch:writables are initialized in state:state with
 		enabled state:loadDefaultState
+	* Check whether a given lv2:Parameter is only part of either patch:writable
+	  or patch:readable, but not both
 
 * port-groups
 	* Check for left/right channels in stereo plugins
