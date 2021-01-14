@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.10.0] - 15 Jan 2021
+
+### Fixed
+
+* various crashes due to NULL dereferences
+
+### Removed
+
+* support for GNU-style extended glob pattern matching in filters (Apple)
+
 ## [0.8.0] - 15 Jul 2020
 
 ### Added
