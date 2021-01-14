@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)
+ * Copyright (c) 2016-2021 Hanspeter Portner (dev@open-music-kontrollers.ch)
  *
  * This is free software: you can redistribute it and/or modify
  * it under the terms of the Artistic License 2.0 as published by
@@ -512,7 +512,7 @@ _header(char **argv)
 {
 	fprintf(stderr,
 		"%s "LV2LINT_VERSION"\n"
-		"Copyright (c) 2016-2020 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
+		"Copyright (c) 2016-2021 Hanspeter Portner (dev@open-music-kontrollers.ch)\n"
 		"Released under Artistic License 2.0 by Open Music Kontrollers\n",
 		argv[0]);
 }
