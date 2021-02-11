@@ -7,6 +7,7 @@ project('lv2lint', 'c', default_options : [
 
 online_tests = get_option('online-tests')
 elf_tests = get_option('elf-tests')
+x11_tests = get_option('x11-tests')
 
 version = run_command('cat', 'VERSION').stdout().strip()
 
@@ -20,13 +21,18 @@ m_dep = cc.find_library('m')
 lv2_dep = dependency('lv2', version : '>=1.18.0')
 lilv_dep = dependency('lilv-0', version : '>=0.24.0',
 	static : meson.is_cross_build() and false) #FIXME
-curl_dep = dependency('libcurl', required: false)
-elf_dep = dependency('libelf', required: false)
+curl_dep = dependency('libcurl', required: online_tests)
+elf_dep = dependency('libelf', required: elf_tests)
+x11_dep = dependency('x11', version : '>=1.6.0', required : x11_tests)
+xext_dep = dependency('xext', version : '>=1.3.0', required : x11_tests)
+xcb_dep = dependency('xcb', version : '>=1.12', required : x11_tests)
+xcbicccm_dep = dependency('xcb-icccm', version : '>=0.4.0', required : x11_tests)
+xcbxrm_dep = dependency('xcb-xrm', version : '>=1.0', required : x11_tests)
 
 mapper_inc = include_directories('mapper.lv2')
 incs = [mapper_inc]
 
-if curl_dep.found() and online_tests
+if online_tests.enabled()
 	add_project_arguments('-DENABLE_ONLINE_TESTS', language : 'c')
 	conf_data.set('ONLINE_TESTS', '')
 else
@@ -37,11 +43,18 @@ if cc.has_header('fnmatch.h') and cc.has_function('fnmatch')
 	add_project_arguments('-DHAS_FNMATCH', language : 'c')
 endif
 
-if elf_dep.found() and elf_tests
+if elf_tests.enabled()
 	add_project_arguments('-DENABLE_ELF_TESTS', language : 'c')
 	conf_data.set('ELF_TESTS', '')
 else
 	conf_data.set('ELF_TESTS', './')
+endif
+
+if x11_tests.enabled()
+	add_project_arguments('-DENABLE_X11_TESTS', language : 'c')
+	conf_data.set('X11_TESTS', '')
+else
+	conf_data.set('X11_TESTS', './')
 endif
 
 srcs = [

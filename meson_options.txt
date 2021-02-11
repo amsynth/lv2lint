@@ -1,2 +1,3 @@
-option('online-tests', type : 'boolean', value : false)
-option('elf-tests', type : 'boolean', value : false)
+option('online-tests', type : 'feature', value : 'disabled')
+option('elf-tests', type : 'feature', value : 'disabled')
+option('x11-tests', type : 'feature', value : 'disabled')
