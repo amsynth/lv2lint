@@ -187,7 +187,9 @@ test_x11(app_t *app, bool *flag)
 		goto jump;
 	}
 
+#if 0
 	xcb_map_window(conn, win);
+#endif
 	xcb_flush(conn);
 
 	LV2_Log_Log log = {
