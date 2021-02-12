@@ -24,12 +24,8 @@ lilv_dep = dependency('lilv-0', version : '>=0.24.0',
 curl_dep = dependency('libcurl', required: online_tests)
 elf_dep = dependency('libelf', required: elf_tests)
 x11_dep = dependency('x11', version : '>=1.6.0', required : x11_tests)
-xext_dep = dependency('xext', version : '>=1.3.0', required : x11_tests)
-xcb_dep = dependency('xcb', version : '>=1.12', required : x11_tests)
-xcbicccm_dep = dependency('xcb-icccm', version : '>=0.4.0', required : x11_tests)
-xcbxrm_dep = dependency('xcb-xrm', version : '>=1.0', required : x11_tests)
 	
-deps = [m_dep, lv2_dep, lilv_dep, curl_dep, elf_dep, x11_dep, xext_dep, xcb_dep, xcbicccm_dep, xcbxrm_dep]
+deps = [m_dep, lv2_dep, lilv_dep, curl_dep, elf_dep, x11_dep]
 
 mapper_inc = include_directories('mapper.lv2')
 incs = [mapper_inc]

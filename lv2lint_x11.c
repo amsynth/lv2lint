@@ -25,9 +25,8 @@
 #include <lv2/lv2plug.in/ns/ext/instance-access/instance-access.h>
 #include <lv2/lv2plug.in/ns/ext/data-access/data-access.h>
 
-#include <xcb/xcb.h>
-#include <xcb/xcb_icccm.h>
-#include <xcb/xcb_xrm.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
 
 static void
 _write_function(LV2UI_Controller controller __unused, uint32_t index __unused,
@@ -148,49 +147,24 @@ test_x11(app_t *app, bool *flag)
 	if(!rets)
 		return;
 
-	xcb_connection_t *conn = NULL;
-	xcb_screen_t *screen = NULL;
-	xcb_drawable_t win = 0;
+  Display* display = NULL;
+	Window win = 0;
 
-	conn = xcb_connect(NULL, NULL);
-	if(!conn)
+	display = XOpenDisplay(NULL);
+	if(!display)
 	{
 		goto jump;
 	}
 
-	screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data;
-	if(!screen)
-	{
-		goto jump;
-	}
-
-	win = xcb_generate_id(conn);
+	const int black = BlackPixel(display, DefaultScreen(display));
+  win = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0,
+		600, 600, 0, black, black);
 	if(!win)
 	{
 		goto jump;
 	}
 
-	const uint32_t mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
-	const uint32_t values [2] = {
-		screen->white_pixel,
-		XCB_EVENT_MASK_STRUCTURE_NOTIFY
-	};
-
-	const xcb_void_cookie_t vcookie = xcb_create_window_checked(conn,
-		XCB_COPY_FROM_PARENT, win, screen->root, 0, 0, 600, 600, 0,
-		XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, mask, values);
-
-	xcb_generic_error_t *error = xcb_request_check(conn, vcookie);
-	if(error)
-	{
-		free(error);
-		goto jump;
-	}
-
-#if 0
-	xcb_map_window(conn, win);
-#endif
-	xcb_flush(conn);
+	XFlush(display);
 
 	LV2_Log_Log log = {
 		.handle = app,
@@ -501,16 +475,17 @@ test_x11(app_t *app, bool *flag)
 	}
 
 jump:
-	if(conn)
+	if(display)
 	{
 		if(win)
 		{
-			xcb_destroy_subwindows(conn, win);
-			xcb_destroy_window(conn, win);
+			XDestroyWindow(display, win);
 			win = 0;
+
+			XFlush(display);
 		}
 
-		xcb_disconnect(conn);
-		conn = NULL;
+		XCloseDisplay(display);
+		display = NULL;
 	}
 }
