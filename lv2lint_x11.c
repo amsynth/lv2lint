@@ -423,9 +423,16 @@ test_x11(app_t *app, bool *flag)
 	}
 #undef MAX_OPTS
 
-	app->ui_instance = app->descriptor->instantiate(app->descriptor,
-		app->plugin_uri, "", _write_function, app, (void *)&app->ui_widget,
-		features);
+	const LilvNode *ui_bundle_uri = lilv_ui_get_bundle_uri(app->ui);
+	char *ui_plugin_bundle_path = lilv_file_uri_parse(lilv_node_as_string(ui_bundle_uri), NULL);
+	if(ui_plugin_bundle_path)
+	{
+		app->ui_instance = app->descriptor->instantiate(app->descriptor,
+			app->plugin_uri, ui_plugin_bundle_path, _write_function, app,
+			(void *)&app->ui_widget, features);
+
+		lilv_free(ui_plugin_bundle_path);
+	}
 
 #if 0
 	if(app->ui_instance && app->ui_idle_iface)
