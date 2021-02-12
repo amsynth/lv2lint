@@ -255,8 +255,8 @@ _test_extension_data(app_t *app)
 
 	{
 		const char *uri = "http://open-music-kontrollers.ch/lv2/lv2lint#dummy";
-		const void *ext = app->descriptor->extension_data
-			? app->descriptor->extension_data(uri)
+		const void *ext = app->ui_descriptor->extension_data
+			? app->ui_descriptor->extension_data(uri)
 			: NULL;
 		if(ext)
 		{
@@ -549,7 +549,7 @@ test_ui(app_t *app)
 		return flag;
 
 	void *lib = NULL;
-	app->descriptor = NULL;
+	app->ui_descriptor = NULL;
 
 	const LilvNode *ui_uri_node = lilv_ui_get_uri(app->ui);
 	const LilvNode *ui_binary_node = lilv_ui_get_binary_uri(app->ui);
@@ -593,26 +593,26 @@ test_ui(app_t *app)
 		}
 		else if(!strcmp(ld->URI, app->ui_uri))
 		{
-			app->descriptor = ld;
+			app->ui_descriptor = ld;
 			break;
 		}
 	}
 
-	if(!app->descriptor)
+	if(!app->ui_descriptor)
 	{
 		fprintf(stderr, "Failed to find descriptor for <%s> in %s\n", app->ui_uri, ui_binary_path);
 		dlclose(lib);
 		goto jump;
 	}
 
-	app->ui_idle_iface = app->descriptor->extension_data
-		? app->descriptor->extension_data(LV2_UI__idleInterface)
+	app->ui_idle_iface = app->ui_descriptor->extension_data
+		? app->ui_descriptor->extension_data(LV2_UI__idleInterface)
 		: NULL;
-	app->ui_show_iface = app->descriptor->extension_data
-		? app->descriptor->extension_data(LV2_UI__showInterface)
+	app->ui_show_iface = app->ui_descriptor->extension_data
+		? app->ui_descriptor->extension_data(LV2_UI__showInterface)
 		: NULL;
-	app->ui_resize_iface = app->descriptor->extension_data
-		? app->descriptor->extension_data(LV2_UI__resize)
+	app->ui_resize_iface = app->ui_descriptor->extension_data
+		? app->ui_descriptor->extension_data(LV2_UI__resize)
 		: NULL;
 
 	for(unsigned i=0; i<tests_n; i++)

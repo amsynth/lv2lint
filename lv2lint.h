@@ -112,7 +112,8 @@ struct _app_t {
 	const char *plugin_uri;
 	const LilvPlugin *plugin;
 	LilvInstance *instance;
-	const LV2UI_Descriptor *descriptor;
+	const LV2_Descriptor *descriptor;
+	const LV2UI_Descriptor *ui_descriptor;
 	const LilvPort *port;
 	const LilvNode *parameter;
 	const LilvUI *ui;

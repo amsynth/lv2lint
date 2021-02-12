@@ -1681,6 +1681,9 @@ main(int argc, char **argv)
 						colors[app.atty][ANSI_COLOR_RESET]);
 
 					app.instance = lilv_plugin_instantiate(app.plugin, param_sample_rate, features);
+					app.descriptor = app.instance
+						? lilv_instance_get_descriptor(app.instance)
+						: NULL;
 
 					if(app.instance)
 					{
@@ -1797,6 +1800,7 @@ main(int argc, char **argv)
 					{
 						lilv_instance_free(app.instance);
 						app.instance = NULL;
+						app.descriptor = NULL;
 						app.work_iface = NULL;
 						app.idisp_iface = NULL;
 						app.state_iface= NULL;

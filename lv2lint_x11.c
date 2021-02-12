@@ -176,11 +176,11 @@ test_x11(app_t *app, bool *flag)
 		XCB_EVENT_MASK_STRUCTURE_NOTIFY
 	};
 
-	const xcb_void_cookie_t cookie = xcb_create_window_checked(conn,
-		XCB_COPY_FROM_PARENT, win, screen->root, 0, 0, 640, 480, 0,
+	const xcb_void_cookie_t vcookie = xcb_create_window_checked(conn,
+		XCB_COPY_FROM_PARENT, win, screen->root, 0, 0, 600, 600, 0,
 		XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, mask, values);
 
-	xcb_generic_error_t *error = xcb_request_check(conn, cookie);
+	xcb_generic_error_t *error = xcb_request_check(conn, vcookie);
 	if(error)
 	{
 		free(error);
@@ -219,7 +219,7 @@ test_x11(app_t *app, bool *flag)
 		.ui_resize = _resize
 	};
 	LV2_Extension_Data_Feature data_access = {
-		.data_access = app->descriptor->extension_data
+		.data_access = app->descriptor ? app->descriptor->extension_data : NULL
 	};
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -427,21 +427,20 @@ test_x11(app_t *app, bool *flag)
 	char *ui_plugin_bundle_path = lilv_file_uri_parse(lilv_node_as_string(ui_bundle_uri), NULL);
 	if(ui_plugin_bundle_path)
 	{
-		app->ui_instance = app->descriptor->instantiate(app->descriptor,
-			app->plugin_uri, ui_plugin_bundle_path, _write_function, app,
-			(void *)&app->ui_widget, features);
+		if(app->ui_descriptor && app->ui_descriptor->instantiate)
+		{
+			app->ui_instance = app->ui_descriptor->instantiate(app->ui_descriptor,
+				app->plugin_uri, ui_plugin_bundle_path, _write_function, app,
+				(void *)&app->ui_widget, features);
+		}
 
 		lilv_free(ui_plugin_bundle_path);
 	}
 
 #if 0
-	if(app->ui_instance && app->ui_idle_iface)
+	if(app->ui_instance && app->ui_idle_iface && app->ui_idle_iface->idle)
 	{
-		for(unsigned i=0; i<1000; i++)
-		{
-			app->ui_idle_iface->idle(app->ui_instance);
-			usleep(1000);
-		}
+		app->ui_idle_iface->idle(app->ui_instance);
 	}
 #endif
 
@@ -463,7 +462,11 @@ test_x11(app_t *app, bool *flag)
 
 	if(app->ui_instance)
 	{
-		app->descriptor->cleanup(app->ui_instance);
+		if(app->ui_descriptor && app->ui_descriptor->cleanup)
+		{
+			app->ui_descriptor->cleanup(app->ui_instance);
+		}
+
 		app->ui_instance = NULL;
 	}
 
