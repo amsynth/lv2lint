@@ -32,7 +32,6 @@
 #include <lv2/lv2plug.in/ns/ext/worker/worker.h>
 #include <lv2/lv2plug.in/ns/ext/log/log.h>
 #include <lv2/lv2plug.in/ns/ext/port-groups/port-groups.h>
-#include <lv2/lv2plug.in/ns/ext/uri-map/uri-map.h>
 #include <lv2/lv2plug.in/ns/ext/event/event.h>
 #include <lv2/lv2plug.in/ns/ext/morph/morph.h>
 #include <lv2/lv2plug.in/ns/ext/uri-map/uri-map.h>
@@ -211,6 +210,11 @@ _map_uris(app_t *app)
 	app->uris.bufsz_sequenceSize = lilv_new_uri(app->world, LV2_BUF_SIZE__sequenceSize);
 
 	app->uris.ui_updateRate = lilv_new_uri(app->world, LV2_UI__updateRate);
+	app->uris.ui_parent = lilv_new_uri(app->world, LV2_UI__parent);
+	app->uris.ui_portMap = lilv_new_uri(app->world, LV2_UI__portMap);
+	app->uris.ui_portSubscribe = lilv_new_uri(app->world, LV2_UI__portSubscribe);
+	app->uris.ui_touch = lilv_new_uri(app->world, LV2_UI__touch);
+	app->uris.ui_requestValue = lilv_new_uri(app->world, LV2_UI__requestValue);
 
 	app->uris.ext_Widget = lilv_new_uri(app->world, LV2_EXTERNAL_UI__Widget);
 
@@ -353,6 +357,11 @@ _unmap_uris(app_t *app)
 	lilv_node_free(app->uris.bufsz_sequenceSize);
 
 	lilv_node_free(app->uris.ui_updateRate);
+	lilv_node_free(app->uris.ui_parent);
+	lilv_node_free(app->uris.ui_portMap);
+	lilv_node_free(app->uris.ui_portSubscribe);
+	lilv_node_free(app->uris.ui_touch);
+	lilv_node_free(app->uris.ui_requestValue);
 
 	lilv_node_free(app->uris.ext_Widget);
 
@@ -421,8 +430,8 @@ strsep(char **sp, const char *sep)
 }
 #endif
 
-static int
-_vprintf(void *data __unused, LV2_URID type __unused, const char *fmt,
+int
+log_vprintf(void *data __unused, LV2_URID type __unused, const char *fmt,
 	va_list args)
 {
 	char *buf = NULL;
@@ -448,14 +457,14 @@ _vprintf(void *data __unused, LV2_URID type __unused, const char *fmt,
 	return 0;
 }
 
-static int
-_printf(void *data, LV2_URID type, const char *fmt, ...)
+int
+log_printf(void *data, LV2_URID type, const char *fmt, ...)
 {
   va_list args;
 	int ret;
 
   va_start (args, fmt);
-	ret = _vprintf(data, type, fmt, args);
+	ret = log_vprintf(data, type, fmt, args);
   va_end(args);
 
 	return ret;
@@ -490,8 +499,8 @@ _resize(LV2_Resize_Port_Feature_Data instance __unused, uint32_t index __unused,
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-static uint32_t
-_uri_to_id(LV2_URI_Map_Callback_Data instance,
+uint32_t
+uri_to_id(LV2_URI_Map_Callback_Data instance,
 	const char *_map __attribute__((unused)), const char *uri)
 {
 	LV2_URID_Map *map = instance;
@@ -1349,8 +1358,8 @@ main(int argc, char **argv)
 	};
 	LV2_Log_Log log = {
 		.handle = &app,
-		.printf = _printf,
-		.vprintf = _vprintf
+		.printf = log_printf,
+		.vprintf = log_vprintf
 	};
 	LV2_State_Make_Path mkpath = {
 		.handle = &app,
@@ -1368,7 +1377,7 @@ main(int argc, char **argv)
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 	LV2_URI_Map_Feature urimap = {
 		.callback_data = app.map,
-		.uri_to_id = _uri_to_id
+		.uri_to_id = uri_to_id
 	};
 #pragma GCC diagnostic pop
 	LV2_Inline_Display queue_draw = {

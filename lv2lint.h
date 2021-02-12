@@ -28,6 +28,7 @@
 #include <lv2/lv2plug.in/ns/ext/state/state.h>
 #include <lv2/lv2plug.in/ns/ext/options/options.h>
 #include <lv2/lv2plug.in/ns/extensions/ui/ui.h>
+#include <lv2/lv2plug.in/ns/ext/uri-map/uri-map.h>
 
 #include <ardour.lv2/lv2_extensions.h>
 #include <kx.lv2/lv2_external_ui.h>
@@ -282,6 +283,11 @@ struct _app_t {
 		LilvNode *bufsz_sequenceSize;
 
 		LilvNode *ui_updateRate;
+		LilvNode *ui_parent;
+		LilvNode *ui_portMap;
+		LilvNode *ui_portSubscribe;
+		LilvNode *ui_touch;
+		LilvNode *ui_requestValue;
 
 		LilvNode *ext_Widget;
 
@@ -362,5 +368,17 @@ lv2lint_node_as_uri_strdup(const LilvNode *node);
 
 char *
 lv2lint_strdup(const char *str);
+
+int
+log_vprintf(void *data, LV2_URID type , const char *fmt, va_list args);
+
+int
+log_printf(void *data, LV2_URID type, const char *fmt, ...);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+uint32_t
+uri_to_id(LV2_URI_Map_Callback_Data instance, const char *_map, const char *uri);
+#pragma GCC diagnostic pop
 
 #endif

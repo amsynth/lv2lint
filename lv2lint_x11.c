@@ -19,22 +19,78 @@
 
 #include <lv2lint.h>
 
+#include <lv2/lv2plug.in/ns/ext/log/log.h>
+#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
+#include <lv2/lv2plug.in/ns/ext/parameters/parameters.h>
+#include <lv2/lv2plug.in/ns/ext/instance-access/instance-access.h>
+#include <lv2/lv2plug.in/ns/ext/data-access/data-access.h>
+
 #include <xcb/xcb.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_xrm.h>
 
 static void
-_write_function(LV2UI_Controller controller, uint32_t index,
-	uint32_t size, uint32_t protocol, const void *buf)
+_write_function(LV2UI_Controller controller __unused, uint32_t index __unused,
+	uint32_t size __unused, uint32_t protocol __unused, const void *buf __unused)
 {
-	app_t *app = controller;
+	// nothing to do
+}
 
-	(void)app;
-	(void)index;
-	(void)size;
-	(void)protocol;
-	(void)buf;
-	//FIXME
+static uint32_t
+_port_subscribe(LV2UI_Feature_Handle handle __unused, uint32_t index __unused,
+	uint32_t protocol __unused, const LV2_Feature *const *features __unused)
+{
+	return 0;
+}
+
+static uint32_t
+_port_unsubscribe(LV2UI_Feature_Handle handle __unused, uint32_t index __unused,
+	uint32_t protocol __unused, const LV2_Feature *const *features __unused)
+{
+	return 0;
+}
+
+static void
+_touch(LV2UI_Feature_Handle handle __unused, uint32_t index __unused,
+	bool grabbed __unused)
+{
+	// nothing to do
+}
+
+static uint32_t
+_port_index(LV2UI_Feature_Handle handle, const char *symbol)
+{
+	app_t *app = handle;
+	uint32_t index = LV2UI_INVALID_PORT_INDEX;
+
+	LilvNode *symbol_uri = lilv_new_string(app->world, symbol);
+	if(symbol_uri)
+	{
+		const LilvPort *port = lilv_plugin_get_port_by_symbol(app->plugin, symbol_uri);
+
+		if(port)
+		{
+			index = lilv_port_get_index(app->plugin, port);
+		}
+
+		lilv_node_free(symbol_uri);
+	}
+
+	return index;
+}
+
+static LV2UI_Request_Value_Status
+_request_value(LV2UI_Feature_Handle handle __unused, LV2_URID key __unused,
+	LV2_URID type __unused, const LV2_Feature* const* features __unused)
+{
+	return LV2UI_REQUEST_VALUE_SUCCESS;
+}
+
+static int
+_resize(LV2UI_Feature_Handle handle __unused, int width __unused,
+	int height __unused)
+{
+	return 0;
 }
 
 static const ret_t *
@@ -134,6 +190,70 @@ test_x11(app_t *app, bool *flag)
 	xcb_map_window(conn, win);
 	xcb_flush(conn);
 
+	LV2_Log_Log log = {
+		.handle = app,
+		.printf = log_printf,
+		.vprintf = log_vprintf
+	};
+	LV2UI_Port_Map port_map = {
+		.handle = app,
+		.port_index = _port_index
+	};
+	LV2UI_Port_Subscribe port_subscribe = {
+		.handle = app,
+		.subscribe = _port_subscribe,
+		.unsubscribe = _port_unsubscribe
+	};
+	LV2UI_Touch touch = {
+		.handle = app,
+		.touch = _touch
+	};
+	LV2UI_Request_Value request_value = {
+		.handle = app,
+		.request = _request_value
+	};
+	LV2UI_Resize host_resize = {
+		.handle = app,
+		.ui_resize = _resize
+	};
+	LV2_Extension_Data_Feature data_access = {
+		.data_access = app->descriptor->extension_data
+	};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+	LV2_URI_Map_Feature urimap = {
+		.callback_data = app->map,
+		.uri_to_id = uri_to_id
+	};
+#pragma GCC diagnostic pop
+
+	const LV2_URID atom_Float = app->map->map(app->map->handle, LV2_ATOM__Float);
+	const LV2_URID param_sampleRate = app->map->map(app->map->handle, LV2_PARAMETERS__sampleRate);
+	const LV2_URID ui_updateRate = app->map->map(app->map->handle, LV2_UI__updateRate);
+
+	const float param_sample_rate = 48000.f;
+	const float ui_update_rate = 25.f;
+
+	const LV2_Options_Option opts_sampleRate = {
+		.key = param_sampleRate,
+		.size = sizeof(float),
+		.type = atom_Float,
+		.value = &param_sample_rate
+	};
+	const LV2_Options_Option opts_updateRate = {
+		.key = ui_updateRate,
+		.size = sizeof(float),
+		.type = atom_Float,
+		.value = &ui_update_rate
+	};
+	const LV2_Options_Option opts_sentinel = {
+		.key = 0,
+		.value =NULL
+	};
+
+#define MAX_OPTS 2
+	LV2_Options_Option opts [MAX_OPTS];
+
 	const LV2_Feature feat_parent = {
 		.URI = LV2_UI__parent,
 		.data = (void *)(uintptr_t)win
@@ -146,15 +266,160 @@ test_x11(app_t *app, bool *flag)
 		.URI = LV2_URID__unmap,
 		.data = app->unmap
 	};
+	const LV2_Feature feat_log = {
+		.URI = LV2_LOG__log,
+		.data = &log
+	};
+	const LV2_Feature feat_port_map = {
+		.URI = LV2_UI__portMap,
+		.data = &port_map
+	};
+	const LV2_Feature feat_port_subscribe = {
+		.URI = LV2_UI__portSubscribe,
+		.data = &port_subscribe
+	};
+	const LV2_Feature feat_touch = {
+		.URI = LV2_UI__touch,
+		.data = &touch
+	};
+	const LV2_Feature feat_request_value = {
+		.URI = LV2_UI__requestValue,
+		.data = &request_value
+	};
+	const LV2_Feature feat_resize = {
+		.URI = LV2_UI__resize,
+		.data = &host_resize
+	};
+	const LV2_Feature feat_instance_access = {
+		.URI = LV2_INSTANCE_ACCESS_URI,
+		.data = app->instance
+	};
+	const LV2_Feature feat_data_access = {
+		.URI = LV2_DATA_ACCESS_URI,
+		.data = &data_access
+	};
+	const LV2_Feature feat_urimap = {
+		.URI = LV2_URI_MAP_URI,
+		.data = &urimap
+	};
+	const LV2_Feature feat_opts = {
+		.URI = LV2_OPTIONS__options,
+		.data = opts
+	};
 
-	unsigned i = 0;
-	//FIXME only add required ones
-	const LV2_Feature *features [4];
-	features[i++] = &feat_parent;
-	features[i++] = &feat_map;
-	features[i++] = &feat_unmap;
-	features[i] = NULL;
-	assert(i <= 4);
+#define MAX_FEATURES 13
+	const LV2_Feature *features [MAX_FEATURES];
+	unsigned f = 0;
+	{
+		const LilvNode *uri = lilv_ui_get_uri(app->ui);
+
+		LilvNodes *required_features = lilv_world_find_nodes(app->world, uri,
+			app->uris.lv2_requiredFeature, NULL);
+		if(required_features)
+		{
+			LILV_FOREACH(nodes, itr, required_features)
+			{
+				const LilvNode *feature = lilv_nodes_get(required_features, itr);
+
+				if(lilv_node_equals(feature, app->uris.urid_map))
+				{
+					features[f++] = &feat_map;
+				}
+				else if(lilv_node_equals(feature, app->uris.urid_unmap))
+				{
+					features[f++] = &feat_unmap;
+				}
+				else if(lilv_node_equals(feature, app->uris.ui_parent))
+				{
+					features[f++] = &feat_parent;
+				}
+				else if(lilv_node_equals(feature, app->uris.log_log))
+				{
+					features[f++] = &feat_log;
+				}
+				else if(lilv_node_equals(feature, app->uris.ui_portMap))
+				{
+					features[f++] = &feat_port_map;
+				}
+				else if(lilv_node_equals(feature, app->uris.ui_portSubscribe))
+				{
+					features[f++] = &feat_port_subscribe;
+				}
+				else if(lilv_node_equals(feature, app->uris.ui_touch))
+				{
+					features[f++] = &feat_touch;
+				}
+				else if(lilv_node_equals(feature, app->uris.ui_requestValue))
+				{
+					features[f++] = &feat_request_value;
+				}
+				else if(lilv_node_equals(feature, app->uris.ui_resize))
+				{
+					features[f++] = &feat_resize;
+				}
+				else if(lilv_node_equals(feature, app->uris.instance_access))
+				{
+					features[f++] = &feat_instance_access;
+				}
+				else if(lilv_node_equals(feature, app->uris.data_access))
+				{
+					features[f++] = &feat_data_access;
+				}
+				else if(lilv_node_equals(feature, app->uris.uri_map))
+				{
+					features[f++] = &feat_urimap;
+				}
+				else if(lilv_node_equals(feature, app->uris.opts_options))
+				{
+					features[f++] = &feat_opts;
+				}
+				else
+				{
+					//FIXME unknown feature
+				}
+			}
+
+			lilv_nodes_free(required_features);
+		}
+
+		features[f] = NULL;
+		assert(f <= MAX_FEATURES);
+	}
+#undef MAX_FEATURES
+
+	{
+		const LilvNode *uri = lilv_ui_get_uri(app->ui);
+		unsigned n_opts = 0;
+
+		LilvNodes *required_options = lilv_world_find_nodes(app->world, uri,
+			app->uris.opts_requiredOption, NULL);
+		if(required_options)
+		{
+			LILV_FOREACH(nodes, itr, required_options)
+			{
+				const LilvNode *option = lilv_nodes_get(required_options, itr);
+
+				if(lilv_node_equals(option, app->uris.param_sampleRate))
+				{
+					opts[n_opts++] = opts_sampleRate;
+				}
+				else if(lilv_node_equals(option, app->uris.ui_updateRate))
+				{
+					opts[n_opts++] = opts_updateRate;
+				}
+				else
+				{
+					//FIXME unknown option
+				}
+			}
+
+			lilv_nodes_free(required_options);
+		}
+
+		opts[n_opts++] = opts_sentinel; // sentinel
+		assert(n_opts <= MAX_OPTS);
+	}
+#undef MAX_OPTS
 
 	app->ui_instance = app->descriptor->instantiate(app->descriptor,
 		app->plugin_uri, "", _write_function, app, (void *)&app->ui_widget,
