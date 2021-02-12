@@ -28,6 +28,8 @@ xext_dep = dependency('xext', version : '>=1.3.0', required : x11_tests)
 xcb_dep = dependency('xcb', version : '>=1.12', required : x11_tests)
 xcbicccm_dep = dependency('xcb-icccm', version : '>=0.4.0', required : x11_tests)
 xcbxrm_dep = dependency('xcb-xrm', version : '>=1.0', required : x11_tests)
+	
+deps = [m_dep, lv2_dep, lilv_dep, curl_dep, elf_dep, x11_dep, xext_dep, xcb_dep, xcbicccm_dep, xcbxrm_dep]
 
 mapper_inc = include_directories('mapper.lv2')
 incs = [mapper_inc]
@@ -50,13 +52,6 @@ else
 	conf_data.set('ELF_TESTS', './')
 endif
 
-if x11_tests.enabled()
-	add_project_arguments('-DENABLE_X11_TESTS', language : 'c')
-	conf_data.set('X11_TESTS', '')
-else
-	conf_data.set('X11_TESTS', './')
-endif
-
 srcs = [
 	'lv2lint.c',
 	'lv2lint_plugin.c',
@@ -65,9 +60,17 @@ srcs = [
 	'lv2lint_ui.c'
 ]
 
+if x11_tests.enabled()
+	add_project_arguments('-DENABLE_X11_TESTS', language : 'c')
+	conf_data.set('X11_TESTS', '')
+	srcs += 'lv2lint_x11.c'
+else
+	conf_data.set('X11_TESTS', './')
+endif
+
 executable('lv2lint', srcs,
 	include_directories : incs,
-	dependencies : [m_dep, lv2_dep, lilv_dep, curl_dep, elf_dep],
+	dependencies : deps,
 	install : true)
 
 configure_file(input : 'lv2lint.1.in', output : 'lv2lint.1',

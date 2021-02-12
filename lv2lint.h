@@ -116,6 +116,10 @@ struct _app_t {
 	const LilvNode *parameter;
 	const LilvUI *ui;
 	const char *ui_uri;
+	LV2_URID_Map *map;
+	LV2_URID_Unmap *unmap;
+	void *ui_instance;
+	uintptr_t ui_widget;
 	LilvNodes *writables;
 	LilvNodes *readables;
 	const LV2_Worker_Interface *work_iface;
@@ -306,6 +310,11 @@ test_parameter(app_t *app);
 
 bool
 test_ui(app_t *app);
+
+#ifdef ENABLE_X11_TESTS
+void
+test_x11(app_t *app, bool *flag);
+#endif
 
 #ifdef ENABLE_ONLINE_TESTS
 bool

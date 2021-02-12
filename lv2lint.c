@@ -1341,8 +1341,8 @@ main(int argc, char **argv)
 	lilv_world_load_all(app.world);
 	_load_include_dirs(&app);
 
-	LV2_URID_Map *map = mapper_get_map(mapper);
-	LV2_URID_Unmap *unmap = mapper_get_unmap(mapper);
+	app.map = mapper_get_map(mapper);
+	app.unmap = mapper_get_unmap(mapper);
 	LV2_Worker_Schedule sched = {
 		.handle = &app,
 		.schedule_work = _sched
@@ -1367,7 +1367,7 @@ main(int argc, char **argv)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 	LV2_URI_Map_Feature urimap = {
-		.callback_data = map,
+		.callback_data = app.map,
 		.uri_to_id = _uri_to_id
 	};
 #pragma GCC diagnostic pop
@@ -1376,14 +1376,14 @@ main(int argc, char **argv)
 		.queue_draw = _queue_draw
 	};
 
-	const LV2_URID atom_Float = map->map(map->handle, LV2_ATOM__Float);
-	const LV2_URID atom_Int = map->map(map->handle, LV2_ATOM__Int);
-	const LV2_URID param_sampleRate = map->map(map->handle, LV2_PARAMETERS__sampleRate);
-	const LV2_URID ui_updateRate = map->map(map->handle, LV2_UI__updateRate);
-	const LV2_URID bufsz_minBlockLength = map->map(map->handle, LV2_BUF_SIZE__minBlockLength);
-	const LV2_URID bufsz_maxBlockLength = map->map(map->handle, LV2_BUF_SIZE__maxBlockLength);
-	const LV2_URID bufsz_nominalBlockLength = map->map(map->handle, LV2_BUF_SIZE_PREFIX"nominalBlockLength");
-	const LV2_URID bufsz_sequenceSize = map->map(map->handle, LV2_BUF_SIZE__sequenceSize);
+	const LV2_URID atom_Float = app.map->map(app.map->handle, LV2_ATOM__Float);
+	const LV2_URID atom_Int = app.map->map(app.map->handle, LV2_ATOM__Int);
+	const LV2_URID param_sampleRate = app.map->map(app.map->handle, LV2_PARAMETERS__sampleRate);
+	const LV2_URID ui_updateRate = app.map->map(app.map->handle, LV2_UI__updateRate);
+	const LV2_URID bufsz_minBlockLength = app.map->map(app.map->handle, LV2_BUF_SIZE__minBlockLength);
+	const LV2_URID bufsz_maxBlockLength = app.map->map(app.map->handle, LV2_BUF_SIZE__maxBlockLength);
+	const LV2_URID bufsz_nominalBlockLength = app.map->map(app.map->handle, LV2_BUF_SIZE_PREFIX"nominalBlockLength");
+	const LV2_URID bufsz_sequenceSize = app.map->map(app.map->handle, LV2_BUF_SIZE__sequenceSize);
 
 	const float param_sample_rate = 48000.f;
 	const float ui_update_rate = 25.f;
@@ -1444,11 +1444,11 @@ main(int argc, char **argv)
 
 	const LV2_Feature feat_map = {
 		.URI = LV2_URID__map,
-		.data = map
+		.data = app.map
 	};
 	const LV2_Feature feat_unmap = {
 		.URI = LV2_URID__unmap,
-		.data = unmap
+		.data = app.unmap
 	};
 	const LV2_Feature feat_sched = {
 		.URI = LV2_WORKER__schedule,
@@ -1688,7 +1688,7 @@ main(int argc, char **argv)
 
 							lilv_world_load_resource(app.world, pset);
 
-							LilvState *state = lilv_state_new_from_world(app.world, map, pset);
+							LilvState *state = lilv_state_new_from_world(app.world, app.map, pset);
 							if(state)
 							{
 								lilv_state_restore(state, app.instance, _state_set_value, &app,

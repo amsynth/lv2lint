@@ -17,6 +17,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <assert.h>
 
 #ifdef _WIN32
 #	include <windows.h>
@@ -487,7 +488,6 @@ _test_toolkit(app_t *app)
 }
 
 #ifdef ENABLE_ONLINE_TESTS
-
 static const ret_t *
 _test_ui_url(app_t *app)
 {
@@ -533,7 +533,7 @@ static const test_t tests [] = {
 	{"UI Resize Interface", _test_resize_interface},
 	{"UI Toolkit",          _test_toolkit},
 #ifdef ENABLE_ONLINE_TESTS
-	{"UI URL",           _test_ui_url},
+	{"UI URL",              _test_ui_url},
 #endif
 };
 
@@ -630,6 +630,10 @@ test_ui(app_t *app)
 			msg = true;
 		}
 	}
+
+#ifdef ENABLE_X11_TESTS
+	test_x11(app, &flag);
+#endif
 
 	app->ui_idle_iface = NULL;
 	app->ui_show_iface = NULL;
