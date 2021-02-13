@@ -211,10 +211,18 @@ static const unsigned tests_n = sizeof(tests) / sizeof(test_t);
 void
 test_x11(app_t *app, bool *flag)
 {
+	char *DISPLAY = getenv("DISPLAY");
+	if(!DISPLAY || !strlen(DISPLAY))
+	{
+		return;
+	}
+
 	bool msg = false;
 	res_t *rets = alloca(tests_n * sizeof(res_t));
 	if(!rets)
+	{
 		return;
+	}
 
   Display *display = NULL;
 	Window win = 0;
