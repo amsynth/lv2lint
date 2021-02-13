@@ -162,7 +162,7 @@ _test_ui_hints(app_t *app)
 	long supplied = 0;
 
   Display *display = XOpenDisplay(NULL); // FIXME reuse existing one
-	if(display)
+	if(display && app->ui_widget)
 	{
 		XGetWMNormalHints(display, app->ui_widget, &hints, &supplied);
 
