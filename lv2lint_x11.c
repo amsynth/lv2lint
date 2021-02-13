@@ -27,6 +27,7 @@
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 static void
 _write_function(LV2UI_Controller controller __unused, uint32_t index __unused,
@@ -132,9 +133,77 @@ _test_ui_widget(app_t *app)
 	return ret;
 }
 
+static const ret_t *
+_test_ui_hints(app_t *app)
+{
+	static const ret_t ret_fixed_aspect = {
+		.lnt = LINT_WARN,
+		.msg = "widget uses fixed aspect ratio",
+		.uri = LV2_CORE_URI, //FIXME
+		.dsc = "Windows with fixed aspect ratio are a pain in tiling window mangers."
+	},
+	ret_aspect_constraints = {
+		.lnt = LINT_WARN,
+		.msg = "widget uses aspect ratio constraints",
+		.uri = LV2_CORE_URI, //FIXME
+		.dsc = "Windows with aspect ratio constraints are a pain in tiling window mangers."
+	},
+	ret_fixed_size  = {
+		.lnt = LINT_WARN,
+		.msg = "widget uses fixed size",
+		.uri = LV2_CORE_URI, //FIXME
+		.dsc = "Windows with fixed sizes are a pain in tiling window mangers."
+	};
+
+	const ret_t *ret = NULL;
+
+	XSizeHints hints;
+	memset(&hints, 0x1, sizeof(hints));
+	long supplied = 0;
+
+  Display *display = XOpenDisplay(NULL); // FIXME reuse existing one
+	if(display)
+	{
+		XGetWMNormalHints(display, app->ui_widget, &hints, &supplied);
+
+		XCloseDisplay(display);
+	}
+
+	if(supplied & PAspect)
+	{
+		const float ratio_min = hints.min_aspect.y && hints.min_aspect.x
+			? (float)hints.min_aspect.y / hints.min_aspect.x
+			: 0.f;
+		const float ratio_max = hints.max_aspect.y && hints.max_aspect.x
+			? (float)hints.max_aspect.y / hints.max_aspect.x
+			: 0.f;
+
+		if(ratio_min && ratio_max && (ratio_min == ratio_max) )
+		{
+			ret = &ret_fixed_aspect;
+		}
+		else if(ratio_min || ratio_max)
+		{
+			ret = &ret_aspect_constraints;
+		}
+	}
+
+	if(supplied & (PSize | PMinSize | PMaxSize) )
+	{
+		if( (hints.width == hints.min_width) && (hints.width == hints.max_width)
+		&&  (hints.height == hints.min_height) && (hints.height == hints.max_height) )
+		{
+			ret = &ret_fixed_size;
+		}
+	}
+
+	return ret;
+}
+
 static const test_t tests [] = {
 	{"UI Instantiation",    _test_ui_instantiation},
 	{"UI Widget",           _test_ui_widget},
+	{"UI Hints",            _test_ui_hints},
 };
 
 static const unsigned tests_n = sizeof(tests) / sizeof(test_t);
@@ -147,7 +216,7 @@ test_x11(app_t *app, bool *flag)
 	if(!rets)
 		return;
 
-  Display* display = NULL;
+  Display *display = NULL;
 	Window win = 0;
 
 	display = XOpenDisplay(NULL);
