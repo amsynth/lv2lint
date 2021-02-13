@@ -632,7 +632,10 @@ test_ui(app_t *app)
 	}
 
 #ifdef ENABLE_X11_TESTS
-	test_x11(app, &flag);
+	if(lilv_ui_is_a(app->ui, app->uris.ui_X11UI))
+	{
+		test_x11(app, &flag);
+	}
 #endif
 
 	app->ui_idle_iface = NULL;
