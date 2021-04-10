@@ -59,18 +59,22 @@ when using this tool, please report back, so it can be fixed.*
 * [libelf](https://sourceware.org/elfutils/) (ELF object file access library)
 
 lv2lint can optionally test your plugin URIs for existence. If you want that,
-you need to enable it at compile time (-Donline-tests=true) and link to libcurl.
+you need to enable it at compile time (-Donline-tests=enabled) and link to libcurl.
 You will also need to enable it at run-time (-o), e.g. double-opt-in.
 
 lv2lint can optionally test your plugin symbol visibility and link dependencies.
-If you want that, you need to enable it at compile time (-Delf-tests=true) and
+If you want that, you need to enable it at compile time (-Delf-tests=enabled) and
 link to libelf.
+
+lv2lint can optionally test your plugin X11 UI instantiation.
+If you want that, you need to enable it at compile time (-Dx11-tests=enabled) and
+link to libX11.
 
 ### Build / install
 
 	git clone https://git.open-music-kontrollers.ch/lv2/lv2lint
 	cd lv2lint
-	meson -Donline-tests=true -Delf-tests=true build
+	meson -Donline-tests=enabled -Delf-tests=enabled -Dx11-tests=enabled build
 	cd build
 	ninja
 	sudo ninja install

@@ -47,7 +47,7 @@
 * time
 	* TODO
 
-* ui
+* ui (non-X11)
 	* Actually instantiate UI
 
 * scalePoints (parameters)

@@ -99,8 +99,8 @@ _test_ui_instantiation(app_t *app)
 	static const ret_t ret_instantiation = {
 		.lnt = LINT_FAIL,
 		.msg = "failed to instantiate",
-		.uri = LV2_CORE_URI, //FIXME
-		.dsc = "You likely have forgotten to list all lv2:requiredFeature's."
+		.uri = LV2_UI__X11UI,
+		.dsc = "You likely have forgotten to list all lv2:requiredFeatures."
 	};
 
 	const ret_t *ret = NULL;
@@ -119,7 +119,7 @@ _test_ui_widget(app_t *app)
 	static const ret_t ret_widget = {
 		.lnt = LINT_FAIL,
 		.msg = "failed to return a valid widget",
-		.uri = LV2_CORE_URI, //FIXME
+		.uri = LV2_UI__X11UI,
 		.dsc = "You likely have forgotten to return the proper XWindow ID."
 	};
 
@@ -139,20 +139,20 @@ _test_ui_hints(app_t *app)
 	static const ret_t ret_fixed_aspect = {
 		.lnt = LINT_WARN,
 		.msg = "widget uses fixed aspect ratio",
-		.uri = LV2_CORE_URI, //FIXME
-		.dsc = "Windows with fixed aspect ratio are a pain in tiling window mangers."
+		.uri = LV2_UI__X11UI,
+		.dsc = "Windows with fixed aspect ratio are a pain in tiling window managers."
 	},
 	ret_aspect_constraints = {
 		.lnt = LINT_WARN,
 		.msg = "widget uses aspect ratio constraints",
-		.uri = LV2_CORE_URI, //FIXME
-		.dsc = "Windows with aspect ratio constraints are a pain in tiling window mangers."
+		.uri = LV2_UI__X11UI,
+		.dsc = "Windows with aspect ratio constraints are a pain in tiling window managers."
 	},
 	ret_fixed_size  = {
 		.lnt = LINT_WARN,
 		.msg = "widget uses fixed size",
-		.uri = LV2_CORE_URI, //FIXME
-		.dsc = "Windows with fixed sizes are a pain in tiling window mangers."
+		.uri = LV2_UI__X11UI,
+		.dsc = "Windows with fixed sizes are a pain in tiling window managers."
 	};
 
 	const ret_t *ret = NULL;
