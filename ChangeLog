@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.0] - 12 Apr 2021
+
+### Added
+
+* x11 initialization test
+* x11 fixed-aspect-ratio test
+* x11 constrained-aspect-ratio test
+
 ## [0.10.0] - 15 Jan 2021
 
 ### Fixed
