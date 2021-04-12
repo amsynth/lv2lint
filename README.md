@@ -57,6 +57,7 @@ when using this tool, please report back, so it can be fixed.*
 
 * [libcurl](https://curl.haxx.se/libcurl/) (The multiprotocol file transfer library)
 * [libelf](https://sourceware.org/elfutils/) (ELF object file access library)
+* [libX11](https://www.xorg) (X Window System)
 
 lv2lint can optionally test your plugin URIs for existence. If you want that,
 you need to enable it at compile time (-Donline-tests=enabled) and link to libcurl.
