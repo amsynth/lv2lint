@@ -203,131 +203,174 @@ _test_range(app_t *app)
 			}
 			else
 			{
-				if(  lilv_node_equals(range_node, NODE(app, ATOM__Int))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Long))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Float))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Double)) )
+				const LV2_URID ran = app->map->map(app->map->handle, range);
+
+				switch(ran)
 				{
-					LilvNode *minimum = lilv_world_get(app->world, app->parameter, NODE(app, CORE__minimum), NULL);
-					if(minimum)
+					case ATOM__Int:
+						// fall-through
+					case ATOM__Long:
+						// fall-through
+					case ATOM__Float:
+						// fall-through
+					case ATOM__Double:
 					{
-						if(  lilv_node_equals(range_node, NODE(app, ATOM__Int))
-							|| lilv_node_equals(range_node, NODE(app, ATOM__Long)) )
+						LilvNode *minimum = lilv_world_get(app->world, app->parameter, NODE(app, CORE__minimum), NULL);
+						if(minimum)
 						{
-							if(!lilv_node_is_int(minimum))
+							switch(ran)
 							{
-								ret = &ret_range_minimum_not_an_int;
-								app->min.i64 = 0; // fall-back
+								case ATOM__Int:
+									// fall-through
+								case ATOM__Long:
+								{
+									if(!lilv_node_is_int(minimum))
+									{
+										ret = &ret_range_minimum_not_an_int;
+										app->min.i64 = 0; // fall-back
+									}
+									else
+									{
+										app->min.i64 = lilv_node_as_int(minimum);
+									}
+								} break;
+
+								case ATOM__Float:
+									// fall-through
+								case ATOM__Double:
+								{
+									if(!lilv_node_is_float(minimum))
+									{
+										ret = &ret_range_minimum_not_a_float;
+										app->min.f64 = 0.0; // fall-back
+									}
+									else
+									{
+										app->min.f64 = lilv_node_as_float(minimum);
+									}
+								} break;
 							}
-							else
-							{
-								app->min.i64 = lilv_node_as_int(minimum);
-							}
+
+							lilv_node_free(minimum);
 						}
-						else if(lilv_node_equals(range_node, NODE(app, ATOM__Float))
-							|| lilv_node_equals(range_node, NODE(app, ATOM__Double)) )
+						else
 						{
-							if(!lilv_node_is_float(minimum))
-							{
-								ret = &ret_range_minimum_not_a_float;
-								app->min.f64 = 0.0; // fall-back
-							}
-							else
-							{
-								app->min.f64 = lilv_node_as_float(minimum);
-							}
+							ret = &ret_range_minimum_not_found;
 						}
 
-						lilv_node_free(minimum);
-					}
-					else
-					{
-						ret = &ret_range_minimum_not_found;
-					}
+						LilvNode *maximum = lilv_world_get(app->world, app->parameter, NODE(app, CORE__maximum), NULL);
+						if(maximum)
+						{
+							switch(ran)
+							{
+								case ATOM__Int:
+									// fall-through
+								case ATOM__Long:
+								{
+									if(!lilv_node_is_int(maximum))
+									{
+										ret = &ret_range_maximum_not_an_int;
+										app->max.i64 = 1; // fall-back
+									}
+									else
+									{
+										app->max.i64 = lilv_node_as_int(maximum);
+									}
+								} break;
 
-					LilvNode *maximum = lilv_world_get(app->world, app->parameter, NODE(app, CORE__maximum), NULL);
-					if(maximum)
-					{
-						if(  lilv_node_equals(range_node, NODE(app, ATOM__Int))
-							|| lilv_node_equals(range_node, NODE(app, ATOM__Long)) )
-						{
-							if(!lilv_node_is_int(maximum))
-							{
-								ret = &ret_range_maximum_not_an_int;
-								app->max.i64 = 1; // fall-back
+								case ATOM__Float:
+									// fall-through
+								case ATOM__Double:
+								{
+									if(!lilv_node_is_float(maximum))
+									{
+										ret = &ret_range_maximum_not_a_float;
+										app->max.f64 = 1.0; // fall-back
+									}
+									else
+									{
+										app->max.f64 = lilv_node_as_float(maximum);
+									}
+								} break;
 							}
-							else
-							{
-								app->max.i64 = lilv_node_as_int(maximum);
-							}
+
+							lilv_node_free(maximum);
 						}
-						else if(lilv_node_equals(range_node, NODE(app, ATOM__Float))
-							|| lilv_node_equals(range_node, NODE(app, ATOM__Double)) )
+						else
 						{
-							if(!lilv_node_is_float(maximum))
-							{
-								ret = &ret_range_maximum_not_a_float;
-								app->max.f64 = 1.0; // fall-back
-							}
-							else
-							{
-								app->max.f64 = lilv_node_as_float(maximum);
-							}
+							ret = &ret_range_maximum_not_found;
 						}
 
-						lilv_node_free(maximum);
-					}
-					else
-					{
-						ret = &ret_range_maximum_not_found;
-					}
+						if(minimum && maximum)
+						{
+							switch(ran)
+							{
+								case ATOM__Int:
+									// fall-through
+								case ATOM__Long:
+								{
+									if( !(app->min.i64 <= app->max.i64) )
+									{
+										ret = &ret_range_invalid;
+									}
+								} break;
 
-					if(minimum && maximum)
+								case ATOM__Float:
+									// fall-through
+								case ATOM__Double:
+								{
+									if( !(app->min.f64 <= app->max.f64) )
+									{
+										ret = &ret_range_invalid;
+									}
+								} break;
+							}
+						}
+					} break;
+
+					case ATOM__Bool:
+						// fall-through
+					case ATOM__String:
+						// fall-through
+					case ATOM__Literal:
+						// fall-through
+					case ATOM__Path:
+						// fall-through
+					case ATOM__Chunk:
+						// fall-through
+					case ATOM__URI:
+						// fall-through
+					case ATOM__URID:
+						// fall-through
+					case ATOM__Tuple:
+						// fall-through
+					case ATOM__Object:
+						// fall-through
+					case ATOM__Vector:
+						// fall-through
+					case ATOM__Sequence:
+						// fall-through
+					case XSD__int:
+						// fall-through
+					case XSD__nonNegativeInteger:
+						// fall-through
+					case XSD__long:
+						// fall-through
+					case XSD__float:
+						// fall-through
+					case XSD__double:
 					{
-						if(  lilv_node_equals(range_node, NODE(app, ATOM__Int))
-							|| lilv_node_equals(range_node, NODE(app, ATOM__Long)) )
-						{
-							if( !(app->min.i64 <= app->max.i64) )
-							{
-								ret = &ret_range_invalid;
-							}
-						}
-						else if(lilv_node_equals(range_node, NODE(app, ATOM__Float))
-							|| lilv_node_equals(range_node, NODE(app, ATOM__Double)) )
-						{
-							if( !(app->min.f64 <= app->max.f64) )
-							{
-								ret = &ret_range_invalid;
-							}
-						}
-					}
-				}
-				else if(lilv_node_equals(range_node, NODE(app, ATOM__Bool))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__String))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Literal))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Path))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Chunk))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__URI))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__URID))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Tuple))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Object))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Vector))
-					|| lilv_node_equals(range_node, NODE(app, ATOM__Sequence))
-					|| lilv_node_equals(range_node, NODE(app, XSD__int))
-					|| lilv_node_equals(range_node, NODE(app, XSD__nonNegativeInteger))
-					|| lilv_node_equals(range_node, NODE(app, XSD__long))
-					|| lilv_node_equals(range_node, NODE(app, XSD__float))
-					|| lilv_node_equals(range_node, NODE(app, XSD__double)) )
-				{
-					// OK
-				}
-				else
-				{
-					ret = &ret_range_not_an_atom;
+						//OK
+					} break;
+
+					default:
+					{
+						ret = &ret_range_not_an_atom;
+					} break;
 				}
 			}
 		}
-		else // !is_string
+		else // !is_uri_
 		{
 			ret = &ret_range_not_a_uri;
 		}
