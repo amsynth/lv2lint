@@ -369,62 +369,62 @@ test_x11(app_t *app, bool *flag)
 			LILV_FOREACH(nodes, itr, required_features)
 			{
 				const LilvNode *feature = lilv_nodes_get(required_features, itr);
+				const LV2_URID feat = app->map->map(app->map->handle, lilv_node_as_uri(feature));
 
-				if(lilv_node_equals(feature, NODE(app, URID__map)))
+				switch(feat)
 				{
-					features[f++] = &feat_map;
-				}
-				else if(lilv_node_equals(feature, NODE(app, URID__unmap)))
-				{
-					features[f++] = &feat_unmap;
-				}
-				else if(lilv_node_equals(feature, NODE(app, UI__parent)))
-				{
-					features[f++] = &feat_parent;
-				}
-				else if(lilv_node_equals(feature, NODE(app, LOG__log)))
-				{
-					features[f++] = &feat_log;
-				}
-				else if(lilv_node_equals(feature, NODE(app, UI__portMap)))
-				{
-					features[f++] = &feat_port_map;
-				}
-				else if(lilv_node_equals(feature, NODE(app, UI__portSubscribe)))
-				{
-					features[f++] = &feat_port_subscribe;
-				}
-				else if(lilv_node_equals(feature, NODE(app, UI__touch)))
-				{
-					features[f++] = &feat_touch;
-				}
-				else if(lilv_node_equals(feature, NODE(app, UI__requestValue)))
-				{
-					features[f++] = &feat_request_value;
-				}
-				else if(lilv_node_equals(feature, NODE(app, UI__resize)))
-				{
-					features[f++] = &feat_resize;
-				}
-				else if(lilv_node_equals(feature, NODE(app, INSTANCE_ACCESS)))
-				{
-					features[f++] = &feat_instance_access;
-				}
-				else if(lilv_node_equals(feature, NODE(app, DATA_ACCESS)))
-				{
-					features[f++] = &feat_data_access;
-				}
-				else if(lilv_node_equals(feature, NODE(app, URI_MAP)))
-				{
-					features[f++] = &feat_urimap;
-				}
-				else if(lilv_node_equals(feature, NODE(app, OPTIONS__options)))
-				{
-					features[f++] = &feat_opts;
-				}
-				else
-				{
-					//FIXME unknown feature
+					case URID__map:
+					{
+						features[f++] = &feat_map;
+					} break;
+					case URID__unmap:
+					{
+						features[f++] = &feat_unmap;
+					} break;
+					case UI__parent:
+					{
+						features[f++] = &feat_parent;
+					} break;
+					case LOG__log:
+					{
+						features[f++] = &feat_log;
+					} break;
+					case UI__portMap:
+					{
+						features[f++] = &feat_port_map;
+					} break;
+					case UI__portSubscribe:
+					{
+						features[f++] = &feat_port_subscribe;
+					} break;
+					case UI__touch:
+					{
+						features[f++] = &feat_touch;
+					} break;
+					case UI__requestValue:
+					{
+						features[f++] = &feat_request_value;
+					} break;
+					case UI__resize:
+					{
+						features[f++] = &feat_resize;
+					} break;
+					case INSTANCE_ACCESS:
+					{
+						features[f++] = &feat_instance_access;
+					} break;
+					case DATA_ACCESS:
+					{
+						features[f++] = &feat_data_access;
+					} break;
+					case URI_MAP:
+					{
+						features[f++] = &feat_urimap;
+					} break;
+					case OPTIONS__options:
+					{
+						features[f++] = &feat_opts;
+					} break;
 				}
 			}
 
@@ -447,18 +447,18 @@ test_x11(app_t *app, bool *flag)
 			LILV_FOREACH(nodes, itr, required_options)
 			{
 				const LilvNode *option = lilv_nodes_get(required_options, itr);
+				const LV2_URID opt = app->map->map(app->map->handle, lilv_node_as_uri(option));
 
-				if(lilv_node_equals(option, NODE(app, PARAMETERS__sampleRate)))
+				switch(opt)
 				{
-					opts[n_opts++] = opts_sampleRate;
-				}
-				else if(lilv_node_equals(option, NODE(app, UI__updateRate)))
-				{
-					opts[n_opts++] = opts_updateRate;
-				}
-				else
-				{
-					//FIXME unknown option
+					case PARAMETERS__sampleRate:
+					{
+						opts[n_opts++] = opts_sampleRate;
+					} break;
+					case UI__updateRate:
+					{
+						opts[n_opts++] = opts_updateRate;
+					} break;
 				}
 			}
 

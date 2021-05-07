@@ -1716,53 +1716,91 @@ main(int argc, char **argv)
 							LILV_FOREACH(nodes, itr, required_features)
 							{
 								const LilvNode *feature = lilv_nodes_get(required_features, itr);
+								const LV2_URID feat = app.map->map(app.map->handle, lilv_node_as_uri(feature));
 
-								if(lilv_node_equals(feature, NODE(&app, URID__map)))
-									features[f++] = &feat_map;
-								else if(lilv_node_equals(feature, NODE(&app, URID__unmap)))
-									features[f++] = &feat_unmap;
-								else if(lilv_node_equals(feature, NODE(&app, WORKER__schedule)))
-									features[f++] = &feat_sched;
-								else if(lilv_node_equals(feature, NODE(&app, LOG__log)))
-									features[f++] = &feat_log;
-								else if(lilv_node_equals(feature, NODE(&app, STATE__makePath)))
-									features[f++] = &feat_mkpath;
-								else if(lilv_node_equals(feature, NODE(&app, STATE__freePath)))
-									features[f++] = &feat_freepath;
-								else if(lilv_node_equals(feature, NODE(&app, UI__resize)))
-									features[f++] = &feat_rsz;
-								else if(lilv_node_equals(feature, NODE(&app, OPTIONS__options)))
-									features[f++] = &feat_opts;
-								else if(lilv_node_equals(feature, NODE(&app, URI_MAP)))
-									features[f++] = &feat_urimap;
-								else if(lilv_node_equals(feature, NODE(&app, CORE__isLive)))
-									features[f++] = &feat_islive;
-								else if(lilv_node_equals(feature, NODE(&app, CORE__inPlaceBroken)))
-									features[f++] = &feat_inplacebroken;
-								else if(lilv_node_equals(feature, NODE(&app, CORE__hardRTCapable)))
-									features[f++] = &feat_hardrtcapable;
-								else if(lilv_node_equals(feature, NODE(&app, PORT_PROPS__supportsStrictBounds)))
-									features[f++] = &feat_supportsstrictbounds;
-								else if(lilv_node_equals(feature, NODE(&app, BUF_SIZE__boundedBlockLength)))
+								switch(feat)
 								{
-									features[f++] = &feat_boundedblocklength;
-									requires_bounded_block_length = true;
-								}
-								else if(lilv_node_equals(feature, NODE(&app, BUF_SIZE__fixedBlockLength)))
-									features[f++] = &feat_fixedblocklength;
-								else if(lilv_node_equals(feature, NODE(&app, BUF_SIZE__powerOf2BlockLength)))
-									features[f++] = &feat_powerof2blocklength;
-								else if(lilv_node_equals(feature, NODE(&app, BUF_SIZE__coarseBlockLength)))
-									features[f++] = &feat_coarseblocklength;
-								else if(lilv_node_equals(feature, NODE(&app, STATE__loadDefaultState)))
-									features[f++] = &feat_loaddefaultstate;
-								else if(lilv_node_equals(feature, NODE(&app, STATE__threadSafeRestore)))
-									features[f++] = &feat_threadsaferestore;
-								else if(lilv_node_equals(feature, NODE(&app, INLINEDISPLAY__queue_draw)))
-									features[f++] = &feat_idispqueuedraw;
-								else
-								{
-									//FIXME unknown feature
+									case URID__map:
+									{
+										features[f++] = &feat_map;
+									}	break;
+									case URID__unmap:
+									{
+										features[f++] = &feat_unmap;
+									}	break;
+									case WORKER__schedule:
+									{
+										features[f++] = &feat_sched;
+									}	break;
+									case LOG__log:
+									{
+										features[f++] = &feat_log;
+									}	break;
+									case STATE__makePath:
+									{
+										features[f++] = &feat_mkpath;
+									}	break;
+									case STATE__freePath:
+									{
+										features[f++] = &feat_freepath;
+									}	break;
+									case UI__resize:
+									{
+										features[f++] = &feat_rsz;
+									}	break;
+									case OPTIONS__options:
+									{
+										features[f++] = &feat_opts;
+									}	break;
+									case URI_MAP:
+									{
+										features[f++] = &feat_urimap;
+									}	break;
+									case CORE__isLive:
+									{
+										features[f++] = &feat_islive;
+									}	break;
+									case CORE__inPlaceBroken:
+									{
+										features[f++] = &feat_inplacebroken;
+									}	break;
+									case CORE__hardRTCapable:
+									{
+										features[f++] = &feat_hardrtcapable;
+									}	break;
+									case PORT_PROPS__supportsStrictBounds:
+									{
+										features[f++] = &feat_supportsstrictbounds;
+									}	break;
+									case BUF_SIZE__boundedBlockLength:
+									{
+										features[f++] = &feat_boundedblocklength;
+										requires_bounded_block_length = true;
+									}	break;
+									case BUF_SIZE__fixedBlockLength:
+									{
+										features[f++] = &feat_fixedblocklength;
+									}	break;
+									case BUF_SIZE__powerOf2BlockLength:
+									{
+										features[f++] = &feat_powerof2blocklength;
+									}	break;
+									case BUF_SIZE__coarseBlockLength:
+									{
+										features[f++] = &feat_coarseblocklength;
+									}	break;
+									case STATE__loadDefaultState:
+									{
+										features[f++] = &feat_loaddefaultstate;
+									}	break;
+									case STATE__threadSafeRestore:
+									{
+										features[f++] = &feat_threadsaferestore;
+									}	break;
+									case INLINEDISPLAY__queue_draw:
+									{
+										features[f++] = &feat_idispqueuedraw;
+									}	break;
 								}
 							}
 							lilv_nodes_free(required_features);
@@ -1784,36 +1822,36 @@ main(int argc, char **argv)
 							LILV_FOREACH(nodes, itr, required_options)
 							{
 								const LilvNode *option = lilv_nodes_get(required_options, itr);
+								const LV2_URID opt = app.map->map(app.map->handle, lilv_node_as_uri(option));
 
-								if(lilv_node_equals(option, NODE(&app, PARAMETERS__sampleRate)))
+								switch(opt)
 								{
-									opts[n_opts++] = opts_sampleRate;
-								}
-								else if(lilv_node_equals(option, NODE(&app, BUF_SIZE__minBlockLength)))
-								{
-									opts[n_opts++] = opts_minBlockLength;
-									requires_min_block_length = true;
-								}
-								else if(lilv_node_equals(option, NODE(&app, BUF_SIZE__maxBlockLength)))
-								{
-									opts[n_opts++] = opts_maxBlockLength;
-									requires_max_block_length = true;
-								}
-								else if(lilv_node_equals(option, NODE(&app, BUF_SIZE__nominalBlockLength)))
-								{
-									opts[n_opts++] = opts_nominalBlockLength;
-								}
-								else if(lilv_node_equals(option, NODE(&app, BUF_SIZE__sequenceSize)))
-								{
-									opts[n_opts++] = opts_sequenceSize;
-								}
-								else if(lilv_node_equals(option, NODE(&app, UI__updateRate)))
-								{
-									opts[n_opts++] = opts_updateRate;
-								}
-								else
-								{
-									//FIXME unknown option
+									case PARAMETERS__sampleRate:
+									{
+										opts[n_opts++] = opts_sampleRate;
+									} break;
+									case BUF_SIZE__minBlockLength:
+									{
+										opts[n_opts++] = opts_minBlockLength;
+										requires_min_block_length = true;
+									} break;
+									case BUF_SIZE__maxBlockLength:
+									{
+										opts[n_opts++] = opts_maxBlockLength;
+										requires_max_block_length = true;
+									} break;
+									case BUF_SIZE__nominalBlockLength:
+									{
+										opts[n_opts++] = opts_nominalBlockLength;
+									} break;
+									case BUF_SIZE__sequenceSize:
+									{
+										opts[n_opts++] = opts_sequenceSize;
+									} break;
+									case UI__updateRate:
+									{
+										opts[n_opts++] = opts_updateRate;
+									} break;
 								}
 							}
 
