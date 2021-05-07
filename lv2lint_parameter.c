@@ -17,8 +17,8 @@
 
 #include <lv2lint.h>
 
-#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
-#include <lv2/lv2plug.in/ns/extensions/units/units.h>
+#include <lv2/atom/atom.h>
+#include <lv2/units/units.h>
 
 static const ret_t *
 _test_label(app_t *app)

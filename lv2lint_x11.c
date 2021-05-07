@@ -19,11 +19,11 @@
 
 #include <lv2lint.h>
 
-#include <lv2/lv2plug.in/ns/ext/log/log.h>
-#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
-#include <lv2/lv2plug.in/ns/ext/parameters/parameters.h>
-#include <lv2/lv2plug.in/ns/ext/instance-access/instance-access.h>
-#include <lv2/lv2plug.in/ns/ext/data-access/data-access.h>
+#include <lv2/log/log.h>
+#include <lv2/atom/atom.h>
+#include <lv2/parameters/parameters.h>
+#include <lv2/instance-access/instance-access.h>
+#include <lv2/data-access/data-access.h>
 
 #include <X11/X.h>
 #include <X11/Xlib.h>

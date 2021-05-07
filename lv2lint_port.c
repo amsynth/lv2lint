@@ -19,11 +19,11 @@
 
 #include <lv2lint.h>
 
-#include <lv2/lv2plug.in/ns/ext/event/event.h>
-#include <lv2/lv2plug.in/ns/ext/urid/urid.h>
-#include <lv2/lv2plug.in/ns/ext/morph/morph.h>
-#include <lv2/lv2plug.in/ns/ext/port-groups/port-groups.h>
-#include <lv2/lv2plug.in/ns/extensions/units/units.h>
+#include <lv2/event/event.h>
+#include <lv2/urid/urid.h>
+#include <lv2/morph/morph.h>
+#include <lv2/port-groups/port-groups.h>
+#include <lv2/units/units.h>
 
 static const ret_t *
 _test_class(app_t *app)

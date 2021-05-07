@@ -17,13 +17,13 @@
 
 #include <lv2lint.h>
 
-#include <lv2/lv2plug.in/ns/ext/patch/patch.h>
-#include <lv2/lv2plug.in/ns/ext/worker/worker.h>
-#include <lv2/lv2plug.in/ns/ext/uri-map/uri-map.h>
-#include <lv2/lv2plug.in/ns/ext/state/state.h>
-#include <lv2/lv2plug.in/ns/ext/buf-size/buf-size.h>
-#include <lv2/lv2plug.in/ns/extensions/ui/ui.h>
-#include <lv2/lv2plug.in/ns/extensions/ui/ui.h>
+#include <lv2/patch/patch.h>
+#include <lv2/worker/worker.h>
+#include <lv2/uri-map/uri-map.h>
+#include <lv2/state/state.h>
+#include <lv2/buf-size/buf-size.h>
+#include <lv2/ui/ui.h>
+#include <lv2/ui/ui.h>
 
 static const ret_t *
 _test_lv2_path(app_t *app)

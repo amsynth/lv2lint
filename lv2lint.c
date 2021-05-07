@@ -27,24 +27,25 @@
 
 #include <lv2lint.h>
 
-#include <lv2/lv2plug.in/ns/ext/patch/patch.h>
-#include <lv2/lv2plug.in/ns/ext/atom/atom.h>
-#include <lv2/lv2plug.in/ns/ext/worker/worker.h>
-#include <lv2/lv2plug.in/ns/ext/log/log.h>
-#include <lv2/lv2plug.in/ns/ext/port-groups/port-groups.h>
-#include <lv2/lv2plug.in/ns/ext/event/event.h>
-#include <lv2/lv2plug.in/ns/ext/morph/morph.h>
-#include <lv2/lv2plug.in/ns/ext/uri-map/uri-map.h>
-#include <lv2/lv2plug.in/ns/ext/instance-access/instance-access.h>
-#include <lv2/lv2plug.in/ns/ext/parameters/parameters.h>
-#include <lv2/lv2plug.in/ns/ext/port-props/port-props.h>
-#include <lv2/lv2plug.in/ns/ext/buf-size/buf-size.h>
-#include <lv2/lv2plug.in/ns/ext/resize-port/resize-port.h>
-#include <lv2/lv2plug.in/ns/ext/options/options.h>
-#include <lv2/lv2plug.in/ns/ext/data-access/data-access.h>
-#include <lv2/lv2plug.in/ns/ext/state/state.h>
-#include <lv2/lv2plug.in/ns/extensions/ui/ui.h>
-#include <lv2/lv2plug.in/ns/extensions/units/units.h>
+#include <lv2/patch/patch.h>
+#include <lv2/atom/atom.h>
+#include <lv2/worker/worker.h>
+#include <lv2/log/log.h>
+#include <lv2/port-groups/port-groups.h>
+#include <lv2/event/event.h>
+#include <lv2/morph/morph.h>
+#include <lv2/uri-map/uri-map.h>
+#include <lv2/instance-access/instance-access.h>
+#include <lv2/parameters/parameters.h>
+#include <lv2/port-props/port-props.h>
+#include <lv2/buf-size/buf-size.h>
+#include <lv2/resize-port/resize-port.h>
+#include <lv2/options/options.h>
+#include <lv2/data-access/data-access.h>
+#include <lv2/dynmanifest/dynmanifest.h>
+#include <lv2/state/state.h>
+#include <lv2/ui/ui.h>
+#include <lv2/units/units.h>
 
 #ifdef ENABLE_ELF_TESTS
 #	include <fcntl.h>
@@ -79,9 +80,452 @@ const char *colors [2][ANSI_COLOR_MAX] = {
 	}
 };
 
+#define NS_ITM(EXT, ID) [EXT ## __ ## ID] = LILV_NS_ ## EXT # ID
+#define ITM(ID) [ID] = LV2_ ## ID
+
+static const char *stat_uris [STAT_URID_MAX] = {
+	[STAT_URID_INVALID] = NULL,
+
+	NS_ITM(RDFS, label),
+	NS_ITM(RDFS, comment),
+	NS_ITM(RDFS, range),
+	NS_ITM(RDFS, subClassOf),
+
+	NS_ITM(RDF, type),
+	NS_ITM(RDF, value),
+
+	NS_ITM(DOAP, description),
+	NS_ITM(DOAP, license),
+	NS_ITM(DOAP, name),
+	NS_ITM(DOAP, shotdesc),
+
+	ITM(ATOM__Atom),
+	ITM(ATOM__AtomPort),
+	ITM(ATOM__Blank),
+	ITM(ATOM__Bool),
+	ITM(ATOM__Chunk),
+	ITM(ATOM__Double),
+	ITM(ATOM__Event),
+	ITM(ATOM__Float),
+	ITM(ATOM__Int),
+	ITM(ATOM__Literal),
+	ITM(ATOM__Long),
+	ITM(ATOM__Number),
+	ITM(ATOM__Object),
+	ITM(ATOM__Path),
+	ITM(ATOM__Property),
+	ITM(ATOM__Resource),
+	ITM(ATOM__Sequence),
+	ITM(ATOM__Sound),
+	ITM(ATOM__String),
+	ITM(ATOM__Tuple),
+	ITM(ATOM__URI),
+	ITM(ATOM__URID),
+	ITM(ATOM__Vector),
+	ITM(ATOM__atomTransfer),
+	ITM(ATOM__beatTime),
+	ITM(ATOM__bufferType),
+	ITM(ATOM__childType),
+	ITM(ATOM__eventTransfer),
+	ITM(ATOM__frameTime),
+	ITM(ATOM__supports),
+	ITM(ATOM__timeUnit),
+
+	ITM(BUF_SIZE__boundedBlockLength),
+	ITM(BUF_SIZE__coarseBlockLength),
+	ITM(BUF_SIZE__fixedBlockLength),
+	ITM(BUF_SIZE__maxBlockLength),
+	ITM(BUF_SIZE__minBlockLength),
+	ITM(BUF_SIZE__nominalBlockLength),
+	ITM(BUF_SIZE__powerOf2BlockLength),
+	ITM(BUF_SIZE__sequenceSize),
+
+	ITM(CORE__AllpassPlugin),
+	ITM(CORE__AmplifierPlugin),
+	ITM(CORE__AnalyserPlugin),
+	ITM(CORE__AudioPort),
+	ITM(CORE__BandpassPlugin),
+	ITM(CORE__CVPort),
+	ITM(CORE__ChorusPlugin),
+	ITM(CORE__CombPlugin),
+	ITM(CORE__CompressorPlugin),
+	ITM(CORE__ConstantPlugin),
+	ITM(CORE__ControlPort),
+	ITM(CORE__ConverterPlugin),
+	ITM(CORE__DelayPlugin),
+	ITM(CORE__DistortionPlugin),
+	ITM(CORE__DynamicsPlugin),
+	ITM(CORE__EQPlugin),
+	ITM(CORE__EnvelopePlugin),
+	ITM(CORE__ExpanderPlugin),
+	ITM(CORE__ExtensionData),
+	ITM(CORE__Feature),
+	ITM(CORE__FilterPlugin),
+	ITM(CORE__FlangerPlugin),
+	ITM(CORE__FunctionPlugin),
+	ITM(CORE__GatePlugin),
+	ITM(CORE__GeneratorPlugin),
+	ITM(CORE__HighpassPlugin),
+	ITM(CORE__InputPort),
+	ITM(CORE__InstrumentPlugin),
+	ITM(CORE__LimiterPlugin),
+	ITM(CORE__LowpassPlugin),
+	ITM(CORE__MixerPlugin),
+	ITM(CORE__ModulatorPlugin),
+	ITM(CORE__MultiEQPlugin),
+	ITM(CORE__OscillatorPlugin),
+	ITM(CORE__OutputPort),
+	ITM(CORE__ParaEQPlugin),
+	ITM(CORE__PhaserPlugin),
+	ITM(CORE__PitchPlugin),
+	ITM(CORE__Plugin),
+	ITM(CORE__PluginBase),
+	ITM(CORE__Point),
+	ITM(CORE__Port),
+	ITM(CORE__PortProperty),
+	ITM(CORE__Resource),
+	ITM(CORE__ReverbPlugin),
+	ITM(CORE__ScalePoint),
+	ITM(CORE__SimulatorPlugin),
+	ITM(CORE__SpatialPlugin),
+	ITM(CORE__Specification),
+	ITM(CORE__SpectralPlugin),
+	ITM(CORE__UtilityPlugin),
+	ITM(CORE__WaveshaperPlugin),
+	ITM(CORE__appliesTo),
+	ITM(CORE__binary),
+	ITM(CORE__connectionOptional),
+	ITM(CORE__control),
+	ITM(CORE__default),
+	ITM(CORE__designation),
+	ITM(CORE__documentation),
+	ITM(CORE__enumeration),
+	ITM(CORE__extensionData),
+	ITM(CORE__freeWheeling),
+	ITM(CORE__hardRTCapable),
+	ITM(CORE__inPlaceBroken),
+	ITM(CORE__index),
+	ITM(CORE__integer),
+	ITM(CORE__isLive),
+	ITM(CORE__latency),
+	ITM(CORE__maximum),
+	ITM(CORE__microVersion),
+	ITM(CORE__minimum),
+	ITM(CORE__minorVersion),
+	ITM(CORE__name),
+	ITM(CORE__optionalFeature),
+	ITM(CORE__port),
+	ITM(CORE__portProperty),
+	ITM(CORE__project),
+	ITM(CORE__prototype),
+	ITM(CORE__reportsLatency),
+	ITM(CORE__requiredFeature),
+	ITM(CORE__sampleRate),
+	ITM(CORE__scalePoint),
+	ITM(CORE__symbol),
+	ITM(CORE__toggled),
+
+	[DATA_ACCESS] = LV2_DATA_ACCESS_URI,
+
+	[DYN_MANIFEST] = LV2_DYN_MANIFEST_URI,
+
+	ITM(EVENT__Event),
+	ITM(EVENT__EventPort),
+	ITM(EVENT__FrameStamp),
+	ITM(EVENT__TimeStamp),
+	ITM(EVENT__generatesTimeStamp),
+	ITM(EVENT__generic),
+	ITM(EVENT__inheritsEvent),
+	ITM(EVENT__inheritsTimeStamp),
+	ITM(EVENT__supportsEvent),
+	ITM(EVENT__supportsTimeStamp),
+
+	[INSTANCE_ACCESS] = LV2_INSTANCE_ACCESS_URI,
+
+	ITM(LOG__Entry),
+	ITM(LOG__Error),
+	ITM(LOG__Note),
+	ITM(LOG__Trace),
+	ITM(LOG__Warning),
+	ITM(LOG__log),
+
+	ITM(MIDI__ActiveSense),
+	ITM(MIDI__Aftertouch),
+	ITM(MIDI__Bender),
+	ITM(MIDI__ChannelPressure),
+	ITM(MIDI__Chunk),
+	ITM(MIDI__Clock),
+	ITM(MIDI__Continue),
+	ITM(MIDI__Controller),
+	ITM(MIDI__MidiEvent),
+	ITM(MIDI__NoteOff),
+	ITM(MIDI__NoteOn),
+	ITM(MIDI__ProgramChange),
+	ITM(MIDI__QuarterFrame),
+	ITM(MIDI__Reset),
+	ITM(MIDI__SongPosition),
+	ITM(MIDI__SongSelect),
+	ITM(MIDI__Start),
+	ITM(MIDI__Stop),
+	ITM(MIDI__SystemCommon),
+	ITM(MIDI__SystemExclusive),
+	ITM(MIDI__SystemMessage),
+	ITM(MIDI__SystemRealtime),
+	ITM(MIDI__Tick),
+	ITM(MIDI__TuneRequest),
+	ITM(MIDI__VoiceMessage),
+	ITM(MIDI__benderValue),
+	ITM(MIDI__binding),
+	ITM(MIDI__byteNumber),
+	ITM(MIDI__channel),
+	ITM(MIDI__chunk),
+	ITM(MIDI__controllerNumber),
+	ITM(MIDI__controllerValue),
+	ITM(MIDI__noteNumber),
+	ITM(MIDI__pressure),
+	ITM(MIDI__programNumber),
+	ITM(MIDI__property),
+	ITM(MIDI__songNumber),
+	ITM(MIDI__songPosition),
+	ITM(MIDI__status),
+	ITM(MIDI__statusMask),
+	ITM(MIDI__velocity),
+
+	ITM(MORPH__AutoMorphPort),
+	ITM(MORPH__MorphPort),
+	ITM(MORPH__interface),
+	ITM(MORPH__supportsType),
+	ITM(MORPH__currentType),
+
+	ITM(OPTIONS__Option),
+	ITM(OPTIONS__interface),
+	ITM(OPTIONS__options),
+	ITM(OPTIONS__requiredOption),
+	ITM(OPTIONS__supportedOption),
+
+	ITM(PARAMETERS__CompressorControls),
+	ITM(PARAMETERS__ControlGroup),
+	ITM(PARAMETERS__EnvelopeControls),
+	ITM(PARAMETERS__FilterControls),
+	ITM(PARAMETERS__OscillatorControls),
+	ITM(PARAMETERS__amplitude),
+	ITM(PARAMETERS__attack),
+	ITM(PARAMETERS__bypass),
+	ITM(PARAMETERS__cutoffFrequency),
+	ITM(PARAMETERS__decay),
+	ITM(PARAMETERS__delay),
+	ITM(PARAMETERS__dryLevel),
+	ITM(PARAMETERS__frequency),
+	ITM(PARAMETERS__gain),
+	ITM(PARAMETERS__hold),
+	ITM(PARAMETERS__pulseWidth),
+	ITM(PARAMETERS__ratio),
+	ITM(PARAMETERS__release),
+	ITM(PARAMETERS__resonance),
+	ITM(PARAMETERS__sampleRate),
+	ITM(PARAMETERS__sustain),
+	ITM(PARAMETERS__threshold),
+	ITM(PARAMETERS__waveform),
+	ITM(PARAMETERS__wetDryRatio),
+	ITM(PARAMETERS__wetLevel),
+
+	ITM(PATCH__Ack),
+	ITM(PATCH__Delete),
+	ITM(PATCH__Copy),
+	ITM(PATCH__Error),
+	ITM(PATCH__Get),
+	ITM(PATCH__Message),
+	ITM(PATCH__Move),
+	ITM(PATCH__Patch),
+	ITM(PATCH__Post),
+	ITM(PATCH__Put),
+	ITM(PATCH__Request),
+	ITM(PATCH__Response),
+	ITM(PATCH__Set),
+	ITM(PATCH__accept),
+	ITM(PATCH__add),
+	ITM(PATCH__body),
+	ITM(PATCH__context),
+	ITM(PATCH__destination),
+	ITM(PATCH__property),
+	ITM(PATCH__readable),
+	ITM(PATCH__remove),
+	ITM(PATCH__request),
+	ITM(PATCH__subject),
+	ITM(PATCH__sequenceNumber),
+	ITM(PATCH__value),
+	ITM(PATCH__wildcard),
+	ITM(PATCH__writable),
+
+	ITM(PORT_GROUPS__DiscreteGroup),
+	ITM(PORT_GROUPS__Element),
+	ITM(PORT_GROUPS__FivePointOneGroup),
+	ITM(PORT_GROUPS__FivePointZeroGroup),
+	ITM(PORT_GROUPS__FourPointZeroGroup),
+	ITM(PORT_GROUPS__Group),
+	ITM(PORT_GROUPS__InputGroup),
+	ITM(PORT_GROUPS__MidSideGroup),
+	ITM(PORT_GROUPS__MonoGroup),
+	ITM(PORT_GROUPS__OutputGroup),
+	ITM(PORT_GROUPS__SevenPointOneGroup),
+	ITM(PORT_GROUPS__SevenPointOneWideGroup),
+	ITM(PORT_GROUPS__SixPointOneGroup),
+	ITM(PORT_GROUPS__StereoGroup),
+	ITM(PORT_GROUPS__ThreePointZeroGroup),
+	ITM(PORT_GROUPS__center),
+	ITM(PORT_GROUPS__centerLeft),
+	ITM(PORT_GROUPS__centerRight),
+	ITM(PORT_GROUPS__element),
+	ITM(PORT_GROUPS__group),
+	ITM(PORT_GROUPS__left),
+	ITM(PORT_GROUPS__lowFrequencyEffects),
+	ITM(PORT_GROUPS__mainInput),
+	ITM(PORT_GROUPS__mainOutput),
+	ITM(PORT_GROUPS__rearCenter),
+	ITM(PORT_GROUPS__rearLeft),
+	ITM(PORT_GROUPS__rearRight),
+	ITM(PORT_GROUPS__right),
+	ITM(PORT_GROUPS__side),
+	ITM(PORT_GROUPS__sideChainOf),
+	ITM(PORT_GROUPS__sideLeft),
+	ITM(PORT_GROUPS__sideRight),
+	ITM(PORT_GROUPS__source),
+	ITM(PORT_GROUPS__subGroupOf),
+
+	ITM(PORT_PROPS__causesArtifacts),
+	ITM(PORT_PROPS__continuousCV),
+	ITM(PORT_PROPS__discreteCV),
+	ITM(PORT_PROPS__displayPriority),
+	ITM(PORT_PROPS__expensive),
+	ITM(PORT_PROPS__hasStrictBounds),
+	ITM(PORT_PROPS__logarithmic),
+	ITM(PORT_PROPS__notAutomatic),
+	ITM(PORT_PROPS__notOnGUI),
+	ITM(PORT_PROPS__rangeSteps),
+	ITM(PORT_PROPS__supportsStrictBounds),
+	ITM(PORT_PROPS__trigger),
+
+	ITM(PRESETS__Bank),
+	ITM(PRESETS__Preset),
+	ITM(PRESETS__bank),
+	ITM(PRESETS__preset),
+	ITM(PRESETS__value),
+
+	ITM(RESIZE_PORT__asLargeAs),
+	ITM(RESIZE_PORT__minimumSize),
+	ITM(RESIZE_PORT__resize),
+
+	ITM(STATE__State),
+	ITM(STATE__interface),
+	ITM(STATE__loadDefaultState),
+	ITM(STATE__freePath),
+	ITM(STATE__makePath),
+	ITM(STATE__mapPath),
+	ITM(STATE__state),
+	ITM(STATE__threadSafeRestore),
+	ITM(STATE__StateChanged),
+
+	ITM(TIME__Time),
+	ITM(TIME__Position),
+	ITM(TIME__Rate),
+	ITM(TIME__position),
+	ITM(TIME__barBeat),
+	ITM(TIME__bar),
+	ITM(TIME__beat),
+	ITM(TIME__beatUnit),
+	ITM(TIME__beatsPerBar),
+	ITM(TIME__beatsPerMinute),
+	ITM(TIME__frame),
+	ITM(TIME__framesPerSecond),
+	ITM(TIME__speed),
+
+	ITM(UI__CocoaUI),
+	ITM(UI__Gtk3UI),
+	ITM(UI__GtkUI),
+	ITM(UI__PortNotification),
+	ITM(UI__PortProtocol),
+	ITM(UI__Qt4UI),
+	ITM(UI__Qt5UI),
+	ITM(UI__UI),
+	ITM(UI__WindowsUI),
+	ITM(UI__X11UI),
+	ITM(UI__binary),
+	ITM(UI__fixedSize),
+	ITM(UI__idleInterface),
+	ITM(UI__noUserResize),
+	ITM(UI__notifyType),
+	ITM(UI__parent),
+	ITM(UI__plugin),
+	ITM(UI__portIndex),
+	ITM(UI__portMap),
+	ITM(UI__portNotification),
+	ITM(UI__portSubscribe),
+	ITM(UI__protocol),
+	ITM(UI__requestValue),
+	ITM(UI__floatProtocol),
+	ITM(UI__peakProtocol),
+	ITM(UI__resize),
+	ITM(UI__showInterface),
+	ITM(UI__touch),
+	ITM(UI__ui),
+	ITM(UI__updateRate),
+	ITM(UI__windowTitle),
+	ITM(UI__scaleFactor),
+	ITM(UI__foregroundColor),
+	ITM(UI__backgroundColor),
+
+	ITM(UNITS__Conversion),
+	ITM(UNITS__Unit),
+	ITM(UNITS__bar),
+	ITM(UNITS__beat),
+	ITM(UNITS__bpm),
+	ITM(UNITS__cent),
+	ITM(UNITS__cm),
+	ITM(UNITS__coef),
+	ITM(UNITS__conversion),
+	ITM(UNITS__db),
+	ITM(UNITS__degree),
+	ITM(UNITS__frame),
+	ITM(UNITS__hz),
+	ITM(UNITS__inch),
+	ITM(UNITS__khz),
+	ITM(UNITS__km),
+	ITM(UNITS__m),
+	ITM(UNITS__mhz),
+	ITM(UNITS__midiNote),
+	ITM(UNITS__mile),
+	ITM(UNITS__min),
+	ITM(UNITS__mm),
+	ITM(UNITS__ms),
+	ITM(UNITS__name),
+	ITM(UNITS__oct),
+	ITM(UNITS__pc),
+	ITM(UNITS__prefixConversion),
+	ITM(UNITS__render),
+	ITM(UNITS__s),
+	ITM(UNITS__semitone12TET),
+	ITM(UNITS__symbol),
+	ITM(UNITS__unit),
+
+	ITM(URID__map),
+	ITM(URID__unmap),
+
+	[URI_MAP] = LV2_URI_MAP_URI,
+
+	ITM(WORKER__interface),
+	ITM(WORKER__schedule)
+};
+
+#undef ITM
+
 static void
 _map_uris(app_t *app)
 {
+	for(unsigned i = 1; i < STAT_URID_MAX; i++)
+	{
+		app->nodes[i] = lilv_new_uri(app->world, stat_uris[i]);
+	}
+
 	app->uris.rdfs_label = lilv_new_uri(app->world, LILV_NS_RDFS"label");
 	app->uris.rdfs_comment = lilv_new_uri(app->world, LILV_NS_RDFS"comment");
 	app->uris.rdfs_range = lilv_new_uri(app->world, LILV_NS_RDFS"range");
@@ -229,6 +673,11 @@ _map_uris(app_t *app)
 static void
 _unmap_uris(app_t *app)
 {
+	for(unsigned i = 1; i < STAT_URID_MAX; i++)
+	{
+		lilv_node_free(app->nodes[i]);
+	}
+
 	lilv_node_free(app->uris.rdfs_label);
 	lilv_node_free(app->uris.rdfs_comment);
 	lilv_node_free(app->uris.rdfs_range);
@@ -1342,7 +1791,7 @@ main(int argc, char **argv)
 	if(!app.world)
 		return -1;
 
-	mapper_t *mapper = mapper_new(8192, 0, NULL, NULL, NULL, NULL);
+	mapper_t *mapper = mapper_new(8192, STAT_URID_MAX, stat_uris, NULL, NULL, NULL);
 	if(!mapper)
 		return -1;
 

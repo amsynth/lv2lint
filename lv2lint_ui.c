@@ -32,8 +32,8 @@ static inline char* dlerror(void) { return "Unknown error"; }
 
 #include <lv2lint.h>
 
-#include <lv2/lv2plug.in/ns/ext/instance-access/instance-access.h>
-#include <lv2/lv2plug.in/ns/ext/data-access/data-access.h>
+#include <lv2/instance-access/instance-access.h>
+#include <lv2/data-access/data-access.h>
 
 #ifdef ENABLE_ELF_TESTS
 static const ret_t *
