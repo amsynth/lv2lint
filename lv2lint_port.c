@@ -38,7 +38,7 @@ _test_class(app_t *app)
 	const ret_t *ret = NULL;
 
 	LilvNodes *class = lilv_world_find_nodes(app->world,
-		NULL, app->uris.rdfs_subClassOf, app->uris.lv2_Port);
+		NULL, NODE(app, RDFS__subClassOf), NODE(app, CORE__Port));
 	if(class)
 	{
 		const LilvNodes *supported= lilv_port_get_classes(app->plugin, app->port);
@@ -76,7 +76,7 @@ _test_properties(app_t *app)
 	const ret_t *ret = NULL;
 
 	LilvNodes *properties = lilv_world_find_nodes(app->world,
-		NULL, app->uris.rdf_type, app->uris.lv2_PortProperty);
+		NULL, NODE(app, RDF__type), NODE(app, CORE__PortProperty));
 	if(properties)
 	{
 		LilvNodes *supported = lilv_port_get_properties(app->plugin, app->port);
@@ -243,14 +243,14 @@ _test_default(app_t *app)
 
 	app->dflt.f32 = 0.f; // fall-back
 
-	const bool is_integer = lilv_port_has_property(app->plugin, app->port, app->uris.lv2_integer);
-	const bool is_toggled = lilv_port_has_property(app->plugin, app->port, app->uris.lv2_toggled);
+	const bool is_integer = lilv_port_has_property(app->plugin, app->port, NODE(app, CORE__integer));
+	const bool is_toggled = lilv_port_has_property(app->plugin, app->port, NODE(app, CORE__toggled));
 
-	if(  (lilv_port_is_a(app->plugin, app->port, app->uris.lv2_ControlPort)
-			|| lilv_port_is_a(app->plugin, app->port, app->uris.lv2_CVPort))
-		&& lilv_port_is_a(app->plugin, app->port, app->uris.lv2_InputPort) )
+	if(  (lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__ControlPort))
+			|| lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__CVPort)))
+		&& lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__InputPort)) )
 	{
-		LilvNode *default_node = lilv_port_get(app->plugin, app->port, app->uris.lv2_default);
+		LilvNode *default_node = lilv_port_get(app->plugin, app->port, NODE(app, CORE__default));
 		ret = _test_num(app, default_node, is_integer, is_toggled, &app->dflt.f32,
 			LV2_CORE__default);
 		//lilv_node_free(default_node);
@@ -266,15 +266,15 @@ _test_minimum(app_t *app)
 
 	app->min.f32 = 0.f; // fall-back
 
-	const bool is_integer = lilv_port_has_property(app->plugin, app->port, app->uris.lv2_integer);
-	const bool is_toggled = lilv_port_has_property(app->plugin, app->port, app->uris.lv2_toggled);
+	const bool is_integer = lilv_port_has_property(app->plugin, app->port, NODE(app, CORE__integer));
+	const bool is_toggled = lilv_port_has_property(app->plugin, app->port, NODE(app, CORE__toggled));
 
-	if(  (lilv_port_is_a(app->plugin, app->port, app->uris.lv2_ControlPort)
-			|| lilv_port_is_a(app->plugin, app->port, app->uris.lv2_CVPort))
-		&& lilv_port_is_a(app->plugin, app->port, app->uris.lv2_InputPort)
+	if(  (lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__ControlPort))
+			|| lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__CVPort)))
+		&& lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__InputPort))
 		&& !is_toggled )
 	{
-		LilvNode *minimum_node = lilv_port_get(app->plugin, app->port, app->uris.lv2_minimum);
+		LilvNode *minimum_node = lilv_port_get(app->plugin, app->port, NODE(app, CORE__minimum));
 		ret = _test_num(app, minimum_node, is_integer, is_toggled, &app->min.f32,
 			LV2_CORE__minimum);
 		//lilv_node_free(minimum_node);
@@ -290,15 +290,15 @@ _test_maximum(app_t *app)
 
 	app->max.f32 = 1.f; // fall-back
 
-	const bool is_integer = lilv_port_has_property(app->plugin, app->port, app->uris.lv2_integer);
-	const bool is_toggled = lilv_port_has_property(app->plugin, app->port, app->uris.lv2_toggled);
+	const bool is_integer = lilv_port_has_property(app->plugin, app->port, NODE(app, CORE__integer));
+	const bool is_toggled = lilv_port_has_property(app->plugin, app->port, NODE(app, CORE__toggled));
 
-	if(  (lilv_port_is_a(app->plugin, app->port, app->uris.lv2_ControlPort)
-			|| lilv_port_is_a(app->plugin, app->port, app->uris.lv2_CVPort))
-		&& lilv_port_is_a(app->plugin, app->port, app->uris.lv2_InputPort)
+	if(  (lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__ControlPort))
+			|| lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__CVPort)))
+		&& lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__InputPort))
 		&& !is_toggled )
 	{
-		LilvNode *maximum_node = lilv_port_get(app->plugin, app->port, app->uris.lv2_maximum);
+		LilvNode *maximum_node = lilv_port_get(app->plugin, app->port, NODE(app, CORE__maximum));
 		ret = _test_num(app, maximum_node, is_integer, is_toggled, &app->max.f32,
 			LV2_CORE__maximum);
 		//lilv_node_free(maximum_node);
@@ -319,12 +319,12 @@ _test_range(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	if(  lilv_port_is_a(app->plugin, app->port, app->uris.lv2_ControlPort)
-			|| lilv_port_is_a(app->plugin, app->port, app->uris.lv2_CVPort) )
+	if(  lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__ControlPort))
+			|| lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__CVPort)) )
 	{
 		float min = app->min.f32;
 		float max = app->max.f32;
-		if(lilv_port_has_property(app->plugin, app->port, app->uris.lv2_sampleRate))
+		if(lilv_port_has_property(app->plugin, app->port, NODE(app, CORE__sampleRate)))
 		{
 			min *= 44100.0;
 			max *= 44100.0;
@@ -351,10 +351,10 @@ _test_atom_port(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	if(lilv_port_is_a(app->plugin, app->port, app->uris.atom_AtomPort))
+	if(lilv_port_is_a(app->plugin, app->port, NODE(app, ATOM__AtomPort)))
 	{
 		const bool has_urid_map = lilv_plugin_has_feature(app->plugin,
-			app->uris.urid_map);
+			NODE(app, URID__map));
 
 		if(!has_urid_map)
 		{
@@ -377,7 +377,7 @@ _test_event_port(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	if(lilv_port_is_a(app->plugin, app->port, app->uris.event_EventPort))
+	if(lilv_port_is_a(app->plugin, app->port, NODE(app, EVENT__EventPort)))
 	{
 		ret = &ret_event_port_deprecated;
 	}
@@ -414,27 +414,27 @@ _test_morph_port(app_t *app)
 	};
 
 	LilvNodes *morph_supported_types = lilv_port_get_value(app->plugin, app->port,
-		app->uris.morph_supportsType);
+		NODE(app, MORPH__supportsType));
 	const unsigned n_morph_supported_types = morph_supported_types
 		? lilv_nodes_size(morph_supported_types)
 		: 0;
 
 	const bool is_morph_port = lilv_port_is_a(app->plugin, app->port,
-		app->uris.morph_MorphPort);
+		NODE(app, MORPH__MorphPort));
 	const bool is_auto_morph_port = lilv_port_is_a(app->plugin, app->port,
-		app->uris.morph_AutoMorphPort);
+		NODE(app, MORPH__AutoMorphPort));
 	const bool is_any_morph_port = is_morph_port || is_auto_morph_port;
 
 	const bool is_control_port = lilv_port_is_a(app->plugin, app->port,
-		app->uris.lv2_ControlPort);
+		NODE(app, CORE__ControlPort));
 	const bool is_audio_port = lilv_port_is_a(app->plugin, app->port,
-		app->uris.lv2_AudioPort);
+		NODE(app, CORE__AudioPort));
 	const bool is_cv_port = lilv_port_is_a(app->plugin, app->port,
-		app->uris.lv2_CVPort);
+		NODE(app, CORE__CVPort));
 	const bool is_atom_port = lilv_port_is_a(app->plugin, app->port,
-		app->uris.atom_AtomPort);
+		NODE(app, ATOM__AtomPort));
 	const bool is_event_port = lilv_port_is_a(app->plugin, app->port,
-		app->uris.event_EventPort);
+		NODE(app, EVENT__EventPort));
 
 	const ret_t *ret = NULL;
 
@@ -479,7 +479,7 @@ _test_comment(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	LilvNode *comment = lilv_port_get(app->plugin, app->port, app->uris.rdfs_comment);
+	LilvNode *comment = lilv_port_get(app->plugin, app->port, NODE(app, RDFS__comment));
 	if(comment)
 	{
 		if(!lilv_node_is_string(comment))
@@ -516,7 +516,7 @@ _test_group(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	LilvNode *group = lilv_port_get(app->plugin, app->port, app->uris.pg_group);
+	LilvNode *group = lilv_port_get(app->plugin, app->port, NODE(app, PORT_GROUPS__group));
 	if(group)
 	{
 		if(!lilv_node_is_uri(group))
@@ -553,14 +553,14 @@ _test_unit(app_t *app)
 	const ret_t *ret = NULL;
 
 
-	if(  lilv_port_is_a(app->plugin, app->port, app->uris.lv2_ControlPort)
-		|| lilv_port_is_a(app->plugin, app->port, app->uris.lv2_CVPort) )
+	if(  lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__ControlPort))
+		|| lilv_port_is_a(app->plugin, app->port, NODE(app, CORE__CVPort)) )
 	{
-		LilvNode *unit = lilv_port_get(app->plugin, app->port, app->uris.units_unit);
+		LilvNode *unit = lilv_port_get(app->plugin, app->port, NODE(app, UNITS__unit));
 		if(unit)
 		{
 			if(  !lilv_node_is_uri(unit)
-				&& !lilv_world_ask(app->world, unit, app->uris.rdf_type, app->uris.units_Unit) )
+				&& !lilv_world_ask(app->world, unit, NODE(app, RDF__type), NODE(app, UNITS__Unit)) )
 			{
 				ret = &ret_units_unit_not_a_uri_or_object;
 			}

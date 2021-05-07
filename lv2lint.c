@@ -97,7 +97,13 @@ static const char *stat_uris [STAT_URID_MAX] = {
 	NS_ITM(DOAP, description),
 	NS_ITM(DOAP, license),
 	NS_ITM(DOAP, name),
-	NS_ITM(DOAP, shotdesc),
+	NS_ITM(DOAP, shortdesc),
+
+	NS_ITM(XSD, int),
+	NS_ITM(XSD, nonNegativeInteger),
+	NS_ITM(XSD, long),
+	NS_ITM(XSD, float),
+	NS_ITM(XSD, double),
 
 	ITM(ATOM__Atom),
 	ITM(ATOM__AtomPort),
@@ -473,6 +479,7 @@ static const char *stat_uris [STAT_URID_MAX] = {
 	ITM(UI__scaleFactor),
 	ITM(UI__foregroundColor),
 	ITM(UI__backgroundColor),
+	ITM(UI__makeSONameResident),
 
 	ITM(UNITS__Conversion),
 	ITM(UNITS__Unit),
@@ -513,7 +520,12 @@ static const char *stat_uris [STAT_URID_MAX] = {
 	[URI_MAP] = LV2_URI_MAP_URI,
 
 	ITM(WORKER__interface),
-	ITM(WORKER__schedule)
+	ITM(WORKER__schedule),
+
+	ITM(EXTERNAL_UI__Widget),
+
+	ITM(INLINEDISPLAY__interface),
+	ITM(INLINEDISPLAY__queue_draw)
 };
 
 #undef ITM
@@ -525,149 +537,6 @@ _map_uris(app_t *app)
 	{
 		app->nodes[i] = lilv_new_uri(app->world, stat_uris[i]);
 	}
-
-	app->uris.rdfs_label = lilv_new_uri(app->world, LILV_NS_RDFS"label");
-	app->uris.rdfs_comment = lilv_new_uri(app->world, LILV_NS_RDFS"comment");
-	app->uris.rdfs_range = lilv_new_uri(app->world, LILV_NS_RDFS"range");
-	app->uris.rdfs_subClassOf = lilv_new_uri(app->world, LILV_NS_RDFS"subClassOf");
-
-	app->uris.rdf_type = lilv_new_uri(app->world, LILV_NS_RDF"type");
-	app->uris.rdf_value = lilv_new_uri(app->world, LILV_NS_RDF"value");
-
-	app->uris.doap_description = lilv_new_uri(app->world, LILV_NS_DOAP"description");
-	app->uris.doap_license = lilv_new_uri(app->world, LILV_NS_DOAP"license");
-	app->uris.doap_name = lilv_new_uri(app->world, LILV_NS_DOAP"name");
-	app->uris.doap_shortdesc = lilv_new_uri(app->world, LILV_NS_DOAP"shortdesc");
-
-	app->uris.lv2_minimum = lilv_new_uri(app->world, LV2_CORE__minimum);
-	app->uris.lv2_maximum = lilv_new_uri(app->world, LV2_CORE__maximum);
-	app->uris.lv2_Port = lilv_new_uri(app->world, LV2_CORE__Port);
-	app->uris.lv2_PortProperty = lilv_new_uri(app->world, LV2_CORE__PortProperty);
-	app->uris.lv2_default = lilv_new_uri(app->world, LV2_CORE__default);
-	app->uris.lv2_ControlPort = lilv_new_uri(app->world, LV2_CORE__ControlPort);
-	app->uris.lv2_CVPort = lilv_new_uri(app->world, LV2_CORE__CVPort);
-	app->uris.lv2_AudioPort = lilv_new_uri(app->world, LV2_CORE__AudioPort);
-	app->uris.lv2_OutputPort = lilv_new_uri(app->world, LV2_CORE__OutputPort);
-	app->uris.lv2_InputPort = lilv_new_uri(app->world, LV2_CORE__InputPort);
-	app->uris.lv2_integer = lilv_new_uri(app->world, LV2_CORE__integer);
-	app->uris.lv2_toggled = lilv_new_uri(app->world, LV2_CORE__toggled);
-	app->uris.lv2_Feature = lilv_new_uri(app->world, LV2_CORE__Feature);
-	app->uris.lv2_minorVersion = lilv_new_uri(app->world, LV2_CORE__minorVersion);
-	app->uris.lv2_microVersion = lilv_new_uri(app->world, LV2_CORE__microVersion);
-	app->uris.lv2_ExtensionData = lilv_new_uri(app->world, LV2_CORE__ExtensionData);
-	app->uris.lv2_requiredFeature = lilv_new_uri(app->world, LV2_CORE__requiredFeature);
-	app->uris.lv2_optionalFeature = lilv_new_uri(app->world, LV2_CORE__optionalFeature);
-	app->uris.lv2_extensionData = lilv_new_uri(app->world, LV2_CORE__extensionData);
-	app->uris.lv2_isLive = lilv_new_uri(app->world, LV2_CORE__isLive);
-	app->uris.lv2_inPlaceBroken = lilv_new_uri(app->world, LV2_CORE__inPlaceBroken);
-	app->uris.lv2_hardRTCapable = lilv_new_uri(app->world, LV2_CORE__hardRTCapable);
-	app->uris.lv2_documentation = lilv_new_uri(app->world, LV2_CORE__documentation);
-	app->uris.lv2_sampleRate = lilv_new_uri(app->world, LV2_CORE__sampleRate);
-	app->uris.lv2_InstrumentPlugin = lilv_new_uri(app->world, LV2_CORE__InstrumentPlugin);
-	app->uris.lv2_scalePoint = lilv_new_uri(app->world, LV2_CORE__scalePoint);
-
-	app->uris.atom_AtomPort = lilv_new_uri(app->world, LV2_ATOM__AtomPort);
-	app->uris.atom_Bool = lilv_new_uri(app->world, LV2_ATOM__Bool);
-	app->uris.atom_Int = lilv_new_uri(app->world, LV2_ATOM__Int);
-	app->uris.atom_Long = lilv_new_uri(app->world, LV2_ATOM__Long);
-	app->uris.atom_Float = lilv_new_uri(app->world, LV2_ATOM__Float);
-	app->uris.atom_Double = lilv_new_uri(app->world, LV2_ATOM__Double);
-	app->uris.atom_String = lilv_new_uri(app->world, LV2_ATOM__String);
-	app->uris.atom_Literal = lilv_new_uri(app->world, LV2_ATOM__String);
-	app->uris.atom_Path = lilv_new_uri(app->world, LV2_ATOM__Path);
-	app->uris.atom_Chunk = lilv_new_uri(app->world, LV2_ATOM__Chunk);
-	app->uris.atom_URI = lilv_new_uri(app->world, LV2_ATOM__URI);
-	app->uris.atom_URID = lilv_new_uri(app->world, LV2_ATOM__URID);
-	app->uris.atom_Tuple = lilv_new_uri(app->world, LV2_ATOM__Tuple);
-	app->uris.atom_Object = lilv_new_uri(app->world, LV2_ATOM__Object);
-	app->uris.atom_Vector = lilv_new_uri(app->world, LV2_ATOM__Vector);
-	app->uris.atom_Sequence = lilv_new_uri(app->world, LV2_ATOM__Sequence);
-
-	app->uris.xsd_int = lilv_new_uri(app->world, LILV_NS_XSD"int");
-	app->uris.xsd_uint = lilv_new_uri(app->world, LILV_NS_XSD"nonNegativeInteger");
-	app->uris.xsd_long = lilv_new_uri(app->world, LILV_NS_XSD"long");
-	app->uris.xsd_float = lilv_new_uri(app->world, LILV_NS_XSD"float");
-	app->uris.xsd_double = lilv_new_uri(app->world, LILV_NS_XSD"double");
-
-	app->uris.state_loadDefaultState = lilv_new_uri(app->world, LV2_STATE__loadDefaultState);
-	app->uris.state_state = lilv_new_uri(app->world, LV2_STATE__state);
-	app->uris.state_interface = lilv_new_uri(app->world, LV2_STATE__interface);
-	app->uris.state_threadSafeRestore = lilv_new_uri(app->world, LV2_STATE_PREFIX"threadSafeRestore");
-	app->uris.state_makePath = lilv_new_uri(app->world, LV2_STATE__makePath);
-	app->uris.state_freePath = lilv_new_uri(app->world, LV2_STATE__freePath);
-
-	app->uris.work_schedule = lilv_new_uri(app->world, LV2_WORKER__schedule);
-	app->uris.work_interface = lilv_new_uri(app->world, LV2_WORKER__interface);
-
-	app->uris.idisp_queue_draw = lilv_new_uri(app->world, LV2_INLINEDISPLAY__queue_draw);
-	app->uris.idisp_interface = lilv_new_uri(app->world, LV2_INLINEDISPLAY__interface);
-
-	app->uris.opts_options = lilv_new_uri(app->world, LV2_OPTIONS__options);
-	app->uris.opts_interface = lilv_new_uri(app->world, LV2_OPTIONS__interface);
-	app->uris.opts_requiredOption = lilv_new_uri(app->world, LV2_OPTIONS__requiredOption);
-	app->uris.opts_supportedOption = lilv_new_uri(app->world, LV2_OPTIONS__supportedOption);
-
-	app->uris.patch_writable = lilv_new_uri(app->world, LV2_PATCH__writable);
-	app->uris.patch_readable = lilv_new_uri(app->world, LV2_PATCH__readable);
-	app->uris.patch_Message = lilv_new_uri(app->world, LV2_PATCH__Message);
-
-	app->uris.pg_group = lilv_new_uri(app->world, LV2_PORT_GROUPS__group);
-
-	app->uris.ui_binary = lilv_new_uri(app->world, LV2_UI__binary);
-	app->uris.ui_makeSONameResident = lilv_new_uri(app->world, LV2_UI_PREFIX"makeSONameResident");
-	app->uris.ui_idleInterface = lilv_new_uri(app->world, LV2_UI__idleInterface);
-	app->uris.ui_showInterface = lilv_new_uri(app->world, LV2_UI__showInterface);
-	app->uris.ui_resize = lilv_new_uri(app->world, LV2_UI__resize);
-	app->uris.ui_UI= lilv_new_uri(app->world, LV2_UI__UI);
-	app->uris.ui_X11UI = lilv_new_uri(app->world, LV2_UI__X11UI);
-	app->uris.ui_WindowsUI = lilv_new_uri(app->world, LV2_UI__WindowsUI);
-	app->uris.ui_CocoaUI = lilv_new_uri(app->world, LV2_UI__CocoaUI);
-	app->uris.ui_GtkUI = lilv_new_uri(app->world, LV2_UI__GtkUI);
-	app->uris.ui_Gtk3UI = lilv_new_uri(app->world, LV2_UI__Gtk3UI);
-	app->uris.ui_Qt4UI = lilv_new_uri(app->world, LV2_UI__Qt4UI);
-	app->uris.ui_Qt5UI = lilv_new_uri(app->world, LV2_UI__Qt5UI);
-
-	app->uris.event_EventPort = lilv_new_uri(app->world, LV2_EVENT__EventPort);
-	app->uris.uri_map = lilv_new_uri(app->world, LV2_URI_MAP_URI);
-	app->uris.instance_access = lilv_new_uri(app->world, LV2_INSTANCE_ACCESS_URI);
-	app->uris.data_access = lilv_new_uri(app->world, LV2_DATA_ACCESS_URI);
-
-	app->uris.log_log = lilv_new_uri(app->world, LV2_LOG__log);
-
-	app->uris.urid_map = lilv_new_uri(app->world, LV2_URID__map);
-	app->uris.urid_unmap = lilv_new_uri(app->world, LV2_URID__unmap);
-
-	app->uris.rsz_resize = lilv_new_uri(app->world, LV2_RESIZE_PORT__resize);
-
-	app->uris.bufsz_boundedBlockLength = lilv_new_uri(app->world, LV2_BUF_SIZE__boundedBlockLength);
-	app->uris.bufsz_fixedBlockLength = lilv_new_uri(app->world, LV2_BUF_SIZE__fixedBlockLength);
-	app->uris.bufsz_powerOf2BlockLength = lilv_new_uri(app->world, LV2_BUF_SIZE__powerOf2BlockLength);
-	app->uris.bufsz_coarseBlockLength = lilv_new_uri(app->world, LV2_BUF_SIZE_PREFIX"coarseBlockLength");
-
-	app->uris.pprops_supportsStrictBounds = lilv_new_uri(app->world, LV2_PORT_PROPS__supportsStrictBounds);
-
-	app->uris.param_sampleRate = lilv_new_uri(app->world, LV2_PARAMETERS__sampleRate);
-
-	app->uris.bufsz_minBlockLength = lilv_new_uri(app->world, LV2_BUF_SIZE__minBlockLength);
-	app->uris.bufsz_maxBlockLength = lilv_new_uri(app->world, LV2_BUF_SIZE__maxBlockLength);
-	app->uris.bufsz_nominalBlockLength = lilv_new_uri(app->world, LV2_BUF_SIZE__nominalBlockLength);
-	app->uris.bufsz_sequenceSize = lilv_new_uri(app->world, LV2_BUF_SIZE__sequenceSize);
-
-	app->uris.ui_updateRate = lilv_new_uri(app->world, LV2_UI__updateRate);
-	app->uris.ui_parent = lilv_new_uri(app->world, LV2_UI__parent);
-	app->uris.ui_portMap = lilv_new_uri(app->world, LV2_UI__portMap);
-	app->uris.ui_portSubscribe = lilv_new_uri(app->world, LV2_UI__portSubscribe);
-	app->uris.ui_touch = lilv_new_uri(app->world, LV2_UI__touch);
-	app->uris.ui_requestValue = lilv_new_uri(app->world, LV2_UI__requestValue);
-
-	app->uris.ext_Widget = lilv_new_uri(app->world, LV2_EXTERNAL_UI__Widget);
-
-	app->uris.morph_MorphPort = lilv_new_uri(app->world, LV2_MORPH__MorphPort);
-	app->uris.morph_AutoMorphPort = lilv_new_uri(app->world, LV2_MORPH__AutoMorphPort);
-	app->uris.morph_supportsType = lilv_new_uri(app->world, LV2_MORPH__supportsType);
-
-	app->uris.units_unit = lilv_new_uri(app->world, LV2_UNITS__unit);
-	app->uris.units_Unit = lilv_new_uri(app->world, LV2_UNITS__Unit);
 }
 
 static void
@@ -677,149 +546,6 @@ _unmap_uris(app_t *app)
 	{
 		lilv_node_free(app->nodes[i]);
 	}
-
-	lilv_node_free(app->uris.rdfs_label);
-	lilv_node_free(app->uris.rdfs_comment);
-	lilv_node_free(app->uris.rdfs_range);
-	lilv_node_free(app->uris.rdfs_subClassOf);
-
-	lilv_node_free(app->uris.rdf_type);
-	lilv_node_free(app->uris.rdf_value);
-
-	lilv_node_free(app->uris.doap_description);
-	lilv_node_free(app->uris.doap_license);
-	lilv_node_free(app->uris.doap_name);
-	lilv_node_free(app->uris.doap_shortdesc);
-
-	lilv_node_free(app->uris.lv2_minimum);
-	lilv_node_free(app->uris.lv2_maximum);
-	lilv_node_free(app->uris.lv2_Port);
-	lilv_node_free(app->uris.lv2_PortProperty);
-	lilv_node_free(app->uris.lv2_default);
-	lilv_node_free(app->uris.lv2_ControlPort);
-	lilv_node_free(app->uris.lv2_CVPort);
-	lilv_node_free(app->uris.lv2_AudioPort);
-	lilv_node_free(app->uris.lv2_OutputPort);
-	lilv_node_free(app->uris.lv2_InputPort);
-	lilv_node_free(app->uris.lv2_integer);
-	lilv_node_free(app->uris.lv2_toggled);
-	lilv_node_free(app->uris.lv2_Feature);
-	lilv_node_free(app->uris.lv2_minorVersion);
-	lilv_node_free(app->uris.lv2_microVersion);
-	lilv_node_free(app->uris.lv2_ExtensionData);
-	lilv_node_free(app->uris.lv2_requiredFeature);
-	lilv_node_free(app->uris.lv2_optionalFeature);
-	lilv_node_free(app->uris.lv2_extensionData);
-	lilv_node_free(app->uris.lv2_isLive);
-	lilv_node_free(app->uris.lv2_inPlaceBroken);
-	lilv_node_free(app->uris.lv2_hardRTCapable);
-	lilv_node_free(app->uris.lv2_documentation);
-	lilv_node_free(app->uris.lv2_sampleRate);
-	lilv_node_free(app->uris.lv2_InstrumentPlugin);
-	lilv_node_free(app->uris.lv2_scalePoint);
-
-	lilv_node_free(app->uris.atom_AtomPort);
-	lilv_node_free(app->uris.atom_Bool);
-	lilv_node_free(app->uris.atom_Int);
-	lilv_node_free(app->uris.atom_Long);
-	lilv_node_free(app->uris.atom_Float);
-	lilv_node_free(app->uris.atom_Double);
-	lilv_node_free(app->uris.atom_String);
-	lilv_node_free(app->uris.atom_Literal);
-	lilv_node_free(app->uris.atom_Path);
-	lilv_node_free(app->uris.atom_Chunk);
-	lilv_node_free(app->uris.atom_URI);
-	lilv_node_free(app->uris.atom_URID);
-	lilv_node_free(app->uris.atom_Tuple);
-	lilv_node_free(app->uris.atom_Object);
-	lilv_node_free(app->uris.atom_Vector);
-	lilv_node_free(app->uris.atom_Sequence);
-
-	lilv_node_free(app->uris.xsd_int);
-	lilv_node_free(app->uris.xsd_uint);
-	lilv_node_free(app->uris.xsd_long);
-	lilv_node_free(app->uris.xsd_float);
-	lilv_node_free(app->uris.xsd_double);
-
-	lilv_node_free(app->uris.state_loadDefaultState);
-	lilv_node_free(app->uris.state_state);
-	lilv_node_free(app->uris.state_interface);
-	lilv_node_free(app->uris.state_threadSafeRestore);
-	lilv_node_free(app->uris.state_makePath);
-	lilv_node_free(app->uris.state_freePath);
-
-	lilv_node_free(app->uris.work_schedule);
-	lilv_node_free(app->uris.work_interface);
-
-	lilv_node_free(app->uris.idisp_queue_draw);
-	lilv_node_free(app->uris.idisp_interface);
-
-	lilv_node_free(app->uris.opts_options);
-	lilv_node_free(app->uris.opts_interface);
-	lilv_node_free(app->uris.opts_requiredOption);
-	lilv_node_free(app->uris.opts_supportedOption);
-
-	lilv_node_free(app->uris.patch_writable);
-	lilv_node_free(app->uris.patch_readable);
-	lilv_node_free(app->uris.patch_Message);
-
-	lilv_node_free(app->uris.pg_group);
-
-	lilv_node_free(app->uris.ui_binary);
-	lilv_node_free(app->uris.ui_makeSONameResident);
-	lilv_node_free(app->uris.ui_idleInterface);
-	lilv_node_free(app->uris.ui_showInterface);
-	lilv_node_free(app->uris.ui_resize);
-	lilv_node_free(app->uris.ui_UI);
-	lilv_node_free(app->uris.ui_X11UI);
-	lilv_node_free(app->uris.ui_WindowsUI);
-	lilv_node_free(app->uris.ui_CocoaUI);
-	lilv_node_free(app->uris.ui_GtkUI);
-	lilv_node_free(app->uris.ui_Gtk3UI);
-	lilv_node_free(app->uris.ui_Qt4UI);
-	lilv_node_free(app->uris.ui_Qt5UI);
-
-	lilv_node_free(app->uris.event_EventPort);
-	lilv_node_free(app->uris.uri_map);
-	lilv_node_free(app->uris.instance_access);
-	lilv_node_free(app->uris.data_access);
-
-	lilv_node_free(app->uris.log_log);
-
-	lilv_node_free(app->uris.urid_map);
-	lilv_node_free(app->uris.urid_unmap);
-
-	lilv_node_free(app->uris.rsz_resize);
-
-	lilv_node_free(app->uris.bufsz_boundedBlockLength);
-	lilv_node_free(app->uris.bufsz_fixedBlockLength);
-	lilv_node_free(app->uris.bufsz_powerOf2BlockLength);
-	lilv_node_free(app->uris.bufsz_coarseBlockLength);
-
-	lilv_node_free(app->uris.pprops_supportsStrictBounds);
-
-	lilv_node_free(app->uris.param_sampleRate);
-
-	lilv_node_free(app->uris.bufsz_minBlockLength);
-	lilv_node_free(app->uris.bufsz_maxBlockLength);
-	lilv_node_free(app->uris.bufsz_nominalBlockLength);
-	lilv_node_free(app->uris.bufsz_sequenceSize);
-
-	lilv_node_free(app->uris.ui_updateRate);
-	lilv_node_free(app->uris.ui_parent);
-	lilv_node_free(app->uris.ui_portMap);
-	lilv_node_free(app->uris.ui_portSubscribe);
-	lilv_node_free(app->uris.ui_touch);
-	lilv_node_free(app->uris.ui_requestValue);
-
-	lilv_node_free(app->uris.ext_Widget);
-
-	lilv_node_free(app->uris.morph_MorphPort);
-	lilv_node_free(app->uris.morph_AutoMorphPort);
-	lilv_node_free(app->uris.morph_supportsType);
-
-	lilv_node_free(app->uris.units_unit);
-	lilv_node_free(app->uris.units_Unit);
 }
 
 static void
@@ -1834,15 +1560,6 @@ main(int argc, char **argv)
 		.queue_draw = _queue_draw
 	};
 
-	const LV2_URID atom_Float = app.map->map(app.map->handle, LV2_ATOM__Float);
-	const LV2_URID atom_Int = app.map->map(app.map->handle, LV2_ATOM__Int);
-	const LV2_URID param_sampleRate = app.map->map(app.map->handle, LV2_PARAMETERS__sampleRate);
-	const LV2_URID ui_updateRate = app.map->map(app.map->handle, LV2_UI__updateRate);
-	const LV2_URID bufsz_minBlockLength = app.map->map(app.map->handle, LV2_BUF_SIZE__minBlockLength);
-	const LV2_URID bufsz_maxBlockLength = app.map->map(app.map->handle, LV2_BUF_SIZE__maxBlockLength);
-	const LV2_URID bufsz_nominalBlockLength = app.map->map(app.map->handle, LV2_BUF_SIZE_PREFIX"nominalBlockLength");
-	const LV2_URID bufsz_sequenceSize = app.map->map(app.map->handle, LV2_BUF_SIZE__sequenceSize);
-
 	const float param_sample_rate = 48000.f;
 	const float ui_update_rate = 25.f;
 	const int32_t bufsz_min_block_length = 256;
@@ -1851,44 +1568,44 @@ main(int argc, char **argv)
 	const int32_t bufsz_sequence_size = 2048;
 
 	const LV2_Options_Option opts_sampleRate = {
-		.key = param_sampleRate,
+		.key = PARAMETERS__sampleRate,
 		.size = sizeof(float),
-		.type = atom_Float,
+		.type = ATOM__Float,
 		.value = &param_sample_rate
 	};
 
 	const LV2_Options_Option opts_updateRate = {
-		.key = ui_updateRate,
+		.key = UI__updateRate,
 		.size = sizeof(float),
-		.type = atom_Float,
+		.type = ATOM__Float,
 		.value = &ui_update_rate
 	};
 
 	const LV2_Options_Option opts_minBlockLength = {
-		.key = bufsz_minBlockLength,
+		.key = BUF_SIZE__minBlockLength,
 		.size = sizeof(int32_t),
-		.type = atom_Int,
+		.type = ATOM__Int,
 		.value = &bufsz_min_block_length
 	};
 
 	const LV2_Options_Option opts_maxBlockLength = {
-		.key = bufsz_maxBlockLength,
+		.key = BUF_SIZE__maxBlockLength,
 		.size = sizeof(int32_t),
-		.type = atom_Int,
+		.type = ATOM__Int,
 		.value = &bufsz_max_block_length
 	};
 
 	const LV2_Options_Option opts_nominalBlockLength = {
-		.key = bufsz_nominalBlockLength,
+		.key = BUF_SIZE__nominalBlockLength,
 		.size = sizeof(int32_t),
-		.type = atom_Int,
+		.type = ATOM__Int,
 		.value = &bufsz_nominal_block_length
 	};
 
 	const LV2_Options_Option opts_sequenceSize = {
-		.key = bufsz_sequenceSize,
+		.key = BUF_SIZE__sequenceSize,
 		.size = sizeof(int32_t),
-		.type = atom_Int,
+		.type = ATOM__Int,
 		.value = &bufsz_sequence_size
 	};
 
@@ -2000,48 +1717,48 @@ main(int argc, char **argv)
 							{
 								const LilvNode *feature = lilv_nodes_get(required_features, itr);
 
-								if(lilv_node_equals(feature, app.uris.urid_map))
+								if(lilv_node_equals(feature, NODE(&app, URID__map)))
 									features[f++] = &feat_map;
-								else if(lilv_node_equals(feature, app.uris.urid_unmap))
+								else if(lilv_node_equals(feature, NODE(&app, URID__unmap)))
 									features[f++] = &feat_unmap;
-								else if(lilv_node_equals(feature, app.uris.work_schedule))
+								else if(lilv_node_equals(feature, NODE(&app, WORKER__schedule)))
 									features[f++] = &feat_sched;
-								else if(lilv_node_equals(feature, app.uris.log_log))
+								else if(lilv_node_equals(feature, NODE(&app, LOG__log)))
 									features[f++] = &feat_log;
-								else if(lilv_node_equals(feature, app.uris.state_makePath))
+								else if(lilv_node_equals(feature, NODE(&app, STATE__makePath)))
 									features[f++] = &feat_mkpath;
-								else if(lilv_node_equals(feature, app.uris.state_freePath))
+								else if(lilv_node_equals(feature, NODE(&app, STATE__freePath)))
 									features[f++] = &feat_freepath;
-								else if(lilv_node_equals(feature, app.uris.rsz_resize))
+								else if(lilv_node_equals(feature, NODE(&app, UI__resize)))
 									features[f++] = &feat_rsz;
-								else if(lilv_node_equals(feature, app.uris.opts_options))
+								else if(lilv_node_equals(feature, NODE(&app, OPTIONS__options)))
 									features[f++] = &feat_opts;
-								else if(lilv_node_equals(feature, app.uris.uri_map))
+								else if(lilv_node_equals(feature, NODE(&app, URI_MAP)))
 									features[f++] = &feat_urimap;
-								else if(lilv_node_equals(feature, app.uris.lv2_isLive))
+								else if(lilv_node_equals(feature, NODE(&app, CORE__isLive)))
 									features[f++] = &feat_islive;
-								else if(lilv_node_equals(feature, app.uris.lv2_inPlaceBroken))
+								else if(lilv_node_equals(feature, NODE(&app, CORE__inPlaceBroken)))
 									features[f++] = &feat_inplacebroken;
-								else if(lilv_node_equals(feature, app.uris.lv2_hardRTCapable))
+								else if(lilv_node_equals(feature, NODE(&app, CORE__hardRTCapable)))
 									features[f++] = &feat_hardrtcapable;
-								else if(lilv_node_equals(feature, app.uris.pprops_supportsStrictBounds))
+								else if(lilv_node_equals(feature, NODE(&app, PORT_PROPS__supportsStrictBounds)))
 									features[f++] = &feat_supportsstrictbounds;
-								else if(lilv_node_equals(feature, app.uris.bufsz_boundedBlockLength))
+								else if(lilv_node_equals(feature, NODE(&app, BUF_SIZE__boundedBlockLength)))
 								{
 									features[f++] = &feat_boundedblocklength;
 									requires_bounded_block_length = true;
 								}
-								else if(lilv_node_equals(feature, app.uris.bufsz_fixedBlockLength))
+								else if(lilv_node_equals(feature, NODE(&app, BUF_SIZE__fixedBlockLength)))
 									features[f++] = &feat_fixedblocklength;
-								else if(lilv_node_equals(feature, app.uris.bufsz_powerOf2BlockLength))
+								else if(lilv_node_equals(feature, NODE(&app, BUF_SIZE__powerOf2BlockLength)))
 									features[f++] = &feat_powerof2blocklength;
-								else if(lilv_node_equals(feature, app.uris.bufsz_coarseBlockLength))
+								else if(lilv_node_equals(feature, NODE(&app, BUF_SIZE__coarseBlockLength)))
 									features[f++] = &feat_coarseblocklength;
-								else if(lilv_node_equals(feature, app.uris.state_loadDefaultState))
+								else if(lilv_node_equals(feature, NODE(&app, STATE__loadDefaultState)))
 									features[f++] = &feat_loaddefaultstate;
-								else if(lilv_node_equals(feature, app.uris.state_threadSafeRestore))
+								else if(lilv_node_equals(feature, NODE(&app, STATE__threadSafeRestore)))
 									features[f++] = &feat_threadsaferestore;
-								else if(lilv_node_equals(feature, app.uris.idisp_queue_draw))
+								else if(lilv_node_equals(feature, NODE(&app, INLINEDISPLAY__queue_draw)))
 									features[f++] = &feat_idispqueuedraw;
 								else
 								{
@@ -2061,36 +1778,36 @@ main(int argc, char **argv)
 						bool requires_min_block_length = false;
 						bool requires_max_block_length = false;
 
-						LilvNodes *required_options = lilv_plugin_get_value(app.plugin, app.uris.opts_requiredOption);
+						LilvNodes *required_options = lilv_plugin_get_value(app.plugin, NODE(&app, OPTIONS__requiredOption));
 						if(required_options)
 						{
 							LILV_FOREACH(nodes, itr, required_options)
 							{
 								const LilvNode *option = lilv_nodes_get(required_options, itr);
 
-								if(lilv_node_equals(option, app.uris.param_sampleRate))
+								if(lilv_node_equals(option, NODE(&app, PARAMETERS__sampleRate)))
 								{
 									opts[n_opts++] = opts_sampleRate;
 								}
-								else if(lilv_node_equals(option, app.uris.bufsz_minBlockLength))
+								else if(lilv_node_equals(option, NODE(&app, BUF_SIZE__minBlockLength)))
 								{
 									opts[n_opts++] = opts_minBlockLength;
 									requires_min_block_length = true;
 								}
-								else if(lilv_node_equals(option, app.uris.bufsz_maxBlockLength))
+								else if(lilv_node_equals(option, NODE(&app, BUF_SIZE__maxBlockLength)))
 								{
 									opts[n_opts++] = opts_maxBlockLength;
 									requires_max_block_length = true;
 								}
-								else if(lilv_node_equals(option, app.uris.bufsz_nominalBlockLength))
+								else if(lilv_node_equals(option, NODE(&app, BUF_SIZE__nominalBlockLength)))
 								{
 									opts[n_opts++] = opts_nominalBlockLength;
 								}
-								else if(lilv_node_equals(option, app.uris.bufsz_sequenceSize))
+								else if(lilv_node_equals(option, NODE(&app, BUF_SIZE__sequenceSize)))
 								{
 									opts[n_opts++] = opts_sequenceSize;
 								}
-								else if(lilv_node_equals(option, app.uris.ui_updateRate))
+								else if(lilv_node_equals(option, NODE(&app, UI__updateRate)))
 								{
 									opts[n_opts++] = opts_updateRate;
 								}
@@ -2142,7 +1859,7 @@ main(int argc, char **argv)
 						app.opts_iface = lilv_instance_get_extension_data(app.instance, LV2_OPTIONS__interface);
 
 						const bool has_load_default = lilv_plugin_has_feature(app.plugin,
-							app.uris.state_loadDefaultState);
+							NODE(&app, STATE__loadDefaultState));
 						if(has_load_default)
 						{
 							const LilvNode *pset = lilv_plugin_get_uri(app.plugin);
@@ -2171,7 +1888,7 @@ main(int argc, char **argv)
 							unsigned minor_version = 0;
 							unsigned micro_version = 0;
 
-							LilvNode *minor_version_nodes = lilv_plugin_get_value(app.plugin , app.uris.lv2_minorVersion);
+							LilvNode *minor_version_nodes = lilv_plugin_get_value(app.plugin , NODE(&app, CORE__minorVersion));
 							if(minor_version_nodes)
 							{
 								const LilvNode *minor_version_node = lilv_nodes_get_first(minor_version_nodes);
@@ -2183,7 +1900,7 @@ main(int argc, char **argv)
 								lilv_nodes_free(minor_version_nodes);
 							}
 
-							LilvNode *micro_version_nodes = lilv_plugin_get_value(app.plugin , app.uris.lv2_microVersion);
+							LilvNode *micro_version_nodes = lilv_plugin_get_value(app.plugin , NODE(&app, CORE__microVersion));
 							if(micro_version_nodes)
 							{
 								const LilvNode *micro_version_node = lilv_nodes_get_first(micro_version_nodes);
@@ -2469,7 +2186,7 @@ lv2lint_report(app_t *app, const test_t *test, res_t *res, bool show_passes, boo
 				LilvNode *subj_node = ret->uri ? lilv_new_uri(app->world, ret->uri) : NULL;
 				if(subj_node)
 				{
-					LilvNode *docu_node = lilv_world_get(app->world, subj_node, app->uris.lv2_documentation, NULL);
+					LilvNode *docu_node = lilv_world_get(app->world, subj_node, NODE(app, CORE__documentation), NULL);
 					if(docu_node)
 					{
 						docu = lv2lint_node_as_string_strdup(docu_node);

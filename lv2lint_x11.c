@@ -280,23 +280,19 @@ test_x11(app_t *app, bool *flag)
 	};
 #pragma GCC diagnostic pop
 
-	const LV2_URID atom_Float = app->map->map(app->map->handle, LV2_ATOM__Float);
-	const LV2_URID param_sampleRate = app->map->map(app->map->handle, LV2_PARAMETERS__sampleRate);
-	const LV2_URID ui_updateRate = app->map->map(app->map->handle, LV2_UI__updateRate);
-
 	const float param_sample_rate = 48000.f;
 	const float ui_update_rate = 25.f;
 
 	const LV2_Options_Option opts_sampleRate = {
-		.key = param_sampleRate,
+		.key = PARAMETERS__sampleRate,
 		.size = sizeof(float),
-		.type = atom_Float,
+		.type = ATOM__Float,
 		.value = &param_sample_rate
 	};
 	const LV2_Options_Option opts_updateRate = {
-		.key = ui_updateRate,
+		.key = UI__updateRate,
 		.size = sizeof(float),
-		.type = atom_Float,
+		.type = ATOM__Float,
 		.value = &ui_update_rate
 	};
 	const LV2_Options_Option opts_sentinel = {
@@ -367,62 +363,62 @@ test_x11(app_t *app, bool *flag)
 		const LilvNode *uri = lilv_ui_get_uri(app->ui);
 
 		LilvNodes *required_features = lilv_world_find_nodes(app->world, uri,
-			app->uris.lv2_requiredFeature, NULL);
+			NODE(app, CORE__requiredFeature), NULL);
 		if(required_features)
 		{
 			LILV_FOREACH(nodes, itr, required_features)
 			{
 				const LilvNode *feature = lilv_nodes_get(required_features, itr);
 
-				if(lilv_node_equals(feature, app->uris.urid_map))
+				if(lilv_node_equals(feature, NODE(app, URID__map)))
 				{
 					features[f++] = &feat_map;
 				}
-				else if(lilv_node_equals(feature, app->uris.urid_unmap))
+				else if(lilv_node_equals(feature, NODE(app, URID__unmap)))
 				{
 					features[f++] = &feat_unmap;
 				}
-				else if(lilv_node_equals(feature, app->uris.ui_parent))
+				else if(lilv_node_equals(feature, NODE(app, UI__parent)))
 				{
 					features[f++] = &feat_parent;
 				}
-				else if(lilv_node_equals(feature, app->uris.log_log))
+				else if(lilv_node_equals(feature, NODE(app, LOG__log)))
 				{
 					features[f++] = &feat_log;
 				}
-				else if(lilv_node_equals(feature, app->uris.ui_portMap))
+				else if(lilv_node_equals(feature, NODE(app, UI__portMap)))
 				{
 					features[f++] = &feat_port_map;
 				}
-				else if(lilv_node_equals(feature, app->uris.ui_portSubscribe))
+				else if(lilv_node_equals(feature, NODE(app, UI__portSubscribe)))
 				{
 					features[f++] = &feat_port_subscribe;
 				}
-				else if(lilv_node_equals(feature, app->uris.ui_touch))
+				else if(lilv_node_equals(feature, NODE(app, UI__touch)))
 				{
 					features[f++] = &feat_touch;
 				}
-				else if(lilv_node_equals(feature, app->uris.ui_requestValue))
+				else if(lilv_node_equals(feature, NODE(app, UI__requestValue)))
 				{
 					features[f++] = &feat_request_value;
 				}
-				else if(lilv_node_equals(feature, app->uris.ui_resize))
+				else if(lilv_node_equals(feature, NODE(app, UI__resize)))
 				{
 					features[f++] = &feat_resize;
 				}
-				else if(lilv_node_equals(feature, app->uris.instance_access))
+				else if(lilv_node_equals(feature, NODE(app, INSTANCE_ACCESS)))
 				{
 					features[f++] = &feat_instance_access;
 				}
-				else if(lilv_node_equals(feature, app->uris.data_access))
+				else if(lilv_node_equals(feature, NODE(app, DATA_ACCESS)))
 				{
 					features[f++] = &feat_data_access;
 				}
-				else if(lilv_node_equals(feature, app->uris.uri_map))
+				else if(lilv_node_equals(feature, NODE(app, URI_MAP)))
 				{
 					features[f++] = &feat_urimap;
 				}
-				else if(lilv_node_equals(feature, app->uris.opts_options))
+				else if(lilv_node_equals(feature, NODE(app, OPTIONS__options)))
 				{
 					features[f++] = &feat_opts;
 				}
@@ -445,18 +441,18 @@ test_x11(app_t *app, bool *flag)
 		unsigned n_opts = 0;
 
 		LilvNodes *required_options = lilv_world_find_nodes(app->world, uri,
-			app->uris.opts_requiredOption, NULL);
+			NODE(app, OPTIONS__requiredOption), NULL);
 		if(required_options)
 		{
 			LILV_FOREACH(nodes, itr, required_options)
 			{
 				const LilvNode *option = lilv_nodes_get(required_options, itr);
 
-				if(lilv_node_equals(option, app->uris.param_sampleRate))
+				if(lilv_node_equals(option, NODE(app, PARAMETERS__sampleRate)))
 				{
 					opts[n_opts++] = opts_sampleRate;
 				}
-				else if(lilv_node_equals(option, app->uris.ui_updateRate))
+				else if(lilv_node_equals(option, NODE(app, UI__updateRate)))
 				{
 					opts[n_opts++] = opts_updateRate;
 				}

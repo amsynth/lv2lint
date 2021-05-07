@@ -131,7 +131,7 @@ _test_instance_access(app_t *app)
 	const LilvNode *uri = lilv_ui_get_uri(app->ui);
 
 	const bool needs_instance_access = lilv_world_ask(app->world, uri,
-		app->uris.lv2_requiredFeature, app->uris.instance_access);
+		NODE(app, CORE__requiredFeature), NODE(app, INSTANCE_ACCESS));
 
 	if(needs_instance_access)
 	{
@@ -158,7 +158,7 @@ _test_data_access(app_t *app)
 	const LilvNode *uri = lilv_ui_get_uri(app->ui);
 
 	const bool needs_data_access = lilv_world_ask(app->world, uri,
-		app->uris.lv2_requiredFeature, app->uris.data_access);
+		NODE(app, CORE__requiredFeature), NODE(app, DATA_ACCESS));
 
 	if(needs_data_access)
 	{
@@ -206,7 +206,7 @@ _test_binary(app_t *app)
 	const ret_t *ret = NULL;
 
 	const bool has_ui_binary = lilv_world_ask(app->world,
-		lilv_ui_get_uri(app->ui), app->uris.ui_binary, NULL);
+		lilv_ui_get_uri(app->ui), NODE(app, UI__binary), NULL);
 
 	if(has_ui_binary)
 	{
@@ -230,7 +230,7 @@ _test_resident(app_t *app)
 	const ret_t *ret = NULL;
 
 	const bool has_ui_resident = lilv_world_ask(app->world,
-		lilv_ui_get_uri(app->ui), app->uris.ui_makeSONameResident, NULL);
+		lilv_ui_get_uri(app->ui), NODE(app, UI__makeSONameResident), NULL);
 
 	if(has_ui_resident)
 	{
@@ -295,11 +295,11 @@ _test_idle_interface(app_t *app)
 	const ret_t *ret = NULL;
 
 	const bool has_idle_feature = lilv_world_ask(app->world,
-			lilv_ui_get_uri(app->ui), app->uris.lv2_optionalFeature, app->uris.ui_idleInterface)
+			lilv_ui_get_uri(app->ui), NODE(app, CORE__optionalFeature), NODE(app, UI__idleInterface))
 		|| lilv_world_ask(app->world,
-			lilv_ui_get_uri(app->ui), app->uris.lv2_requiredFeature, app->uris.ui_idleInterface);
+			lilv_ui_get_uri(app->ui), NODE(app, CORE__requiredFeature), NODE(app, UI__idleInterface));
 	const bool has_idle_extension = lilv_world_ask(app->world,
-		lilv_ui_get_uri(app->ui), app->uris.lv2_extensionData, app->uris.ui_idleInterface);
+		lilv_ui_get_uri(app->ui), NODE(app, CORE__extensionData), NODE(app, UI__idleInterface));
 
 	if( (has_idle_extension || app->ui_idle_iface) && !has_idle_feature)
 	{
@@ -337,7 +337,7 @@ _test_show_interface(app_t *app)
 	const ret_t *ret = NULL;
 
 	const bool has_show_extension = lilv_world_ask(app->world,
-		lilv_ui_get_uri(app->ui), app->uris.lv2_extensionData, app->uris.ui_showInterface);
+		lilv_ui_get_uri(app->ui), NODE(app, CORE__extensionData), NODE(app, UI__showInterface));
 
 	if(app->ui_show_iface && !has_show_extension)
 	{
@@ -371,7 +371,7 @@ _test_resize_interface(app_t *app)
 	const ret_t *ret = NULL;
 
 	const bool has_resize_extension = lilv_world_ask(app->world,
-		lilv_ui_get_uri(app->ui), app->uris.lv2_extensionData, app->uris.ui_resize);
+		lilv_ui_get_uri(app->ui), NODE(app, CORE__extensionData), NODE(app, UI__resize));
 
 	if(app->ui_resize_iface && !has_resize_extension)
 	{
@@ -424,26 +424,26 @@ _test_toolkit(app_t *app)
 	const ret_t *ret = NULL;
 
 	const LilvNode *ui_uri_node = lilv_ui_get_uri(app->ui);
-	LilvNode *ui_class_node = lilv_world_get(app->world, ui_uri_node, app->uris.rdf_type, NULL);
-	LilvNodes *ui_class_nodes = lilv_world_find_nodes(app->world, NULL, app->uris.rdfs_subClassOf, app->uris.ui_UI);
+	LilvNode *ui_class_node = lilv_world_get(app->world, ui_uri_node, NODE(app, RDF__type), NULL);
+	LilvNodes *ui_class_nodes = lilv_world_find_nodes(app->world, NULL, NODE(app, RDFS__subClassOf), NODE(app, UI__UI));
 
 #if defined(_WIN32)
-	const bool is_native = lilv_ui_is_a(app->ui, app->uris.ui_WindowsUI);
+	const bool is_native = lilv_ui_is_a(app->ui, NODE(app, UI__WindowsUI));
 #elif defined(__APPLE__)
-	const bool is_native = lilv_ui_is_a(app->ui, app->uris.ui_CocoaUI);
+	const bool is_native = lilv_ui_is_a(app->ui, NODE(app, UI__CocoaUI));
 #else
-	const bool is_native = lilv_ui_is_a(app->ui, app->uris.ui_X11UI);
+	const bool is_native = lilv_ui_is_a(app->ui, NODE(app, UI__X11UI));
 #endif
 
 	const bool has_show_extension = lilv_world_ask(app->world,
-		lilv_ui_get_uri(app->ui), app->uris.lv2_extensionData, app->uris.ui_showInterface);
-	const bool is_external = lilv_node_equals(ui_class_node, app->uris.ext_Widget);
+		lilv_ui_get_uri(app->ui), NODE(app, CORE__extensionData), NODE(app, UI__showInterface));
+	const bool is_external = lilv_node_equals(ui_class_node, NODE(app, EXTERNAL_UI__Widget));
 	const bool is_show_ui = app->ui_show_iface || has_show_extension;
 
 	bool is_known = false;
 	if(ui_class_node)
 	{
-		if(lilv_node_equals(ui_class_node, app->uris.ui_UI))
+		if(lilv_node_equals(ui_class_node, NODE(app, UI__UI)))
 		{
 			is_known = true;
 		}
@@ -632,7 +632,7 @@ test_ui(app_t *app)
 	}
 
 #ifdef ENABLE_X11_TESTS
-	if(lilv_ui_is_a(app->ui, app->uris.ui_X11UI))
+	if(lilv_ui_is_a(app->ui, NODE(app, UI__X11UI)))
 	{
 		test_x11(app, &flag);
 	}

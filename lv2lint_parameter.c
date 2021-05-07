@@ -44,7 +44,7 @@ _test_label(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	LilvNode *label_node = lilv_world_get(app->world, app->parameter, app->uris.rdfs_label, NULL);
+	LilvNode *label_node = lilv_world_get(app->world, app->parameter, NODE(app, RDFS__label), NULL);
 	if(label_node)
 	{
 		if(lilv_node_is_string(label_node))
@@ -94,7 +94,7 @@ _test_comment(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	LilvNode *comment_node = lilv_world_get(app->world, app->parameter, app->uris.rdfs_comment, NULL);
+	LilvNode *comment_node = lilv_world_get(app->world, app->parameter, NODE(app, RDFS__comment), NULL);
 	if(comment_node)
 	{
 		if(lilv_node_is_string(comment_node))
@@ -191,7 +191,7 @@ _test_range(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	LilvNode *range_node = lilv_world_get(app->world, app->parameter, app->uris.rdfs_range, NULL);
+	LilvNode *range_node = lilv_world_get(app->world, app->parameter, NODE(app, RDFS__range), NULL);
 	if(range_node)
 	{
 		if(lilv_node_is_uri(range_node))
@@ -203,16 +203,16 @@ _test_range(app_t *app)
 			}
 			else
 			{
-				if(  lilv_node_equals(range_node, app->uris.atom_Int)
-					|| lilv_node_equals(range_node, app->uris.atom_Long)
-					|| lilv_node_equals(range_node, app->uris.atom_Float)
-					|| lilv_node_equals(range_node, app->uris.atom_Double) )
+				if(  lilv_node_equals(range_node, NODE(app, ATOM__Int))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Long))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Float))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Double)) )
 				{
-					LilvNode *minimum = lilv_world_get(app->world, app->parameter, app->uris.lv2_minimum, NULL);
+					LilvNode *minimum = lilv_world_get(app->world, app->parameter, NODE(app, CORE__minimum), NULL);
 					if(minimum)
 					{
-						if(  lilv_node_equals(range_node, app->uris.atom_Int)
-							|| lilv_node_equals(range_node, app->uris.atom_Long) )
+						if(  lilv_node_equals(range_node, NODE(app, ATOM__Int))
+							|| lilv_node_equals(range_node, NODE(app, ATOM__Long)) )
 						{
 							if(!lilv_node_is_int(minimum))
 							{
@@ -224,8 +224,8 @@ _test_range(app_t *app)
 								app->min.i64 = lilv_node_as_int(minimum);
 							}
 						}
-						else if(lilv_node_equals(range_node, app->uris.atom_Float)
-							|| lilv_node_equals(range_node, app->uris.atom_Double) )
+						else if(lilv_node_equals(range_node, NODE(app, ATOM__Float))
+							|| lilv_node_equals(range_node, NODE(app, ATOM__Double)) )
 						{
 							if(!lilv_node_is_float(minimum))
 							{
@@ -245,11 +245,11 @@ _test_range(app_t *app)
 						ret = &ret_range_minimum_not_found;
 					}
 
-					LilvNode *maximum = lilv_world_get(app->world, app->parameter, app->uris.lv2_maximum, NULL);
+					LilvNode *maximum = lilv_world_get(app->world, app->parameter, NODE(app, CORE__maximum), NULL);
 					if(maximum)
 					{
-						if(  lilv_node_equals(range_node, app->uris.atom_Int)
-							|| lilv_node_equals(range_node, app->uris.atom_Long) )
+						if(  lilv_node_equals(range_node, NODE(app, ATOM__Int))
+							|| lilv_node_equals(range_node, NODE(app, ATOM__Long)) )
 						{
 							if(!lilv_node_is_int(maximum))
 							{
@@ -261,8 +261,8 @@ _test_range(app_t *app)
 								app->max.i64 = lilv_node_as_int(maximum);
 							}
 						}
-						else if(lilv_node_equals(range_node, app->uris.atom_Float)
-							|| lilv_node_equals(range_node, app->uris.atom_Double) )
+						else if(lilv_node_equals(range_node, NODE(app, ATOM__Float))
+							|| lilv_node_equals(range_node, NODE(app, ATOM__Double)) )
 						{
 							if(!lilv_node_is_float(maximum))
 							{
@@ -284,16 +284,16 @@ _test_range(app_t *app)
 
 					if(minimum && maximum)
 					{
-						if(  lilv_node_equals(range_node, app->uris.atom_Int)
-							|| lilv_node_equals(range_node, app->uris.atom_Long) )
+						if(  lilv_node_equals(range_node, NODE(app, ATOM__Int))
+							|| lilv_node_equals(range_node, NODE(app, ATOM__Long)) )
 						{
 							if( !(app->min.i64 <= app->max.i64) )
 							{
 								ret = &ret_range_invalid;
 							}
 						}
-						else if(lilv_node_equals(range_node, app->uris.atom_Float)
-							|| lilv_node_equals(range_node, app->uris.atom_Double) )
+						else if(lilv_node_equals(range_node, NODE(app, ATOM__Float))
+							|| lilv_node_equals(range_node, NODE(app, ATOM__Double)) )
 						{
 							if( !(app->min.f64 <= app->max.f64) )
 							{
@@ -302,22 +302,22 @@ _test_range(app_t *app)
 						}
 					}
 				}
-				else if(lilv_node_equals(range_node, app->uris.atom_Bool)
-					|| lilv_node_equals(range_node, app->uris.atom_String)
-					|| lilv_node_equals(range_node, app->uris.atom_Literal)
-					|| lilv_node_equals(range_node, app->uris.atom_Path)
-					|| lilv_node_equals(range_node, app->uris.atom_Chunk)
-					|| lilv_node_equals(range_node, app->uris.atom_URI)
-					|| lilv_node_equals(range_node, app->uris.atom_URID)
-					|| lilv_node_equals(range_node, app->uris.atom_Tuple)
-					|| lilv_node_equals(range_node, app->uris.atom_Object)
-					|| lilv_node_equals(range_node, app->uris.atom_Vector)
-					|| lilv_node_equals(range_node, app->uris.atom_Sequence)
-					|| lilv_node_equals(range_node, app->uris.xsd_int)
-					|| lilv_node_equals(range_node, app->uris.xsd_uint)
-					|| lilv_node_equals(range_node, app->uris.xsd_long)
-					|| lilv_node_equals(range_node, app->uris.xsd_float)
-					|| lilv_node_equals(range_node, app->uris.xsd_double) )
+				else if(lilv_node_equals(range_node, NODE(app, ATOM__Bool))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__String))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Literal))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Path))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Chunk))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__URI))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__URID))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Tuple))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Object))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Vector))
+					|| lilv_node_equals(range_node, NODE(app, ATOM__Sequence))
+					|| lilv_node_equals(range_node, NODE(app, XSD__int))
+					|| lilv_node_equals(range_node, NODE(app, XSD__nonNegativeInteger))
+					|| lilv_node_equals(range_node, NODE(app, XSD__long))
+					|| lilv_node_equals(range_node, NODE(app, XSD__float))
+					|| lilv_node_equals(range_node, NODE(app, XSD__double)) )
 				{
 					// OK
 				}
@@ -360,11 +360,11 @@ _test_unit(app_t *app)
 	const ret_t *ret = NULL;
 
 
-	LilvNode *unit = lilv_world_get(app->world, app->parameter, app->uris.units_unit, NULL);
+	LilvNode *unit = lilv_world_get(app->world, app->parameter, NODE(app, UNITS__unit), NULL);
 	if(unit)
 	{
 		if(  !lilv_node_is_uri(unit)
-			&& !lilv_world_ask(app->world, unit, app->uris.rdf_type, app->uris.units_Unit) )
+			&& !lilv_world_ask(app->world, unit, NODE(app, RDF__type), NODE(app, UNITS__Unit)) )
 		{
 			ret = &ret_units_unit_not_a_uri_or_object;
 		}
@@ -391,20 +391,20 @@ _test_scale_points(app_t *app)
 	const ret_t *ret = NULL;
 
 	LilvNodes *sps = lilv_world_find_nodes(app->world, app->parameter,
-		app->uris.lv2_scalePoint, NULL);
+		NODE(app, CORE__scalePoint), NULL);
 	if(sps)
 	{
 		LILV_FOREACH(nodes, iter1, sps)
 		{
 			const LilvNode *sp1 = lilv_nodes_get(sps, iter1);
-			LilvNode *val1 = lilv_world_get(app->world, sp1, app->uris.rdf_value, NULL);
-			LilvNode *lbl1 = lilv_world_get(app->world, sp1, app->uris.rdfs_label, NULL);
+			LilvNode *val1 = lilv_world_get(app->world, sp1, NODE(app, RDF__value), NULL);
+			LilvNode *lbl1 = lilv_world_get(app->world, sp1, NODE(app, RDFS__label), NULL);
 
 			LILV_FOREACH(nodes, iter2, sps)
 			{
 				const LilvNode *sp2 = lilv_nodes_get(sps, iter2);
 
-				LilvNode *lbl2 = lilv_world_get(app->world, sp2, app->uris.rdfs_label, NULL);
+				LilvNode *lbl2 = lilv_world_get(app->world, sp2, NODE(app, RDFS__label), NULL);
 				if(lilv_node_equals(lbl1, lbl2))
 				{
 					lilv_node_free(lbl2);
@@ -412,7 +412,7 @@ _test_scale_points(app_t *app)
 				}
 				lilv_node_free(lbl2);
 
-				LilvNode *val2 = lilv_world_get(app->world, sp2, app->uris.rdf_value, NULL);
+				LilvNode *val2 = lilv_world_get(app->world, sp2, NODE(app, RDF__value), NULL);
 				if(lilv_node_equals(val1, val2))
 				{
 					ret = &ret_not_unique_val;

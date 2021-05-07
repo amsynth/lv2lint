@@ -46,9 +46,9 @@ _test_lv2_path(app_t *app)
 	const ret_t *ret = NULL;
 
 	LilvNode *ui_class_node = lilv_world_get(app->world,
-		app->uris.ui_X11UI, app->uris.rdfs_label, NULL);
+		NODE(app, UI__X11UI), NODE(app, RDFS__label), NULL);
 	LilvNode *plugin_class_node = lilv_world_get(app->world,
-		app->uris.lv2_InstrumentPlugin, app->uris.rdfs_label, NULL);
+		NODE(app, CORE__InstrumentPlugin), NODE(app, RDFS__label), NULL);
 
 	const char *lv2_path = getenv("LV2_PATH");
 
@@ -350,13 +350,13 @@ _test_license(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	LilvNode *license_node = lilv_world_get(app->world, lilv_plugin_get_uri(app->plugin), app->uris.doap_license, NULL);
+	LilvNode *license_node = lilv_world_get(app->world, lilv_plugin_get_uri(app->plugin), NODE(app, DOAP__license), NULL);
 	if (!license_node)
 	{
 		LilvNode *project_node = lilv_plugin_get_project(app->plugin);
 		if (project_node)
 		{
-			license_node = lilv_world_get(app->world, project_node, app->uris.doap_license, NULL);
+			license_node = lilv_world_get(app->world, project_node, NODE(app, DOAP__license), NULL);
 		}
 	}
 
@@ -588,7 +588,7 @@ _test_version_minor(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	LilvNodes *minor_version_nodes = lilv_plugin_get_value(app->plugin , app->uris.lv2_minorVersion);
+	LilvNodes *minor_version_nodes = lilv_plugin_get_value(app->plugin , NODE(app, CORE__minorVersion));
 	if(minor_version_nodes)
 	{
 		const LilvNode *minor_version_node = lilv_nodes_get_first(minor_version_nodes);
@@ -645,7 +645,7 @@ _test_version_micro(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	LilvNodes *micro_version_nodes = lilv_plugin_get_value(app->plugin , app->uris.lv2_microVersion);
+	LilvNodes *micro_version_nodes = lilv_plugin_get_value(app->plugin , NODE(app, CORE__microVersion));
 	if(micro_version_nodes)
 	{
 		const LilvNode *micro_version_node = lilv_nodes_get_first(micro_version_nodes);
@@ -711,7 +711,7 @@ _test_project(app_t *app)
 	LilvNode *project_node = lilv_plugin_get_project(app->plugin);
 	if(project_node)
 	{
-		LilvNode *project_name_node = lilv_world_get(app->world, project_node, app->uris.doap_name, NULL);
+		LilvNode *project_name_node = lilv_world_get(app->world, project_node, NODE(app, DOAP__name), NULL);
 		if(project_name_node)
 		{
 			if(lilv_node_is_string(project_name_node))
@@ -836,7 +836,7 @@ _test_features(app_t *app)
 	const ret_t *ret = NULL;
 
 	LilvNodes *features = lilv_world_find_nodes(app->world,
-		NULL, app->uris.rdf_type, app->uris.lv2_Feature);
+		NULL, NODE(app, RDF__type), NODE(app, CORE__Feature));
 	if(features)
 	{
 		LilvNodes *supported = lilv_plugin_get_supported_features(app->plugin);
@@ -901,7 +901,7 @@ _test_extensions(app_t *app)
 	}
 
 	LilvNodes *extensions = lilv_world_find_nodes(app->world,
-		NULL, app->uris.rdf_type, app->uris.lv2_ExtensionData);
+		NULL, NODE(app, RDF__type), NODE(app, CORE__ExtensionData));
 	if(extensions)
 	{
 		LilvNodes *data = lilv_plugin_get_extension_data(app->plugin);
@@ -984,8 +984,8 @@ _test_worker(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const bool has_work_schedule= lilv_plugin_has_feature(app->plugin, app->uris.work_schedule);
-	const bool has_work_iface = lilv_plugin_has_extension_data(app->plugin, app->uris.work_interface);
+	const bool has_work_schedule= lilv_plugin_has_feature(app->plugin, NODE(app, WORKER__schedule));
+	const bool has_work_iface = lilv_plugin_has_extension_data(app->plugin, NODE(app, WORKER__interface));
 
 	if(has_work_schedule || has_work_iface || app->work_iface)
 	{
@@ -1049,7 +1049,7 @@ _test_options_iface(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const bool has_opts_iface = lilv_plugin_has_extension_data(app->plugin, app->uris.opts_interface);
+	const bool has_opts_iface = lilv_plugin_has_extension_data(app->plugin, NODE(app, OPTIONS__interface));
 
 	if(has_opts_iface || app->opts_iface)
 	{
@@ -1100,9 +1100,9 @@ _test_options_feature(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const bool has_opts_options= lilv_plugin_has_feature(app->plugin, app->uris.opts_options);
-	LilvNodes *required_options = lilv_plugin_get_value(app->plugin, app->uris.opts_requiredOption);
-	LilvNodes *supported_options = lilv_plugin_get_value(app->plugin, app->uris.opts_supportedOption);
+	const bool has_opts_options= lilv_plugin_has_feature(app->plugin, NODE(app, OPTIONS__options));
+	LilvNodes *required_options = lilv_plugin_get_value(app->plugin, NODE(app, OPTIONS__requiredOption));
+	LilvNodes *supported_options = lilv_plugin_get_value(app->plugin, NODE(app, OPTIONS__supportedOption));
 
 	const unsigned required_n = lilv_nodes_size(required_options);
 	const unsigned supported_n = lilv_nodes_size(supported_options);
@@ -1149,7 +1149,7 @@ _test_uri_map(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	if(lilv_plugin_has_feature(app->plugin, app->uris.uri_map))
+	if(lilv_plugin_has_feature(app->plugin, NODE(app, URI_MAP)))
 	{
 		ret = &ret_uri_map_deprecated;
 	}
@@ -1202,11 +1202,11 @@ _test_state(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const bool has_load_default = lilv_plugin_has_feature(app->plugin, app->uris.state_loadDefaultState);
-	const bool has_thread_safe_restore = lilv_plugin_has_feature(app->plugin, app->uris.state_threadSafeRestore);
+	const bool has_load_default = lilv_plugin_has_feature(app->plugin, NODE(app, STATE__loadDefaultState));
+	const bool has_thread_safe_restore = lilv_plugin_has_feature(app->plugin, NODE(app, STATE__threadSafeRestore));
 	const bool has_state = lilv_world_ask(app->world,
-		lilv_plugin_get_uri(app->plugin), app->uris.state_state, NULL);
-	const bool has_iface = lilv_plugin_has_extension_data(app->plugin, app->uris.state_interface);
+		lilv_plugin_get_uri(app->plugin), NODE(app, STATE__state), NULL);
+	const bool has_iface = lilv_plugin_has_extension_data(app->plugin, NODE(app, STATE__interface));
 
 	if(has_load_default || has_thread_safe_restore || has_state || has_iface || app->state_iface)
 	{
@@ -1267,9 +1267,9 @@ _test_comment(app_t *app)
 	const ret_t *ret = NULL;
 
 	LilvNode *comment = lilv_world_get(app->world,
-		lilv_plugin_get_uri(app->plugin), app->uris.rdfs_comment, NULL);
+		lilv_plugin_get_uri(app->plugin), NODE(app, RDFS__comment), NULL);
 	LilvNode *description= lilv_world_get(app->world,
-		lilv_plugin_get_uri(app->plugin), app->uris.doap_description, NULL);
+		lilv_plugin_get_uri(app->plugin), NODE(app, DOAP__description), NULL);
 
 	if(comment)
 	{
@@ -1318,7 +1318,7 @@ _test_shortdesc(app_t *app)
 	const ret_t *ret = NULL;
 
 	LilvNode *shortdesc = lilv_world_get(app->world,
-		lilv_plugin_get_uri(app->plugin), app->uris.doap_shortdesc, NULL);
+		lilv_plugin_get_uri(app->plugin), NODE(app, DOAP__shortdesc), NULL);
 	if(shortdesc)
 	{
 		if(!lilv_node_is_string(shortdesc))
@@ -1368,8 +1368,8 @@ _test_idisp(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const bool has_idisp_queue_draw = lilv_plugin_has_feature(app->plugin, app->uris.idisp_queue_draw);
-	const bool has_idisp_iface = lilv_plugin_has_extension_data(app->plugin, app->uris.idisp_interface);
+	const bool has_idisp_queue_draw = lilv_plugin_has_feature(app->plugin, NODE(app, INLINEDISPLAY__queue_draw));
+	const bool has_idisp_iface = lilv_plugin_has_extension_data(app->plugin, NODE(app, INLINEDISPLAY__interface));
 
 	if(has_idisp_queue_draw || has_idisp_iface || app->idisp_iface)
 	{
@@ -1407,7 +1407,7 @@ _test_hard_rt_capable(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const bool is_hard_rt_capable = lilv_plugin_has_feature(app->plugin, app->uris.lv2_hardRTCapable);
+	const bool is_hard_rt_capable = lilv_plugin_has_feature(app->plugin, NODE(app, CORE__hardRTCapable));
 
 	if(!is_hard_rt_capable)
 	{
@@ -1430,7 +1430,7 @@ _test_in_place_broken(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const bool is_in_place_broken = lilv_plugin_has_feature(app->plugin, app->uris.lv2_inPlaceBroken);
+	const bool is_in_place_broken = lilv_plugin_has_feature(app->plugin, NODE(app, CORE__inPlaceBroken));
 
 	if(is_in_place_broken)
 	{
@@ -1453,7 +1453,7 @@ _test_is_live(app_t *app)
 
 	const ret_t *ret = NULL;
 
-	const bool is_live = lilv_plugin_has_feature(app->plugin, app->uris.lv2_isLive);
+	const bool is_live = lilv_plugin_has_feature(app->plugin, NODE(app, CORE__isLive));
 
 	if(!is_live)
 	{
@@ -1476,7 +1476,7 @@ _test_fixed_block_length(app_t *app)
 	const ret_t *ret = NULL;
 
 	const bool wants_fixed_block_length =
-		lilv_plugin_has_feature(app->plugin, app->uris.bufsz_fixedBlockLength);
+		lilv_plugin_has_feature(app->plugin, NODE(app, BUF_SIZE__fixedBlockLength));
 
 	if(wants_fixed_block_length)
 	{
@@ -1499,7 +1499,7 @@ _test_power_of_2_block_length(app_t *app)
 	const ret_t *ret = NULL;
 
 	const bool wants_power_of_2_block_length =
-		lilv_plugin_has_feature(app->plugin, app->uris.bufsz_powerOf2BlockLength);
+		lilv_plugin_has_feature(app->plugin, NODE(app, BUF_SIZE__powerOf2BlockLength));
 
 	if(wants_power_of_2_block_length)
 	{
@@ -1580,14 +1580,14 @@ _test_patch(app_t *app)
 	{
 		const LilvPort *port = lilv_plugin_get_port_by_index(app->plugin, i);
 
-		if(  lilv_port_is_a(app->plugin, port, app->uris.atom_AtomPort)
-			&& lilv_port_supports_event(app->plugin, port, app->uris.patch_Message) )
+		if(  lilv_port_is_a(app->plugin, port, NODE(app, ATOM__AtomPort))
+			&& lilv_port_supports_event(app->plugin, port, NODE(app, PATCH__Message)) )
 		{
-			if(lilv_port_is_a(app->plugin, port, app->uris.lv2_InputPort))
+			if(lilv_port_is_a(app->plugin, port, NODE(app, CORE__InputPort)))
 			{
 				n_patch_message_input += 1;
 			}
-			else if(lilv_port_is_a(app->plugin, port, app->uris.lv2_OutputPort))
+			else if(lilv_port_is_a(app->plugin, port, NODE(app, CORE__OutputPort)))
 			{
 				n_patch_message_output += 1;
 			}
@@ -1664,8 +1664,8 @@ test_plugin(app_t *app)
 	if(!rets)
 		return flag;
 
-	app->writables = lilv_plugin_get_value(app->plugin, app->uris.patch_writable);
-	app->readables = lilv_plugin_get_value(app->plugin, app->uris.patch_readable);
+	app->writables = lilv_plugin_get_value(app->plugin, NODE(app, PATCH__writable));
+	app->readables = lilv_plugin_get_value(app->plugin, NODE(app, PATCH__readable));
 
 	for(unsigned i=0; i<tests_n; i++)
 	{

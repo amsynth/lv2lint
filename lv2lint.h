@@ -46,7 +46,11 @@
 #	define __unused __attribute__((unused))
 #endif
 
-#define NODE(APP, ID) (app)->nodes[ID]
+#ifndef LV2_UI__makeSONameResident
+#	define LV2_UI__makeSONameResident          LV2_UI_PREFIX "makeSONameResident"
+#endif
+
+#define NODE(APP, ID) (APP)->nodes[ID]
 
 typedef enum _ansi_color_t {
 	ANSI_COLOR_BOLD,
@@ -126,7 +130,13 @@ typedef enum _stat_urid_t {
 	DOAP__description,
 	DOAP__license,
 	DOAP__name,
-	DOAP__shotdesc,
+	DOAP__shortdesc,
+
+	XSD__int,
+	XSD__nonNegativeInteger,
+	XSD__long,
+	XSD__float,
+	XSD__double,
 
 	ATOM__Atom,
 	ATOM__AtomPort,
@@ -502,6 +512,7 @@ typedef enum _stat_urid_t {
 	UI__scaleFactor,
 	UI__foregroundColor,
 	UI__backgroundColor,
+	UI__makeSONameResident,
 
 	UNITS__Conversion,
 	UNITS__Unit,
@@ -543,6 +554,11 @@ typedef enum _stat_urid_t {
 
 	WORKER__interface,
 	WORKER__schedule,
+
+	EXTERNAL_UI__Widget,
+
+	INLINEDISPLAY__interface,
+	INLINEDISPLAY__queue_draw,
 
 	STAT_URID_MAX
 } stat_urid_t;
@@ -595,151 +611,6 @@ struct _app_t {
 	CURL *curl;
 	char *greet;
 #endif
-	struct {
-		LilvNode *rdfs_label;
-		LilvNode *rdfs_comment;
-		LilvNode *rdfs_range;
-		LilvNode *rdfs_subClassOf;
-
-		LilvNode *rdf_type;
-		LilvNode *rdf_value;
-
-		LilvNode *doap_description;
-		LilvNode *doap_license;
-		LilvNode *doap_name;
-		LilvNode *doap_shortdesc;
-
-		LilvNode *lv2_minimum;
-		LilvNode *lv2_maximum;
-		LilvNode *lv2_Port;
-		LilvNode *lv2_PortProperty;
-		LilvNode *lv2_default;
-		LilvNode *lv2_ControlPort;
-		LilvNode *lv2_CVPort;
-		LilvNode *lv2_AudioPort;
-		LilvNode *lv2_OutputPort;
-		LilvNode *lv2_InputPort;
-		LilvNode *lv2_integer;
-		LilvNode *lv2_toggled;
-		LilvNode *lv2_Feature;
-		LilvNode *lv2_minorVersion;
-		LilvNode *lv2_microVersion;
-		LilvNode *lv2_ExtensionData;
-		LilvNode *lv2_requiredFeature;
-		LilvNode *lv2_optionalFeature;
-		LilvNode *lv2_extensionData;
-		LilvNode *lv2_isLive;
-		LilvNode *lv2_inPlaceBroken;
-		LilvNode *lv2_hardRTCapable;
-		LilvNode *lv2_documentation;
-		LilvNode *lv2_sampleRate;
-		LilvNode *lv2_InstrumentPlugin;
-		LilvNode *lv2_scalePoint;
-
-		LilvNode *atom_AtomPort;
-		LilvNode *atom_Bool;
-		LilvNode *atom_Int;
-		LilvNode *atom_Long;
-		LilvNode *atom_Float;
-		LilvNode *atom_Double;
-		LilvNode *atom_String;
-		LilvNode *atom_Literal;
-		LilvNode *atom_Path;
-		LilvNode *atom_Chunk;
-		LilvNode *atom_URI;
-		LilvNode *atom_URID;
-		LilvNode *atom_Tuple;
-		LilvNode *atom_Object;
-		LilvNode *atom_Vector;
-		LilvNode *atom_Sequence;
-
-		LilvNode *xsd_int;
-		LilvNode *xsd_uint;
-		LilvNode *xsd_long;
-		LilvNode *xsd_float;
-		LilvNode *xsd_double;
-
-		LilvNode *state_loadDefaultState;
-		LilvNode *state_state;
-		LilvNode *state_interface;
-		LilvNode *state_threadSafeRestore;
-		LilvNode *state_makePath;
-		LilvNode *state_freePath;
-
-		LilvNode *work_schedule;
-		LilvNode *work_interface;
-
-		LilvNode *idisp_queue_draw;
-		LilvNode *idisp_interface;
-
-		LilvNode *opts_options;
-		LilvNode *opts_interface;
-		LilvNode *opts_requiredOption;
-		LilvNode *opts_supportedOption;
-
-		LilvNode *patch_writable;
-		LilvNode *patch_readable;
-		LilvNode *patch_Message;
-
-		LilvNode *pg_group;
-
-		LilvNode *ui_binary;
-		LilvNode *ui_makeSONameResident;
-		LilvNode *ui_idleInterface;
-		LilvNode *ui_showInterface;
-		LilvNode *ui_resize;
-		LilvNode *ui_UI;
-		LilvNode *ui_X11UI;
-		LilvNode *ui_WindowsUI;
-		LilvNode *ui_CocoaUI;
-		LilvNode *ui_GtkUI;
-		LilvNode *ui_Gtk3UI;
-		LilvNode *ui_Qt4UI;
-		LilvNode *ui_Qt5UI;
-
-		LilvNode *event_EventPort;
-		LilvNode *uri_map;
-		LilvNode *instance_access;
-		LilvNode *data_access;
-
-		LilvNode *log_log;
-
-		LilvNode *urid_map;
-		LilvNode *urid_unmap;
-
-		LilvNode *rsz_resize;
-
-		LilvNode *bufsz_boundedBlockLength;
-		LilvNode *bufsz_fixedBlockLength;
-		LilvNode *bufsz_powerOf2BlockLength;
-		LilvNode *bufsz_coarseBlockLength;
-
-		LilvNode *pprops_supportsStrictBounds;
-
-		LilvNode *param_sampleRate;
-
-		LilvNode *bufsz_minBlockLength;
-		LilvNode *bufsz_maxBlockLength;
-		LilvNode *bufsz_nominalBlockLength;
-		LilvNode *bufsz_sequenceSize;
-
-		LilvNode *ui_updateRate;
-		LilvNode *ui_parent;
-		LilvNode *ui_portMap;
-		LilvNode *ui_portSubscribe;
-		LilvNode *ui_touch;
-		LilvNode *ui_requestValue;
-
-		LilvNode *ext_Widget;
-
-		LilvNode *morph_MorphPort;
-		LilvNode *morph_AutoMorphPort;
-		LilvNode *morph_supportsType;
-
-		LilvNode *units_unit;
-		LilvNode *units_Unit;
-	} uris;
-
 	LilvNode *nodes [STAT_URID_MAX];
 };
 
