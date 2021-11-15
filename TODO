@@ -50,8 +50,5 @@
 * ui (non-X11)
 	* Actually instantiate UI
 
-* scalePoints (parameters)
-	* Check  for duplicate labels and/or values
-
 * ideas
 	* ship latest lv2 spec as a fallback, in case target system has an oldish one
