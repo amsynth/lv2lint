@@ -1662,7 +1662,10 @@ test_plugin(app_t *app)
 	bool msg = false;
 	res_t *rets = alloca(tests_n * sizeof(res_t));
 	if(!rets)
+	{
 		return flag;
+	}
+	memset(rets, 0x0, tests_n * sizeof(res_t));
 
 	app->writables = lilv_plugin_get_value(app->plugin, NODE(app, PATCH__writable));
 	app->readables = lilv_plugin_get_value(app->plugin, NODE(app, PATCH__readable));

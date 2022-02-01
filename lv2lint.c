@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <signal.h>
 #if defined(HAS_FNMATCH)
 #	include <fnmatch.h>
 #endif
@@ -529,6 +530,18 @@ static const char *stat_uris [STAT_URID_MAX] = {
 };
 
 #undef ITM
+
+jmp_buf jump_env;
+atomic_bool jump_flag = ATOMIC_VAR_INIT(false);
+
+static void
+_sig(int signal __attribute__((unused)))
+{
+	if(atomic_load(&jump_flag))
+	{
+		longjmp(jump_env, 1);
+	}
+}
 
 static void
 _map_uris(app_t *app)
@@ -1506,6 +1519,9 @@ main(int argc, char **argv)
 	{
 		_header(argv);
 	}
+
+	signal(SIGSEGV, _sig);
+	signal(SIGABRT, _sig);
 
 #ifdef ENABLE_ONLINE_TESTS
 	app.curl = curl_easy_init();

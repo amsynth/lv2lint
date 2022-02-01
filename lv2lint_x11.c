@@ -223,6 +223,7 @@ test_x11(app_t *app, bool *flag)
 	{
 		return;
 	}
+	memset(rets, 0x0, tests_n * sizeof(res_t));
 
   Display *display = NULL;
 	Window win = 0;
@@ -476,9 +477,18 @@ test_x11(app_t *app, bool *flag)
 	{
 		if(app->ui_descriptor && app->ui_descriptor->instantiate)
 		{
-			app->ui_instance = app->ui_descriptor->instantiate(app->ui_descriptor,
-				app->plugin_uri, ui_plugin_bundle_path, _write_function, app,
-				(void *)&app->ui_widget, features);
+			atomic_store(&jump_flag, true);
+			if(setjmp(jump_env) == 0)
+			{
+				app->ui_instance = app->ui_descriptor->instantiate(app->ui_descriptor,
+					app->plugin_uri, ui_plugin_bundle_path, _write_function, app,
+					(void *)&app->ui_widget, features);
+			}
+			else
+			{
+				app->ui_instance = NULL;
+			}
+			atomic_store(&jump_flag, false);
 		}
 
 		lilv_free(ui_plugin_bundle_path);

@@ -497,7 +497,10 @@ test_parameter(app_t *app)
 	bool msg = false;
 	res_t *rets = alloca(tests_n * sizeof(res_t));
 	if(!rets)
+	{
 		return flag;
+	}
+	memset(rets, 0x0, tests_n * sizeof(res_t));
 
 	for(unsigned i=0; i<tests_n; i++)
 	{
