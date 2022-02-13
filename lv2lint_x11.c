@@ -342,7 +342,7 @@ test_x11(app_t *app, bool *flag)
 	};
 	const LV2_Feature feat_instance_access = {
 		.URI = LV2_INSTANCE_ACCESS_URI,
-		.data = app->instance
+		.data = lilv_instance_get_handle(app->instance)
 	};
 	const LV2_Feature feat_data_access = {
 		.URI = LV2_DATA_ACCESS_URI,
