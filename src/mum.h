@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: Vladimir Makarov <vmakarov@gcc.gnu.org>
+ * SPDX-License-Identifier: MIT
+ */
+
 /* Copyright (c) 2016, 2017, 2018
    Vladimir Makarov <vmakarov@gcc.gnu.org>
 

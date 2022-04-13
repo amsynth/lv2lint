@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: Makoto Matsumoto and Takuji Nishimura
+ * SPDX-FileCopyrightText: Luiz Henrique de Figueiredo <lhf@tecgraf.puc-rio.br>
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+/*
 * random.c
 * Mersenne Twister random number generator
 * Luiz Henrique de Figueiredo <lhf@tecgraf.puc-rio.br>
