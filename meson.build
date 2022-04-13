@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Hanspeter Portner <dev@open-music-kontrollers.ch>
+# SPDX-License-Identifier: CC0-1.0
+
 project('lv2lint', 'c', default_options : [
 	'buildtype=release',
 	'warning_level=3',
@@ -9,7 +12,9 @@ online_tests = get_option('online-tests')
 elf_tests = get_option('elf-tests')
 x11_tests = get_option('x11-tests')
 
-version = run_command('cat', 'VERSION').stdout().strip()
+reuse = find_program('reuse', required : false)
+
+version = get_option('version')
 
 add_project_arguments('-DLV2LINT_VERSION="'+version+'"', language : 'c')
 add_project_arguments('-D_GNU_SOURCE', language : 'c')
@@ -49,11 +54,11 @@ else
 endif
 
 srcs = [
-	'lv2lint.c',
-	'lv2lint_plugin.c',
-	'lv2lint_port.c',
-	'lv2lint_parameter.c',
-	'lv2lint_ui.c'
+	join_paths('src', 'lv2lint.c'),
+	join_paths('src', 'lv2lint_plugin.c'),
+	join_paths('src', 'lv2lint_port.c'),
+	join_paths('src', 'lv2lint_parameter.c'),
+	join_paths('src', 'lv2lint_ui.c')
 ]
 
 if x11_tests.enabled()
@@ -69,7 +74,16 @@ executable('lv2lint', srcs,
 	dependencies : deps,
 	install : true)
 
-configure_file(input : 'lv2lint.1.in', output : 'lv2lint.1',
+configure_file(
+  input : join_paths('man', 'lv2lint.1.in'),
+  output : 'lv2lint.1',
 	configuration : conf_data)
 
 install_man(join_paths(meson.current_build_dir(), 'lv2lint.1'))
+
+if reuse.found()
+  test('REUSE', reuse, args : [
+    '--root', meson.current_source_dir(),
+    'lint'
+  ])
+endif

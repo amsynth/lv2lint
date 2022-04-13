@@ -1,3 +1,6 @@
+\# SPDX-FileCopyrightText: Hanspeter Portner <dev@open-music-kontrollers.ch>
+\# SPDX-License-Identifier: CC0-1.0
+
 .TH LV2LINT "1" "Jan 15, 2021"
 
 .SH NAME

@@ -1,4 +1,9 @@
 /*
+ * SPDX-FileCopyrightText: Filipe Coelho <falktx@falktx.com>
+ * SPDX-License-Identifier: ISC
+ */
+
+/*
   LV2 realtime safe memory pool extension definition
   This work is in public domain.
 

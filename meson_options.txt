@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Hanspeter Portner <dev@open-music-kontrollers.ch>
+# SPDX-License-Identifier: CC0-1.0
+
 option('online-tests', type : 'feature', value : 'disabled')
 option('elf-tests', type : 'feature', value : 'disabled')
 option('x11-tests', type : 'feature', value : 'disabled')
+option('version', type : 'string', value : '0.13.21')

@@ -1,4 +1,9 @@
 /*
+ * SPDX-FileCopyrightText: Filipe Coelho <falktx@falktx.com>
+ * SPDX-License-Identifier: ISC
+ */
+
+/*
   LV2 Programs Extension
   Copyright 2012 Filipe Coelho <falktx@falktx.com>
 

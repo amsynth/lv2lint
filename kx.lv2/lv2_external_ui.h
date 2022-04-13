@@ -1,4 +1,9 @@
 /*
+ * SPDX-FileCopyrightText: Filipe Coelho <falktx@falktx.com>
+ * SPDX-License-Identifier: ISC
+ */
+
+/*
   LV2 External UI extension
   This work is in public domain.
 

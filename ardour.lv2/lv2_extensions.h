@@ -1,4 +1,10 @@
 /*
+ * SPDX-FileCopyrightText: Robin Gareus <robin@gareus.org>
+ * SPDX-License-Identifier: ISC
+ */
+
+
+/*
   Copyright 2016 Robin Gareus <robin@gareus.org>
 
   Permission to use, copy, modify, and/or distribute this software for any
