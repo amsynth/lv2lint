@@ -1,5 +1,4 @@
 # SPDX-FileCopyrightText: Hanspeter Portner <dev@open-music-kontrollers.ch>
 # SPDX-License-Identifier: CC0-1.0
 
-include:
-  - local: 'gitlab-ci/generic.yml'
+option('version', type : 'string', value : '0.1.85')
