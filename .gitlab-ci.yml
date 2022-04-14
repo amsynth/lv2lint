@@ -20,9 +20,6 @@ vars:
 
 .common_template: &common_definition
   stage: build
-  needs:
-    job: vars
-    artifacts: true
   artifacts:
     name: "${BASE_NAME}-${VERSION}-${CI_BUILD_NAME}"
     paths:
@@ -98,9 +95,6 @@ aarch64-linux-gnu-bullseye:
 
 pack:
   stage: deploy
-  needs:
-    job: vars
-    artifacts: true
   script:
     - echo 'packing up...'
   artifacts:
