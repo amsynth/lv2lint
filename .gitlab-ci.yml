@@ -2,28 +2,38 @@
 # SPDX-License-Identifier: CC0-1.0
 
 stages:
+  - prepare
   - build
   - deploy
 
-.variables_template: &variables_definition
-  variables:
-    BASE_NAME: "lv2lint"
-    PKG_CONFIG_PATH: "/opt/lv2/lib/pkgconfig:/opt/${CI_BUILD_NAME}/lib/pkgconfig:/usr/lib/${CI_BUILD_NAME}/pkgconfig"
+variables:
+  BASE_NAME: "lv2lint"
+  PKG_CONFIG_PATH: "/opt/lv2/lib/pkgconfig:/opt/${CI_BUILD_NAME}/lib/pkgconfig:/usr/lib/${CI_BUILD_NAME}/pkgconfig"
+
+vars:
+  stage: prepare
+  script:
+    - echo "VERSION=$( grep version meson_options.txt | cut -d\' -f6 )" > vars.env
+  artifacts:
+    reports:
+      dotenv: vars.env
 
 .common_template: &common_definition
-  <<: *variables_definition
   stage: build
+  needs:
+    job: vars
+    artifacts: true
   artifacts:
-    name: "${BASE_NAME}-$(cat VERSION)-${CI_BUILD_NAME}"
+    name: "${BASE_NAME}-${VERSION}-${CI_BUILD_NAME}"
     paths:
-      - "${BASE_NAME}-$(cat VERSION)/"
+      - "${BASE_NAME}-${VERSION}/"
 
 .build_template: &build_definition
   <<: *common_definition
   script:
     - meson --prefix=/ --cross-file "${CI_BUILD_NAME}" -Dstatic-build=false build
     - ninja -C build
-    - DESTDIR="${CI_PROJECT_DIR}/${BASE_NAME}-$(cat VERSION)/${CI_BUILD_NAME}" ninja -C build install
+    - DESTDIR="${CI_PROJECT_DIR}/${BASE_NAME}-${VERSION}/${CI_BUILD_NAME}" ninja -C build install
 
 .universal_linux_template_stretch: &universal_linux_definition_stretch
   image: ventosus/universal-linux-gnu:stretch
@@ -87,11 +97,13 @@ aarch64-linux-gnu-bullseye:
   <<: *arm_linux_definition_bullseye
 
 pack:
-  <<: *variables_definition
   stage: deploy
+  needs:
+    job: vars
+    artifacts: true
   script:
     - echo 'packing up...'
   artifacts:
-    name: "${BASE_NAME}-$(cat VERSION)"
+    name: "${BASE_NAME}-${VERSION}"
     paths:
-      - "${BASE_NAME}-$(cat VERSION)/"
+      - "${BASE_NAME}-${VERSION}/"

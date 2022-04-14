@@ -4,6 +4,17 @@
   -->
 # Changelog
 
+## [0.16.0] - 15 Apr 2022
+
+### Added
+
+* compatibility with REUSE spec 3.0
+* catch sig{abrt,segv} upon plugin/ui instantiation
+
+### Fixed
+
+* return plugin handle in instance-access feature struct
+
 ## [0.14.0] - 15 Jul 2021
 
 ### Added
