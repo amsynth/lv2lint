@@ -5,7 +5,7 @@
 project('mapper.lv2', 'c', default_options : [
 	'buildtype=release',
 	'warning_level=3',
-	'werror=true',
+	'werror=false',
 	'b_lto=true',
 	'c_std=c11'])
 
