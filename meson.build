@@ -5,7 +5,7 @@ project('lv2lint', 'c', default_options : [
 	'buildtype=release',
 	'warning_level=3',
 	'werror=false',
-	'b_lto=false',
+	'b_lto=true',
 	'c_std=gnu11'])
 
 mapper_lv2 = subproject('mapper.lv2')
