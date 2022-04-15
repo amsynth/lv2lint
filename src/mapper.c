@@ -41,7 +41,7 @@ _mapper_map(void *data, const char *uri)
 		const uintptr_t val = atomic_load_explicit(&item->val, memory_order_acquire);
 		if(val != 0) // slot is already taken
 		{
-			if(memcmp((const char *)val, uri, uri_len) == 0) // URI is already mapped, use that
+			if(strcmp((const char *)val, uri) == 0) // URI is already mapped, use that
 			{
 				if(uri_clone)
 				{
@@ -79,7 +79,7 @@ _mapper_map(void *data, const char *uri)
 
 			return item->stat ? item->stat : idx + mapper->nstats;
 		}
-		else if(memcmp((const char *)expected, uri, uri_len) == 0) // other thread stole it
+		else if(strcmp((const char *)expected, uri) == 0) // other thread stole it
 		{
 			mapper->free(mapper->data, uri_clone); // free superfluous URI
 
