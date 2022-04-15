@@ -4,6 +4,13 @@
   -->
 # Changelog
 
+## [0.16.2] - 15 Apr 2022
+
+### Fixed
+
+* reuse compliance
+* unit test failures
+
 ## [0.16.0] - 15 Apr 2022
 
 ### Added
