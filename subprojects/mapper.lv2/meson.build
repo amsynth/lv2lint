@@ -7,7 +7,7 @@ project('mapper.lv2', 'c', default_options : [
 	'warning_level=3',
 	'werror=false',
 	'b_lto=true',
-	'c_std=c11'])
+	'c_std=gnu11'])
 
 reuse = find_program('reuse', required : false)
 
