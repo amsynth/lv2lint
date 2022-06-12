@@ -1,0 +1,8 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: Hanspeter Portner <dev@open-music-kontrollers.ch>
+# SPDX-License-Identifier: CC0-1.0
+
+set -e
+set -u
+
+LD_PRELOAD=@INST_DIR@/lv2lint.so ${GDB:-} @INST_DIR@/lv2lint.bin "$@"

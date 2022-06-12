@@ -83,6 +83,88 @@ _test_instantiation(app_t *app)
 	return ret;
 }
 
+#define DICT(NAME) \
+	[SHIFT_ ## NAME] = #NAME
+
+static const char *mask_lbls [SHIFT_MAX] = {
+	DICT(malloc),
+	DICT(free),
+	DICT(calloc),
+	DICT(realloc),
+	DICT(posix_memalign),
+	DICT(aligned_alloc),
+	DICT(valloc),
+	DICT(memalign),
+	DICT(pvalloc),
+
+	DICT(pthread_mutex_lock),
+	DICT(pthread_mutex_unlock)
+};
+
+static void
+_serialize_mask(char **symbols, unsigned mask)
+{
+	for(shift_t s = 0; s < SHIFT_MAX; s++)
+	{
+		const unsigned m = MASK(s);
+
+		if(mask == m)
+		{
+			lv2lint_append_to(symbols, mask_lbls[s]);
+		}
+	}
+}
+
+static const ret_t *
+_test_port_connection(app_t *app)
+{
+	static const ret_t ret_nonrt= {
+		.lnt = LINT_FAIL,
+		.msg = "non-realtime function called: %s",
+		.uri = LV2_CORE__hardRTCapable,
+		.dsc = "Time waits for nothing."
+	};
+
+	const ret_t *ret = NULL;
+
+	if(app->instance && app->forbidden.connect_port)
+	{
+		char *symbols = NULL;
+
+		_serialize_mask(&symbols, app->forbidden.connect_port);
+
+		*app->urn = symbols;
+		ret = &ret_nonrt;
+	}
+
+	return ret;
+}
+
+static const ret_t *
+_test_run(app_t *app)
+{
+	static const ret_t ret_nonrt= {
+		.lnt = LINT_FAIL,
+		.msg = "non-realtime function called: %s",
+		.uri = LV2_CORE__hardRTCapable,
+		.dsc = "Time waits for nothing."
+	};
+
+	const ret_t *ret = NULL;
+
+	if(app->instance && app->forbidden.run)
+	{
+		char *symbols = NULL;
+
+		_serialize_mask(&symbols, app->forbidden.run);
+
+		*app->urn = symbols;
+		ret = &ret_nonrt;
+	}
+
+	return ret;
+}
+
 #ifdef ENABLE_ELF_TESTS
 static const ret_t *
 _test_symbols(app_t *app)
@@ -1604,6 +1686,8 @@ _test_patch(app_t *app)
 static const test_t tests [] = {
 	{"Plugin LV2_PATH",        _test_lv2_path},
 	{"Plugin Instantiation",   _test_instantiation},
+	{"Plugin Port Connection", _test_port_connection},
+	{"Plugin Run",             _test_run},
 #ifdef ENABLE_ELF_TESTS
 	{"Plugin Symbols",         _test_symbols},
 	{"Plugin Fork",            _test_fork},

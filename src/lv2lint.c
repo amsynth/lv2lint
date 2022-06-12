@@ -42,8 +42,6 @@
 #	include <gelf.h>
 #endif
 
-#define MAPPER_API static inline
-#define MAPPER_IMPLEMENTATION
 #include <mapper.lv2/mapper.h>
 
 const char *colors [2][ANSI_COLOR_MAX] = {
@@ -582,10 +580,20 @@ _sched(LV2_Worker_Schedule_Handle instance, uint32_t size, const void *data)
 	app_t *app = instance;
 
 	LV2_Worker_Status status = LV2_WORKER_SUCCESS;
+
+	shm_pause(app->shm);
+
 	if(app->work_iface && app->work_iface->work)
+	{
 		status |= app->work_iface->work(&app->instance, _respond, app, size, data);
+	}
+
+	shm_resume(app->shm);
+
 	if(app->work_iface && app->work_iface->end_run)
+	{
 		status |= app->work_iface->end_run(&app->instance);
+	}
 
 	return status;
 }
@@ -878,9 +886,8 @@ _white_match(const white_t *white, const char *uri, const char *str)
 	return false;
 }
 
-#ifdef ENABLE_ELF_TESTS
-static void
-_append_to(char **dst, const char *src)
+void
+lv2lint_append_to(char **dst, const char *src)
 {
 	static const char *prefix = "\n                * ";
 
@@ -900,6 +907,7 @@ _append_to(char **dst, const char *src)
 	}
 }
 
+#ifdef ENABLE_ELF_TESTS
 bool
 test_visibility(app_t *app, const char *path, const char *uri,
 	const char *description, char **symbols)
@@ -1002,7 +1010,7 @@ test_visibility(app_t *app, const char *path, const char *uri,
 								{
 									if(invalid <= 10)
 									{
-										_append_to(symbols, (invalid == 10)
+										lv2lint_append_to(symbols, (invalid == 10)
 											? "... there is more, but the rest is being truncated"
 											: name);
 									}
@@ -1145,12 +1153,12 @@ test_shared_libraries(app_t *app, const char *path, const char *uri,
 
 							if(n_whitelist && !whitelist_match)
 							{
-								_append_to(libraries, name);
+								lv2lint_append_to(libraries, name);
 								invalid++;
 							}
 							if(n_blacklist && blacklist_match && !whitelist_match)
 							{
-								_append_to(libraries, name);
+								lv2lint_append_to(libraries, name);
 								invalid++;
 							}
 						}
@@ -1510,6 +1518,10 @@ main(int argc, char **argv)
 
 	signal(SIGSEGV, _sig);
 	signal(SIGABRT, _sig);
+
+	app.shm = shm_attach();
+	if(!app.shm)
+		return -1;
 
 #ifdef ENABLE_ONLINE_TESTS
 	app.curl = curl_easy_init();
@@ -1919,6 +1931,37 @@ main(int argc, char **argv)
 
 							lilv_world_unload_resource(app.world, pset);
 						}
+
+						const size_t nports = lilv_plugin_get_num_ports(app.plugin);
+						const size_t ports_sz = sizeof(port_t) * nports;
+						port_t *ports = alloca(ports_sz);
+						memset(ports, 0x0, ports_sz);
+						shm_enable(app.shm);
+						for(size_t p = 0; p < nports; p++)
+						{
+							const LilvPort *port = lilv_plugin_get_port_by_index(app.plugin, i);
+
+							port_t *tar = &ports[p];
+							tar->seq.atom.type = ATOM__Sequence;
+							if(lilv_port_is_a(app.plugin, port, NODE(&app, CORE__InputPort)))
+							{
+								tar->seq.atom.size = sizeof(tar->seq.body);
+							}
+							else if(lilv_port_is_a(app.plugin, port, NODE(&app, CORE__OutputPort)))
+							{
+								tar->seq.atom.size = sizeof(tar);
+							}
+							lilv_instance_connect_port(app.instance, p, tar);
+						}
+						app.forbidden.connect_port = shm_disable(app.shm);
+
+						lilv_instance_activate(app.instance);
+
+						shm_enable(app.shm);
+						lilv_instance_run(app.instance, PORT_NSAMPLES);
+						app.forbidden.run = shm_disable(app.shm);
+
+						lilv_instance_deactivate(app.instance);
 					}
 
 					if(!test_plugin(&app))

@@ -12,12 +12,15 @@
 #include <setjmp.h>
 #include <stdatomic.h>
 
+#include <lv2lint/lv2lint_shm.h>
+
 #include <lilv/lilv.h>
 
 #include <lv2/worker/worker.h>
 #include <lv2/state/state.h>
 #include <lv2/options/options.h>
 #include <lv2/ui/ui.h>
+#include <lv2/atom/atom.h>
 #include <lv2/midi/midi.h>
 #include <lv2/time/time.h>
 #include <lv2/presets/presets.h>
@@ -59,6 +62,7 @@ extern const char *colors [2][ANSI_COLOR_MAX];
 extern jmp_buf jump_env;
 extern atomic_bool jump_flag;
 
+typedef union _port_t port_t;
 typedef union _var_t var_t;
 typedef struct _white_t white_t;
 typedef struct _urid_t urid_t;
@@ -98,6 +102,17 @@ struct _res_t {
 	const ret_t *ret;
 	char *urn;
 	bool is_whitelisted;
+};
+
+#define PORT_NSAMPLES 32
+
+union _port_t {
+	float wav [PORT_NSAMPLES];
+	struct {
+		LV2_Atom atom;
+		LV2_Atom_Sequence_Body body;
+		uint8_t data [];
+	} seq;
 };
 
 union _var_t {
@@ -603,6 +618,11 @@ struct _app_t {
 	CURL *curl;
 	char *greet;
 #endif
+	shm_t *shm;
+	struct {
+		unsigned connect_port;
+		unsigned run;
+	} forbidden;
 	LilvNode *nodes [STAT_URID_MAX];
 };
 
@@ -686,5 +706,8 @@ log_printf(void *data, LV2_URID type, const char *fmt, ...);
 uint32_t
 uri_to_id(LV2_URI_Map_Callback_Data instance, const char *_map, const char *uri);
 #pragma GCC diagnostic pop
+
+void
+lv2lint_append_to(char **dst, const char *src);
 
 #endif

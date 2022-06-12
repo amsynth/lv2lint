@@ -18,10 +18,15 @@ reuse = find_program('reuse', required : false)
 
 version = get_option('version')
 
+prefix= get_option('prefix')
+libdir= get_option('libdir')
+inst_dir = join_paths(libdir, meson.project_name())
+
 add_project_arguments('-DLV2LINT_VERSION="'+version+'"', language : 'c')
 add_project_arguments('-D_GNU_SOURCE', language : 'c')
 
 conf_data = configuration_data()
+conf_data.set('INST_DIR', join_paths(prefix, inst_dir))
 cc = meson.get_compiler('c')
 
 m_dep = cc.find_library('m')
@@ -58,7 +63,13 @@ srcs = [
 	join_paths('src', 'lv2lint_plugin.c'),
 	join_paths('src', 'lv2lint_port.c'),
 	join_paths('src', 'lv2lint_parameter.c'),
-	join_paths('src', 'lv2lint_ui.c')
+	join_paths('src', 'lv2lint_ui.c'),
+  join_paths('src', 'lv2lint_shm.c')
+]
+
+lib_srcs = [
+  join_paths('src', 'lv2lint_alloc.c'),
+  join_paths('src', 'lv2lint_shm.c')
 ]
 
 if x11_tests.enabled()
@@ -69,9 +80,15 @@ else
 	conf_data.set('X11_TESTS', './')
 endif
 
-executable('lv2lint', srcs,
+executable('lv2lint.bin', srcs,
 	dependencies : deps,
-	install : true)
+	install : true,
+  install_dir : inst_dir)
+
+shared_module('lv2lint', lib_srcs,
+	name_prefix : '',
+	install : true,
+  install_dir : inst_dir)
 
 configure_file(
   input : join_paths('man', 'lv2lint.1.in'),
@@ -79,6 +96,13 @@ configure_file(
 	configuration : conf_data)
 
 install_man(join_paths(meson.current_build_dir(), 'lv2lint.1'))
+
+configure_file(
+  input : join_paths('sh', 'lv2lint.in'),
+  output : 'lv2lint',
+	configuration : conf_data,
+  install : true,
+  install_dir : 'bin')
 
 if reuse.found()
   test('REUSE', reuse, args : [
