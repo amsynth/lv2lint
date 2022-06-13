@@ -30,6 +30,8 @@ conf_data.set('INST_DIR', join_paths(prefix, inst_dir))
 cc = meson.get_compiler('c')
 
 m_dep = cc.find_library('m')
+rt_dep = cc.find_library('rt')
+dl_dep = cc.find_library('dl')
 lv2_dep = dependency('lv2', version : '>=1.18.0')
 lilv_dep = dependency('lilv-0', version : '>=0.24.0',
 	static : meson.is_cross_build() and false) #FIXME
@@ -38,7 +40,9 @@ elf_dep = dependency('libelf', required: elf_tests)
 x11_dep = dependency('x11', version : '>=1.6.0', required : x11_tests)
 mapper_lv2_dep = mapper_lv2.get_variable('mapper')
 	
-deps = [m_dep, lv2_dep, lilv_dep, curl_dep, elf_dep, x11_dep, mapper_lv2_dep]
+deps = [m_dep, rt_dep, dl_dep, lv2_dep, lilv_dep, curl_dep, elf_dep, x11_dep, mapper_lv2_dep]
+
+lib_deps = [rt_dep, dl_dep]
 
 if online_tests.enabled()
 	add_project_arguments('-DENABLE_ONLINE_TESTS', language : 'c')
@@ -86,6 +90,7 @@ executable('lv2lint.bin', srcs,
   install_dir : inst_dir)
 
 shared_module('lv2lint', lib_srcs,
+  dependencies : lib_deps,
 	name_prefix : '',
 	install : true,
   install_dir : inst_dir)
