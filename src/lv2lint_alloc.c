@@ -8,6 +8,8 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include <malloc.h>
+#include <semaphore.h>
+#include <time.h>
 
 #include <lv2lint/lv2lint_shm.h>
 
@@ -25,6 +27,17 @@ static void *(*__pvalloc)(size_t) = NULL;
 
 static int   (*__pthread_mutex_lock)(pthread_mutex_t *) = NULL;
 static int   (*__pthread_mutex_unlock)(pthread_mutex_t *) = NULL;
+static int   (*__pthread_mutex_timedlock)(pthread_mutex_t *,
+																					const struct timespec *) = NULL;
+
+static int   (*__sem_wait)(sem_t *) = NULL;
+static int   (*__sem_timedwait)(sem_t *, const struct timespec *) = NULL;
+
+static unsigned (*__sleep)(unsigned) = NULL;
+static int   (*__usleep)(useconds_t) = NULL;
+static int   (*__nanosleep)(const struct timespec *, struct timespec *) = NULL;
+static int   (*__clock_nanosleep)(clockid_t, int, const struct timespec *,
+																	struct timespec *) = NULL;
 
 typedef struct _dict_t {
 	const char *name;
@@ -49,7 +62,16 @@ static dict_t dicts [SHIFT_MAX] = {
 	DICT(pvalloc),
 
 	DICT(pthread_mutex_lock),
-	DICT(pthread_mutex_unlock)
+	DICT(pthread_mutex_unlock),
+	DICT(pthread_mutex_timedlock),
+
+	DICT(sem_wait),
+	DICT(sem_timedwait),
+
+	DICT(sleep),
+	DICT(usleep),
+	DICT(nanosleep),
+	DICT(clock_nanosleep),
 };
 
 static void
@@ -182,4 +204,61 @@ pthread_mutex_unlock(pthread_mutex_t *mutex)
 	_mask(SHIFT_pthread_mutex_unlock);
 
 	return __pthread_mutex_unlock(mutex);
+}
+
+int
+pthread_mutex_timedlock(pthread_mutex_t *mutex, const struct timespec *abstime)
+{
+	_mask(SHIFT_pthread_mutex_timedlock);
+
+	return __pthread_mutex_timedlock(mutex, abstime);
+}
+
+int
+sem_wait(sem_t *sem)
+{
+	_mask(SHIFT_sem_wait);
+
+	return __sem_wait(sem);
+}
+
+int
+sem_timedwait(sem_t *sem, const struct timespec *abstime)
+{
+	_mask(SHIFT_sem_timedwait);
+
+	return __sem_timedwait(sem, abstime);
+}
+
+unsigned
+sleep(unsigned secs)
+{
+	_mask(SHIFT_sleep);
+
+	return __sleep(secs);
+}
+
+int
+usleep(useconds_t usecs)
+{
+	_mask(SHIFT_usleep);
+
+	return __usleep(usecs);
+}
+
+int
+nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
+{
+	_mask(SHIFT_nanosleep);
+
+	return __nanosleep(rqtp, rmtp);
+}
+
+int
+clock_nanosleep(clockid_t clock, int flags, const struct timespec *rqtp,
+	struct timespec *rmtp)
+{
+	_mask(SHIFT_clock_nanosleep);
+
+	return __clock_nanosleep(clock, flags, rqtp, rmtp);
 }

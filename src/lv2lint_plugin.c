@@ -98,7 +98,16 @@ static const char *mask_lbls [SHIFT_MAX] = {
 	DICT(pvalloc),
 
 	DICT(pthread_mutex_lock),
-	DICT(pthread_mutex_unlock)
+	DICT(pthread_mutex_unlock),
+	DICT(pthread_mutex_timedlock),
+
+	DICT(sem_wait),
+	DICT(sem_timedwait),
+
+	DICT(sleep),
+	DICT(usleep),
+	DICT(nanosleep),
+	DICT(clock_nanosleep),
 };
 
 static void
@@ -108,7 +117,7 @@ _serialize_mask(char **symbols, unsigned mask)
 	{
 		const unsigned m = MASK(s);
 
-		if(mask == m)
+		if(mask & m)
 		{
 			lv2lint_append_to(symbols, mask_lbls[s]);
 		}

@@ -22,6 +22,15 @@ typedef enum _shift_t
 
 	SHIFT_pthread_mutex_lock,
 	SHIFT_pthread_mutex_unlock,
+	SHIFT_pthread_mutex_timedlock,
+
+	SHIFT_sem_wait,
+	SHIFT_sem_timedwait,
+
+	SHIFT_sleep,
+	SHIFT_usleep,
+	SHIFT_nanosleep,
+	SHIFT_clock_nanosleep,
 
 	SHIFT_MAX
 } shift_t;
