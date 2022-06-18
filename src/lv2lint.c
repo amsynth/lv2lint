@@ -10,9 +10,14 @@
 #include <string.h>
 #include <assert.h>
 #include <signal.h>
+#include <errno.h>
 #if defined(HAS_FNMATCH)
 #	include <fnmatch.h>
 #endif
+#include <sys/wait.h>
+#include <sys/ptrace.h>
+#include <linux/ptrace.h>
+#include <inttypes.h>
 
 #include <lv2lint/lv2lint.h>
 
@@ -1324,6 +1329,189 @@ _free_whitelist_libs(app_t *app)
 }
 #endif
 
+static void
+_trace_internal(app_t *app)
+{
+	const size_t nports = lilv_plugin_get_num_ports(app->plugin);
+	const size_t ports_sz = sizeof(port_t) * nports;
+	port_t *ports = alloca(ports_sz);
+	memset(ports, 0x0, ports_sz);
+	shm_enable(app->shm);
+	for(size_t p = 0; p < nports; p++)
+	{
+		const LilvPort *port = lilv_plugin_get_port_by_index(app->plugin, p);
+
+		port_t *tar = &ports[p];
+		tar->seq.atom.type = ATOM__Sequence;
+		if(lilv_port_is_a(app->plugin, port, NODE(app, CORE__InputPort)))
+		{
+			tar->seq.atom.size = sizeof(tar->seq.body);
+		}
+		else if(lilv_port_is_a(app->plugin, port, NODE(app, CORE__OutputPort)))
+		{
+			tar->seq.atom.size = sizeof(tar);
+		}
+		lilv_instance_connect_port(app->instance, p, tar);
+	}
+	app->forbidden.connect_port = shm_disable(app->shm);
+
+	shm_enable(app->shm);
+	lilv_instance_run(app->instance, PORT_NSAMPLES);
+	app->forbidden.run = shm_disable(app->shm);
+}
+
+static void
+_trace_child(app_t *app)
+{
+	const pid_t pid = getpid();
+
+	if(ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0)
+	{
+		fprintf(stderr, "[%s] ptrace(PTRACE_TRACEME, ...) failed\n", __func__);
+		_exit(1);
+	}
+
+	kill(pid, SIGSTOP);
+
+	_trace_internal(app);
+
+	_exit(0);
+}
+
+static void
+_show_info(app_t *app, const char *from, struct ptrace_syscall_info *info)
+{
+	switch(info->op)
+	{
+		case PTRACE_SYSCALL_INFO_ENTRY:
+		{
+			//fprintf(stdout, "[%s] entry: nr:%"PRIu64"\n", from, info->entry.nr);
+		} break;
+		case PTRACE_SYSCALL_INFO_EXIT:
+		{
+			//fprintf(stdout, "[%s] exit: rval:%"PRIi64"\n", from, info->exit.rval);
+			app->nsyscalls++;
+		} break;
+		case PTRACE_SYSCALL_INFO_SECCOMP:
+		{
+			//fprintf(stdout, "[%s] seccomp: nr:%"PRIu64"\n", from, info->seccomp.nr);
+			app->nsyscalls++;
+		} break;
+		case PTRACE_SYSCALL_INFO_NONE:
+			// fall-through
+		default:
+		{
+			//fprintf(stdout, "[%s] none:\n", from);
+		} break;
+	}
+}
+
+static void
+_trace_parent(app_t *app, pid_t kid)
+{
+	int status;
+	struct ptrace_syscall_info info;
+
+	while(true)
+	{
+		pid_t rc = waitpid(kid, &status, 0);
+
+		if(rc != kid)
+		{
+			fprintf(stderr, "cannot happen\n");
+			_exit(1);
+		}
+
+		if(WIFEXITED(status))
+		{
+			// kid is no more
+			if(WEXITSTATUS(status) == 0)
+			{
+				break;
+			}
+
+			fprintf(stderr, "failed exit\n");
+			_exit(1);
+		}
+
+		if(WIFSIGNALED(status))
+		{
+			// kid is no more
+			fprintf(stderr, "signaled\n");
+			_exit(1);
+		}
+
+		if(!WIFSTOPPED(status))
+		{
+			// cannot happen
+			fprintf(stderr, "stop cannot happen\n");
+			_exit(1);
+		}
+
+		switch(WSTOPSIG(status))
+		{
+			case SIGSTOP:
+			{
+				if(ptrace(PTRACE_SETOPTIONS, kid, 0, PTRACE_O_TRACESYSGOOD) < 0)
+				{
+					fprintf(stderr, "sysgood failed\n");
+					_exit(1);
+				}
+
+				memset(&info, 0, sizeof(info));
+				if(ptrace(PTRACE_GET_SYSCALL_INFO, kid, sizeof(info), &info) < 0)
+				{
+					fprintf(stderr, "syscall info failed\n");
+					_exit(1);
+				}
+				_show_info(app, "stop", &info); // non expected
+			} break;
+
+			case SIGTRAP | 0x80:
+			{
+				memset(&info, 0, sizeof(info));
+				if(ptrace(PTRACE_GET_SYSCALL_INFO, kid, sizeof(info), &info) < 0)
+				{
+					fprintf(stderr, "syscall info failed\n");
+					_exit(1);
+				}
+				_show_info(app, "trap", &info);
+			} break;
+
+			default:
+			{
+				fprintf(stderr, "unexpected stop signal: %x\n", WSTOPSIG(status));
+			} break;
+		}
+
+		ptrace(PTRACE_SYSCALL, kid, NULL, NULL);
+	}
+}
+
+static int
+_trace(app_t *app)
+{
+	const pid_t kid = fork();
+
+	switch(kid)
+	{
+		case -1:
+		{
+			fprintf(stderr, "[%s] fork failed: %s\n", __func__, strerror(errno));
+		} return 1;
+		case 0: // child
+		{
+			_trace_child(app);
+		} break;
+		default: // parent
+		{
+			_trace_parent(app, kid);
+		} break;
+	}
+
+	return 0;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1932,35 +2120,10 @@ main(int argc, char **argv)
 							lilv_world_unload_resource(app.world, pset);
 						}
 
-						const size_t nports = lilv_plugin_get_num_ports(app.plugin);
-						const size_t ports_sz = sizeof(port_t) * nports;
-						port_t *ports = alloca(ports_sz);
-						memset(ports, 0x0, ports_sz);
-						shm_enable(app.shm);
-						for(size_t p = 0; p < nports; p++)
-						{
-							const LilvPort *port = lilv_plugin_get_port_by_index(app.plugin, i);
-
-							port_t *tar = &ports[p];
-							tar->seq.atom.type = ATOM__Sequence;
-							if(lilv_port_is_a(app.plugin, port, NODE(&app, CORE__InputPort)))
-							{
-								tar->seq.atom.size = sizeof(tar->seq.body);
-							}
-							else if(lilv_port_is_a(app.plugin, port, NODE(&app, CORE__OutputPort)))
-							{
-								tar->seq.atom.size = sizeof(tar);
-							}
-							lilv_instance_connect_port(app.instance, p, tar);
-						}
-						app.forbidden.connect_port = shm_disable(app.shm);
-
 						lilv_instance_activate(app.instance);
-
-						shm_enable(app.shm);
-						lilv_instance_run(app.instance, PORT_NSAMPLES);
-						app.forbidden.run = shm_disable(app.shm);
-
+						app.nsyscalls = 0;
+						_trace(&app);
+						_trace_internal(&app);
 						lilv_instance_deactivate(app.instance);
 					}
 

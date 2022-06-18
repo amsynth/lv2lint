@@ -623,6 +623,7 @@ struct _app_t {
 		unsigned connect_port;
 		unsigned run;
 	} forbidden;
+	unsigned nsyscalls;
 	LilvNode *nodes [STAT_URID_MAX];
 };
 

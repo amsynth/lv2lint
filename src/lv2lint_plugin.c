@@ -165,6 +165,31 @@ _test_run(app_t *app)
 	return ret;
 }
 
+static const ret_t *
+_test_syscall(app_t *app)
+{
+	static const ret_t ret_nonrt= {
+		.lnt = LINT_FAIL,
+		.msg = "%s syscalls have been invoked in realtime context",
+		.uri = LV2_CORE__hardRTCapable,
+		.dsc = "Time waits for nothing."
+	};
+
+	const ret_t *ret = NULL;
+
+	if(app->instance && app->nsyscalls)
+	{
+		char *urn = NULL;
+
+		asprintf(&urn, "%u", app->nsyscalls);
+
+		*app->urn = urn;
+		ret = &ret_nonrt;
+	}
+
+	return ret;
+}
+
 #ifdef ENABLE_ELF_TESTS
 static const ret_t *
 _test_symbols(app_t *app)
@@ -1688,6 +1713,7 @@ static const test_t tests [] = {
 	{"Plugin Instantiation",   _test_instantiation},
 	{"Plugin Port Connection", _test_port_connection},
 	{"Plugin Run",             _test_run},
+	{"Plugin Syscall",         _test_syscall},
 #ifdef ENABLE_ELF_TESTS
 	{"Plugin Symbols",         _test_symbols},
 	{"Plugin Fork",            _test_fork},
