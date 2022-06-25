@@ -1379,29 +1379,34 @@ _trace_child(app_t *app)
 }
 
 static void
-_show_info(app_t *app, const char *from, struct ptrace_syscall_info *info)
+_show_info(app_t *app, struct ptrace_syscall_info *info)
 {
+	static syscall_t call = SYSCALL_NONE;
+
 	switch(info->op)
 	{
 		case PTRACE_SYSCALL_INFO_ENTRY:
 		{
-			//fprintf(stdout, "[%s] entry: nr:%"PRIu64"\n", from, info->entry.nr);
+			call = syscall_from_id(info->entry.nr);
 		} break;
 		case PTRACE_SYSCALL_INFO_EXIT:
 		{
-			//fprintf(stdout, "[%s] exit: rval:%"PRIi64"\n", from, info->exit.rval);
-			app->nsyscalls++;
+			if(call != SYSCALL_NONE)
+			{
+				app->syscall[call] = true;
+			}
 		} break;
 		case PTRACE_SYSCALL_INFO_SECCOMP:
 		{
-			//fprintf(stdout, "[%s] seccomp: nr:%"PRIu64"\n", from, info->seccomp.nr);
-			app->nsyscalls++;
+			call = syscall_from_id(info->seccomp.nr);
 		} break;
 		case PTRACE_SYSCALL_INFO_NONE:
-			// fall-through
+		{
+			call = SYSCALL_NONE;
+		} break;
 		default:
 		{
-			//fprintf(stdout, "[%s] none:\n", from);
+			// nothing to do
 		} break;
 	}
 }
@@ -1464,7 +1469,7 @@ _trace_parent(app_t *app, pid_t kid)
 					fprintf(stderr, "syscall info failed\n");
 					_exit(1);
 				}
-				_show_info(app, "stop", &info); // non expected
+				_show_info(app, &info); // non expected
 			} break;
 
 			case SIGTRAP | 0x80:
@@ -1475,7 +1480,7 @@ _trace_parent(app_t *app, pid_t kid)
 					fprintf(stderr, "syscall info failed\n");
 					_exit(1);
 				}
-				_show_info(app, "trap", &info);
+				_show_info(app, &info);
 			} break;
 
 			default:
@@ -2121,7 +2126,7 @@ main(int argc, char **argv)
 						}
 
 						lilv_instance_activate(app.instance);
-						app.nsyscalls = 0;
+						memset(app.syscall, 0, sizeof(bool)*SYSCALL_MAX);
 						_trace(&app);
 						_trace_internal(&app);
 						lilv_instance_deactivate(app.instance);

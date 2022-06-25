@@ -4,6 +4,7 @@
  */
 
 #include <lv2lint/lv2lint.h>
+#include <lv2lint/lv2lint_syscall.h>
 
 #include <lv2/patch/patch.h>
 #include <lv2/worker/worker.h>
@@ -179,19 +180,33 @@ _test_syscall(app_t *app)
 {
 	static const ret_t ret_nonrt= {
 		.lnt = LINT_FAIL,
-		.msg = "%s syscalls have been invoked in realtime context",
+		.msg = "syscalls have been invoked in realtime context: %s",
 		.uri = LV2_CORE__hardRTCapable,
 		.dsc = "Time waits for nothing."
 	};
 
 	const ret_t *ret = NULL;
 
-	if(app->instance && app->nsyscalls)
+	if(!app->instance)
 	{
-		char *urn = NULL;
+		return ret;
+	}
 
-		asprintf(&urn, "%u", app->nsyscalls);
+	char *urn = NULL;
 
+	for(syscall_t call = 0; call < SYSCALL_MAX; call++)
+	{
+		if(app->syscall[call])
+		{
+			char buf [64];
+
+			snprintf(buf, sizeof(buf), "%3d: %s", call, syscall_to_name(call));
+			lv2lint_append_to(&urn, buf);
+		}
+	}
+
+	if(urn)
+	{
 		*app->urn = urn;
 		ret = &ret_nonrt;
 	}

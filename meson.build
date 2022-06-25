@@ -8,6 +8,8 @@ project('lv2lint', 'c', default_options : [
 	'b_lto=true',
 	'c_std=gnu11'])
 
+cpu = target_machine.cpu()
+
 mapper_lv2 = subproject('mapper.lv2')
 
 online_tests = get_option('online-tests')
@@ -68,7 +70,9 @@ srcs = [
 	join_paths('src', 'lv2lint_port.c'),
 	join_paths('src', 'lv2lint_parameter.c'),
 	join_paths('src', 'lv2lint_ui.c'),
-  join_paths('src', 'lv2lint_shm.c')
+  join_paths('src', 'lv2lint_shm.c'),
+  join_paths('src', 'lv2lint_syscall.c'),
+  join_paths('src', 'lv2lint_syscall_' + cpu + '.c')
 ]
 
 lib_srcs = [

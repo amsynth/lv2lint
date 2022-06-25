@@ -13,6 +13,7 @@
 #include <stdatomic.h>
 
 #include <lv2lint/lv2lint_shm.h>
+#include <lv2lint/lv2lint_syscall.h>
 
 #include <lilv/lilv.h>
 
@@ -623,7 +624,7 @@ struct _app_t {
 		unsigned connect_port;
 		unsigned run;
 	} forbidden;
-	unsigned nsyscalls;
+	bool syscall [SYSCALL_MAX];
 	LilvNode *nodes [STAT_URID_MAX];
 };
 
