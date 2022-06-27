@@ -13,7 +13,10 @@
 #include <stdatomic.h>
 
 #include <lv2lint/lv2lint_shm.h>
-#include <lv2lint/lv2lint_syscall.h>
+
+#ifdef ENABLE_PTRACE_TESTS
+#	include <lv2lint/lv2lint_syscall.h>
+#endif
 
 #include <lilv/lilv.h>
 
@@ -624,7 +627,9 @@ struct _app_t {
 		unsigned connect_port;
 		unsigned run;
 	} forbidden;
+#ifdef ENABLE_PTRACE_TESTS
 	bool syscall [SYSCALL_MAX];
+#endif
 	LilvNode *nodes [STAT_URID_MAX];
 };
 

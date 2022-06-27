@@ -4,7 +4,6 @@
  */
 
 #include <lv2lint/lv2lint.h>
-#include <lv2lint/lv2lint_syscall.h>
 
 #include <lv2/patch/patch.h>
 #include <lv2/worker/worker.h>
@@ -175,6 +174,7 @@ _test_run(app_t *app)
 	return ret;
 }
 
+#ifdef ENABLE_PTRACE_TESTS
 static const ret_t *
 _test_syscall(app_t *app)
 {
@@ -213,6 +213,7 @@ _test_syscall(app_t *app)
 
 	return ret;
 }
+#endif
 
 #ifdef ENABLE_ELF_TESTS
 static const ret_t *
@@ -1737,7 +1738,9 @@ static const test_t tests [] = {
 	{"Plugin Instantiation",   _test_instantiation},
 	{"Plugin Port Connection", _test_port_connection},
 	{"Plugin Run",             _test_run},
+#ifdef ENABLE_PTRACE_TESTS
 	{"Plugin Syscall",         _test_syscall},
+#endif
 #ifdef ENABLE_ELF_TESTS
 	{"Plugin Symbols",         _test_symbols},
 	{"Plugin Fork",            _test_fork},

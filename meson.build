@@ -70,10 +70,16 @@ srcs = [
 	join_paths('src', 'lv2lint_port.c'),
 	join_paths('src', 'lv2lint_parameter.c'),
 	join_paths('src', 'lv2lint_ui.c'),
-  join_paths('src', 'lv2lint_shm.c'),
-  join_paths('src', 'lv2lint_syscall.c'),
-  join_paths('src', 'lv2lint_syscall_' + cpu + '.c')
+  join_paths('src', 'lv2lint_shm.c')
 ]
+
+if cc.has_member('struct ptrace_syscall_info', 'op',
+    prefix : '#include <linux/ptrace.h>')
+  add_project_arguments('-DENABLE_PTRACE_TESTS', language : 'c')
+
+  srcs += join_paths('src', 'lv2lint_syscall.c')
+  srcs += join_paths('src', 'lv2lint_syscall_' + cpu + '.c')
+endif
 
 lib_srcs = [
   join_paths('src', 'lv2lint_alloc.c'),

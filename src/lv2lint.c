@@ -1360,6 +1360,7 @@ _trace_internal(app_t *app)
 	app->forbidden.run = shm_disable(app->shm);
 }
 
+#ifdef ENABLE_PTRACE_TESTS
 static void
 _trace_child(app_t *app)
 {
@@ -1516,6 +1517,7 @@ _trace(app_t *app)
 
 	return 0;
 }
+#endif
 
 int
 main(int argc, char **argv)
@@ -2126,9 +2128,14 @@ main(int argc, char **argv)
 						}
 
 						lilv_instance_activate(app.instance);
+
+#ifdef ENABLE_PTRACE_TESTS
 						memset(app.syscall, 0, sizeof(bool)*SYSCALL_MAX);
 						_trace(&app);
+#endif
+
 						_trace_internal(&app);
+
 						lilv_instance_deactivate(app.instance);
 					}
 
