@@ -2263,6 +2263,8 @@ main(int argc, char **argv)
 #endif
 	mapper_free(mapper);
 
+	shm_detach();
+
 	lilv_world_free(app.world);
 
 #ifdef ENABLE_ONLINE_TESTS

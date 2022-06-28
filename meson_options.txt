@@ -4,4 +4,4 @@
 option('online-tests', type : 'feature', value : 'disabled')
 option('elf-tests', type : 'feature', value : 'disabled')
 option('x11-tests', type : 'feature', value : 'disabled')
-option('version', type : 'string', value : '0.1.13')
+option('version', type : 'string', value : '0.1.15')

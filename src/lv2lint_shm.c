@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <lv2lint/lv2lint_shm.h>
 
@@ -14,12 +15,15 @@ shm_t *
 shm_attach()
 {
 	shm_t *shm = NULL;
+	char name [32];
 
-	int fd = shm_open("/lv2lint", O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+	snprintf(name, sizeof(name), "/lv2lint.%d", getpid());
+
+	int fd = shm_open(name, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 
 	if(fd == -1)
 	{
-		fd = shm_open("/lv2lint", O_RDWR, S_IRUSR | S_IWUSR);
+		fd = shm_open(name, O_RDWR, S_IRUSR | S_IWUSR);
 	}
 
 	if(fd == -1)
@@ -43,6 +47,16 @@ shm_attach()
 	shm->mask = 0;
 
 	return shm;
+}
+
+void
+shm_detach()
+{
+	char name [32];
+
+	snprintf(name, sizeof(name), "/lv2lint.%d", getpid());
+
+	shm_unlink(name);
 }
 
 void

@@ -48,6 +48,9 @@ shm_t *
 shm_attach();
 
 void
+shm_detach();
+
+void
 shm_resume(shm_t *shm);
 
 void
