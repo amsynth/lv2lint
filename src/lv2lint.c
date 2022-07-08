@@ -572,17 +572,21 @@ static LV2_Worker_Status
 _respond(LV2_Worker_Respond_Handle instance, uint32_t size, const void *data)
 {
 	app_t *app = instance;
+	void *plughandle = lilv_instance_get_handle(app->instance);
 
 	if(app->work_iface && app->work_iface->work_response)
-		return app->work_iface->work_response(&app->instance, size, data);
+	{
+		return app->work_iface->work_response(plughandle, size, data);
+	}
 
-	else return LV2_WORKER_ERR_UNKNOWN;
+	return LV2_WORKER_ERR_UNKNOWN;
 }
 
 static LV2_Worker_Status
 _sched(LV2_Worker_Schedule_Handle instance, uint32_t size, const void *data)
 {
 	app_t *app = instance;
+	void *plughandle = lilv_instance_get_handle(app->instance);
 
 	LV2_Worker_Status status = LV2_WORKER_SUCCESS;
 
@@ -590,14 +594,14 @@ _sched(LV2_Worker_Schedule_Handle instance, uint32_t size, const void *data)
 
 	if(app->work_iface && app->work_iface->work)
 	{
-		status |= app->work_iface->work(&app->instance, _respond, app, size, data);
+		status |= app->work_iface->work(plughandle, _respond, app, size, data);
 	}
 
 	shm_resume(app->shm);
 
 	if(app->work_iface && app->work_iface->end_run)
 	{
-		status |= app->work_iface->end_run(&app->instance);
+		status |= app->work_iface->end_run(plughandle);
 	}
 
 	return status;
@@ -620,10 +624,16 @@ strsep(char **sp, const char *sep)
 #endif
 
 int
-log_vprintf(void *data __unused, LV2_URID type __unused, const char *fmt,
+log_vprintf(void *data, LV2_URID type, const char *fmt,
 	va_list args)
 {
 	char *buf = NULL;
+	app_t *app = data;
+
+	if(type == LOG__Trace)
+	{
+		shm_pause(app->shm);
+	}
 
 	if(asprintf(&buf, fmt, args) == -1)
 	{
@@ -641,6 +651,11 @@ log_vprintf(void *data __unused, LV2_URID type __unused, const char *fmt,
 		}
 
 		free(buf);
+	}
+
+	if(type == LOG__Trace)
+	{
+		shm_resume(app->shm);
 	}
 
 	return 0;
@@ -665,7 +680,9 @@ _mkpath(LV2_State_Make_Path_Handle instance __unused, const char *abstract_path)
 	char *absolute_path = NULL;
 
 	if(asprintf(&absolute_path, "/tmp/%s", abstract_path) == -1)
+	{
 		absolute_path = NULL;
+	}
 
 	return absolute_path;
 }
@@ -1384,6 +1401,11 @@ _show_info(app_t *app, struct ptrace_syscall_info *info)
 {
 	static syscall_t call = SYSCALL_NONE;
 
+	if(!shm_enabled(app->shm))
+	{
+		return;
+	}
+
 	switch(info->op)
 	{
 		case PTRACE_SYSCALL_INFO_ENTRY:
@@ -1412,7 +1434,7 @@ _show_info(app_t *app, struct ptrace_syscall_info *info)
 	}
 }
 
-static void
+static int
 _trace_parent(app_t *app, pid_t kid)
 {
 	int status;
@@ -1425,7 +1447,7 @@ _trace_parent(app_t *app, pid_t kid)
 		if(rc != kid)
 		{
 			fprintf(stderr, "cannot happen\n");
-			_exit(1);
+			return 1;
 		}
 
 		if(WIFEXITED(status))
@@ -1437,21 +1459,21 @@ _trace_parent(app_t *app, pid_t kid)
 			}
 
 			fprintf(stderr, "failed exit\n");
-			_exit(1);
+			return 1;
 		}
 
 		if(WIFSIGNALED(status))
 		{
 			// kid is no more
 			fprintf(stderr, "signaled\n");
-			_exit(1);
+			return 1;
 		}
 
 		if(!WIFSTOPPED(status))
 		{
 			// cannot happen
 			fprintf(stderr, "stop cannot happen\n");
-			_exit(1);
+			return 1;
 		}
 
 		switch(WSTOPSIG(status))
@@ -1461,14 +1483,14 @@ _trace_parent(app_t *app, pid_t kid)
 				if(ptrace(PTRACE_SETOPTIONS, kid, 0, PTRACE_O_TRACESYSGOOD) < 0)
 				{
 					fprintf(stderr, "sysgood failed\n");
-					_exit(1);
+					return 1;
 				}
 
 				memset(&info, 0, sizeof(info));
 				if(ptrace(PTRACE_GET_SYSCALL_INFO, kid, sizeof(info), &info) < 0)
 				{
 					fprintf(stderr, "syscall info failed\n");
-					_exit(1);
+					return 1;
 				}
 				_show_info(app, &info); // non expected
 			} break;
@@ -1479,19 +1501,33 @@ _trace_parent(app_t *app, pid_t kid)
 				if(ptrace(PTRACE_GET_SYSCALL_INFO, kid, sizeof(info), &info) < 0)
 				{
 					fprintf(stderr, "syscall info failed\n");
-					_exit(1);
+					return 1;
 				}
 				_show_info(app, &info);
 			} break;
 
+			case SIGABRT:
+				// fall-through
+			case SIGSEGV:
+			{
+				kill(kid, SIGKILL);
+			} break;
+
+			case SIGCHLD:
+			{
+				// ignore
+			} break;
+
 			default:
 			{
-				fprintf(stderr, "unexpected stop signal: %x\n", WSTOPSIG(status));
+				fprintf(stderr, "unexpected stop signal: 0x%x\n", WSTOPSIG(status));
 			} break;
 		}
 
 		ptrace(PTRACE_SYSCALL, kid, NULL, NULL);
 	}
+
+	return 0;
 }
 
 static int
