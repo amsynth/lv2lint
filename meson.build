@@ -8,7 +8,7 @@ project('lv2lint', 'c', default_options : [
 	'b_lto=true',
 	'c_std=gnu11'])
 
-cpu = target_machine.cpu()
+cpu_family = target_machine.cpu_family()
 
 mapper_lv2 = subproject('mapper.lv2')
 
@@ -78,7 +78,7 @@ if cc.has_member('struct ptrace_syscall_info', 'op',
   add_project_arguments('-DENABLE_PTRACE_TESTS', language : 'c')
 
   srcs += join_paths('src', 'lv2lint_syscall.c')
-  srcs += join_paths('src', 'lv2lint_syscall_' + cpu + '.c')
+  srcs += join_paths('src', 'lv2lint_syscall_' + cpu_family + '.c')
 endif
 
 lib_srcs = [
