@@ -29,6 +29,7 @@ vars:
   <<: *common_definition
   script:
     - meson --prefix=/ --cross-file "${CI_BUILD_NAME}" -Dstatic-build=false build
+    - echo "*" > build/.gitignore
     - ninja -C build
     - DESTDIR="${CI_PROJECT_DIR}/${BASE_NAME}-${VERSION}/${CI_BUILD_NAME}" ninja -C build install
 
