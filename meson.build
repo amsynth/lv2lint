@@ -10,6 +10,15 @@ project('lv2lint', 'c', default_options : [
 
 cpu_family = target_machine.cpu_family()
 
+match = {
+  'x86'     : 'i386',
+  'aarch64' : 'arm64'
+}
+
+if cpu_family in match
+  cpu_family = match[cpu_family]
+endif
+
 mapper_lv2 = subproject('mapper.lv2')
 
 online_tests = get_option('online-tests')
