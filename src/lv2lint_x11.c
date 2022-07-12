@@ -465,18 +465,10 @@ test_x11(app_t *app, bool *flag)
 	{
 		if(app->ui_descriptor && app->ui_descriptor->instantiate)
 		{
-			atomic_store(&jump_flag, true);
-			if(setjmp(jump_env) == 0)
-			{
-				app->ui_instance = app->ui_descriptor->instantiate(app->ui_descriptor,
-					app->plugin_uri, ui_plugin_bundle_path, _write_function, app,
-					(void *)&app->ui_widget, features);
-			}
-			else
-			{
-				app->ui_instance = NULL;
-			}
-			atomic_store(&jump_flag, false);
+			//FIXME run in child process
+			app->ui_instance = app->ui_descriptor->instantiate(app->ui_descriptor,
+				app->plugin_uri, ui_plugin_bundle_path, _write_function, app,
+				(void *)&app->ui_widget, features);
 		}
 
 		lilv_free(ui_plugin_bundle_path);

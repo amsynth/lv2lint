@@ -9,7 +9,6 @@
 #include <unistd.h> // isatty
 #include <string.h>
 #include <stdlib.h>
-#include <setjmp.h>
 #include <stdatomic.h>
 
 #include <lv2lint/lv2lint_shm.h>
@@ -63,8 +62,6 @@ typedef enum _ansi_color_t {
 } ansi_color_t;
 
 extern const char *colors [2][ANSI_COLOR_MAX];
-extern jmp_buf jump_env;
-extern atomic_bool jump_flag;
 
 typedef union _port_t port_t;
 typedef union _var_t var_t;

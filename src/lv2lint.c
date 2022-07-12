@@ -522,18 +522,6 @@ static const char *stat_uris [STAT_URID_MAX] = {
 
 #undef ITM
 
-jmp_buf jump_env;
-atomic_bool jump_flag = ATOMIC_VAR_INIT(false);
-
-static void
-_sig(int signal __attribute__((unused)))
-{
-	if(atomic_load(&jump_flag))
-	{
-		longjmp(jump_env, 1);
-	}
-}
-
 static void
 _map_uris(app_t *app)
 {
@@ -1747,12 +1735,11 @@ main(int argc, char **argv)
 		_header(argv);
 	}
 
-	signal(SIGSEGV, _sig);
-	signal(SIGABRT, _sig);
-
 	app.shm = shm_attach();
 	if(!app.shm)
+	{
 		return -1;
+	}
 
 #ifdef ENABLE_ONLINE_TESTS
 	app.curl = curl_easy_init();
@@ -2131,6 +2118,7 @@ main(int argc, char **argv)
 						lilv_node_as_uri(lilv_plugin_get_uri(app.plugin)),
 						colors[app.atty][ANSI_COLOR_RESET]);
 
+					//FIXME run in child process
 					app.instance = lilv_plugin_instantiate(app.plugin, param_sample_rate, features);
 					app.descriptor = app.instance
 						? lilv_instance_get_descriptor(app.instance)
@@ -2163,6 +2151,7 @@ main(int argc, char **argv)
 							lilv_world_unload_resource(app.world, pset);
 						}
 
+						//FIXME run in child process
 						lilv_instance_activate(app.instance);
 
 #ifdef ENABLE_PTRACE_TESTS
@@ -2172,6 +2161,7 @@ main(int argc, char **argv)
 
 						_trace_internal(&app);
 
+						//FIXME run in child process
 						lilv_instance_deactivate(app.instance);
 					}
 
@@ -2260,6 +2250,7 @@ main(int argc, char **argv)
 
 					if(app.instance)
 					{
+						//FIXME run in child process
 						lilv_instance_free(app.instance);
 						app.instance = NULL;
 						app.descriptor = NULL;
