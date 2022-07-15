@@ -20,6 +20,7 @@ if cpu_family in match
 endif
 
 mapper_lv2 = subproject('mapper.lv2')
+varchunk = subproject('varchunk')
 
 online_tests = get_option('online-tests')
 elf_tests = get_option('elf-tests')
@@ -50,8 +51,9 @@ curl_dep = dependency('libcurl', required: online_tests)
 elf_dep = dependency('libelf', required: elf_tests)
 x11_dep = dependency('x11', version : '>=1.6.0', required : x11_tests)
 mapper_lv2_dep = mapper_lv2.get_variable('mapper')
+varchunk_dep = varchunk.get_variable('varchunk')
 	
-deps = [m_dep, rt_dep, dl_dep, lv2_dep, lilv_dep, curl_dep, elf_dep, x11_dep, mapper_lv2_dep]
+deps = [m_dep, rt_dep, dl_dep, lv2_dep, lilv_dep, curl_dep, elf_dep, x11_dep, mapper_lv2_dep, varchunk_dep]
 
 lib_deps = [rt_dep, dl_dep]
 
@@ -82,12 +84,16 @@ srcs = [
   join_paths('src', 'lv2lint_shm.c')
 ]
 
-if cc.has_member('struct ptrace_syscall_info', 'op',
-    prefix : '#include <linux/ptrace.h>')
-  add_project_arguments('-DENABLE_PTRACE_TESTS', language : 'c')
+if cc.has_function('clone', args : '-D_GNU_SOURCE', prefix : '#include <sched.h>')
+  add_project_arguments('-DENABLE_WRAP_TESTS', language : 'c')
 
-  srcs += join_paths('src', 'lv2lint_syscall.c')
-  srcs += join_paths('src', 'lv2lint_syscall_' + cpu_family + '.c')
+  if cc.has_member('struct ptrace_syscall_info', 'op',
+      prefix : '#include <linux/ptrace.h>')
+    add_project_arguments('-DENABLE_PTRACE_TESTS', language : 'c')
+
+    srcs += join_paths('src', 'lv2lint_syscall.c')
+    srcs += join_paths('src', 'lv2lint_syscall_' + cpu_family + '.c')
+  endif
 endif
 
 lib_srcs = [

@@ -9,16 +9,14 @@
 #include <unistd.h> // isatty
 #include <string.h>
 #include <stdlib.h>
-#include <setjmp.h>
 #include <stdatomic.h>
 
 #include <lv2lint/lv2lint_shm.h>
-
-#ifdef ENABLE_PTRACE_TESTS
-#	include <lv2lint/lv2lint_syscall.h>
-#endif
+#include <lv2lint/lv2lint_syscall.h>
 
 #include <lilv/lilv.h>
+
+#include <varchunk/varchunk.h>
 
 #include <lv2/worker/worker.h>
 #include <lv2/state/state.h>
@@ -63,8 +61,6 @@ typedef enum _ansi_color_t {
 } ansi_color_t;
 
 extern const char *colors [2][ANSI_COLOR_MAX];
-extern jmp_buf jump_env;
-extern atomic_bool jump_flag;
 
 typedef union _port_t port_t;
 typedef union _var_t var_t;
@@ -73,8 +69,12 @@ typedef struct _urid_t urid_t;
 typedef struct _app_t app_t;
 typedef struct _test_t test_t;
 typedef struct _ret_t ret_t;
+typedef struct _dst_t dst_t;
 typedef struct _res_t res_t;
 typedef const ret_t *(*test_cb_t)(app_t *app);
+typedef int (*wrap_t)(app_t *app, void *data);
+typedef int (*parent_t)(app_t *, pid_t);
+typedef int (*child_t)(void *);
 
 typedef enum _lint_t {
 	LINT_NONE     = 0,
@@ -102,13 +102,18 @@ struct _ret_t {
 	const char *dsc;
 };
 
+struct _dst_t {
+	int idx;
+	void *body;
+};
+
 struct _res_t {
 	const ret_t *ret;
 	char *urn;
 	bool is_whitelisted;
 };
 
-#define PORT_NSAMPLES 32
+#define PORT_NSAMPLES 32 //FIXME
 
 union _port_t {
 	float wav [PORT_NSAMPLES];
@@ -626,10 +631,23 @@ struct _app_t {
 	struct {
 		unsigned connect_port;
 		unsigned run;
+		unsigned work_response;
 	} forbidden;
-#ifdef ENABLE_PTRACE_TESTS
+	struct {
+		int instantiate;
+		int connect_port;
+		int activate;
+		int run;
+		int deactivate;
+		int cleanup;
+		int ui_instantiate;
+		int ui_cleanup;
+		int work;
+		int work_response;
+	} status;
+	varchunk_t *to_worker;
+	varchunk_t *from_worker;
 	bool syscall [SYSCALL_MAX];
-#endif
 	LilvNode *nodes [STAT_URID_MAX];
 };
 
@@ -716,5 +734,8 @@ uri_to_id(LV2_URI_Map_Callback_Data instance, const char *_map, const char *uri)
 
 void
 lv2lint_append_to(char **dst, const char *src);
+
+int
+lv2lint_wrap(app_t *app, wrap_t wrap, void *data);
 
 #endif

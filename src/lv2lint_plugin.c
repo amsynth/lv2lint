@@ -125,18 +125,28 @@ _serialize_mask(char **symbols, unsigned mask)
 }
 
 static const ret_t *
-_test_port_connection(app_t *app)
+_test_connect_port(app_t *app)
 {
-	static const ret_t ret_nonrt= {
+	static const ret_t ret_nonrt = {
 		.lnt = LINT_FAIL,
 		.msg = "non-realtime function called: %s",
 		.uri = LV2_CORE__hardRTCapable,
 		.dsc = "Time waits for nothing."
+	},
+	ret_crash = {
+		.lnt = LINT_FAIL,
+		.msg = "crashed",
+		.uri = LV2_CORE__Plugin,
+		.dsc = "Well - fix your plugin."
 	};
 
 	const ret_t *ret = NULL;
 
-	if(app->instance && app->forbidden.connect_port)
+	if(app->status.connect_port)
+	{
+		ret = &ret_crash;
+	}
+	else if(app->instance && app->forbidden.connect_port)
 	{
 		char *symbols = NULL;
 
@@ -157,11 +167,21 @@ _test_run(app_t *app)
 		.msg = "non-realtime function called: %s",
 		.uri = LV2_CORE__hardRTCapable,
 		.dsc = "Time waits for nothing."
+	},
+	ret_crash = {
+		.lnt = LINT_FAIL,
+		.msg = "crashed",
+		.uri = LV2_CORE__Plugin,
+		.dsc = "Well - fix your plugin."
 	};
 
 	const ret_t *ret = NULL;
 
-	if(app->instance && app->forbidden.run)
+	if(app->status.run)
+	{
+		ret = &ret_crash;
+	}
+	else if(app->instance && app->forbidden.run)
 	{
 		char *symbols = NULL;
 
@@ -169,6 +189,101 @@ _test_run(app_t *app)
 
 		*app->urn = symbols;
 		ret = &ret_nonrt;
+	}
+
+	return ret;
+}
+
+static const ret_t *
+_test_work(app_t *app)
+{
+	static const ret_t ret_crash = {
+		.lnt = LINT_FAIL,
+		.msg = "crashed",
+		.uri = LV2_CORE__Plugin,
+		.dsc = "Well - fix your plugin."
+	};
+
+	const ret_t *ret = NULL;
+
+	if(app->status.work)
+	{
+		ret = &ret_crash;
+	}
+
+	return ret;
+}
+
+static const ret_t *
+_test_work_response(app_t *app)
+{
+	static const ret_t ret_nonrt= {
+		.lnt = LINT_FAIL,
+		.msg = "non-realtime function called: %s",
+		.uri = LV2_CORE__hardRTCapable,
+		.dsc = "Time waits for nothing."
+	},
+	ret_crash = {
+		.lnt = LINT_FAIL,
+		.msg = "crashed",
+		.uri = LV2_CORE__Plugin,
+		.dsc = "Well - fix your plugin."
+	};
+
+	const ret_t *ret = NULL;
+
+	if(app->status.work_response)
+	{
+		ret = &ret_crash;
+	}
+	else if(app->instance && app->forbidden.work_response)
+	{
+		char *symbols = NULL;
+
+		_serialize_mask(&symbols, app->forbidden.work_response);
+
+		*app->urn = symbols;
+		ret = &ret_nonrt;
+	}
+
+	return ret;
+}
+
+static const ret_t *
+_test_activate(app_t *app)
+{
+	static const ret_t ret_crash = {
+		.lnt = LINT_FAIL,
+		.msg = "crashed",
+		.uri = LV2_CORE__Plugin,
+		.dsc = "Well - fix your plugin."
+	};
+
+	const ret_t *ret = NULL;
+
+	if(app->status.activate)
+	{
+		ret = &ret_crash;
+	}
+
+	return ret;
+}
+
+static const ret_t *
+_test_deactivate(app_t *app)
+{
+	static const ret_t ret_crash = {
+		.lnt = LINT_FAIL,
+		.msg = "crashed",
+		.uri = LV2_CORE__Plugin,
+		.dsc = "Well - fix your plugin."
+	};
+
+	const ret_t *ret = NULL;
+
+	if(app->status.deactivate)
+	{
+		ret = &ret_crash;
 	}
 
 	return ret;
@@ -1736,8 +1851,12 @@ _test_patch(app_t *app)
 static const test_t tests [] = {
 	{"Plugin LV2_PATH",        _test_lv2_path},
 	{"Plugin Instantiation",   _test_instantiation},
-	{"Plugin Port Connection", _test_port_connection},
+	{"Plugin Connect Port",    _test_connect_port},
 	{"Plugin Run",             _test_run},
+	{"Plugin Work",            _test_work},
+	{"Plugin Work Response",   _test_work_response},
+	{"Plugin Activate",        _test_activate},
+	{"Plugin Deactivate",      _test_deactivate},
 #ifdef ENABLE_PTRACE_TESTS
 	{"Plugin Syscall",         _test_syscall},
 #endif

@@ -89,11 +89,21 @@ _test_ui_instantiation(app_t *app)
 		.msg = "failed to instantiate",
 		.uri = LV2_UI__X11UI,
 		.dsc = "You likely have forgotten to list all lv2:requiredFeatures."
+	},
+	ret_crash = {
+		.lnt = LINT_FAIL,
+		.msg = "crashed",
+		.uri = LV2_CORE__Plugin,
+		.dsc = "Well - fix your plugin."
 	};
 
 	const ret_t *ret = NULL;
 
-	if(!app->ui_instance)
+	if(app->status.ui_instantiate)
+	{
+		ret = &ret_crash;
+	}
+	else if(!app->ui_instance)
 	{
 		ret = &ret_instantiation;
 	}
@@ -120,6 +130,8 @@ _test_ui_widget(app_t *app)
 
 	return ret;
 }
+
+static Display *_display; //FIXME
 
 static const ret_t *
 _test_ui_hints(app_t *app)
@@ -149,12 +161,9 @@ _test_ui_hints(app_t *app)
 	memset(&hints, 0x1, sizeof(hints));
 	long supplied = 0;
 
-  Display *display = XOpenDisplay(NULL); // FIXME reuse existing one
-	if(display && app->ui_widget)
+	if(_display && app->ui_widget)
 	{
-		XGetWMNormalHints(display, app->ui_widget, &hints, &supplied);
-
-		XCloseDisplay(display);
+		XGetWMNormalHints(_display, app->ui_widget, &hints, &supplied);
 	}
 
 	if(supplied & PAspect)
@@ -188,6 +197,64 @@ _test_ui_hints(app_t *app)
 	return ret;
 }
 
+static int
+_wrap_instantiate(app_t *app, void *data)
+{
+	const LV2_Feature **features = data;
+
+	if(!app->ui_descriptor)
+	{
+		return 1;
+	}
+
+	if(!app->ui_descriptor->instantiate)
+	{
+		return 1;
+	}
+
+	const LilvNode *ui_bundle_uri = lilv_ui_get_bundle_uri(app->ui);
+	char *ui_plugin_bundle_path = lilv_file_uri_parse(lilv_node_as_string(ui_bundle_uri), NULL);
+
+	if(!ui_plugin_bundle_path)
+	{
+		return 1;
+	}
+
+	char path [PATH_MAX];
+	snprintf(path, sizeof(path), "%s", ui_plugin_bundle_path);
+
+	lilv_free(ui_plugin_bundle_path);
+
+	app->ui_instance = app->ui_descriptor->instantiate(app->ui_descriptor,
+		app->plugin_uri, path, _write_function, app,
+		(void *)&app->ui_widget, features);
+
+	return 0;
+}
+
+static int
+_wrap_cleanup(app_t *app, void *data __attribute__((unused)))
+{
+	if(!app->ui_instance)
+	{
+		return 1;
+	}
+
+	if(!app->ui_descriptor)
+	{
+		return 1;
+	}
+
+	if(!app->ui_descriptor->cleanup)
+	{
+		return 1;
+	}
+
+	app->ui_descriptor->cleanup(app->ui_instance);
+
+	return 0;
+}
+
 static const test_t tests [] = {
 	{"UI Instantiation",    _test_ui_instantiation},
 	{"UI Widget",           _test_ui_widget},
@@ -199,6 +266,14 @@ static const unsigned tests_n = sizeof(tests) / sizeof(test_t);
 void
 test_x11(app_t *app, bool *flag)
 {
+	static bool xinit = true;
+
+	if(xinit)
+	{
+		XInitThreads();
+		xinit = false;
+	}
+
 	char *DISPLAY = getenv("DISPLAY");
 	if(!DISPLAY || !strlen(DISPLAY))
 	{
@@ -213,17 +288,15 @@ test_x11(app_t *app, bool *flag)
 	}
 	memset(rets, 0x0, tests_n * sizeof(res_t));
 
-  Display *display = NULL;
-	Window win = 0;
-
-	display = XOpenDisplay(NULL);
+	Display *display = XOpenDisplay(NULL);
 	if(!display)
 	{
 		goto jump;
 	}
+	_display = display;
 
 	const int black = BlackPixel(display, DefaultScreen(display));
-  win = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0,
+  Window win = XCreateSimpleWindow(display, DefaultRootWindow(display), 0, 0,
 		600, 600, 0, black, black);
 	if(!win)
 	{
@@ -330,7 +403,7 @@ test_x11(app_t *app, bool *flag)
 	};
 	const LV2_Feature feat_instance_access = {
 		.URI = LV2_INSTANCE_ACCESS_URI,
-		.data = lilv_instance_get_handle(app->instance)
+		.data = app->instance ? lilv_instance_get_handle(app->instance) : NULL
 	};
 	const LV2_Feature feat_data_access = {
 		.URI = LV2_DATA_ACCESS_URI,
@@ -459,29 +532,14 @@ test_x11(app_t *app, bool *flag)
 	}
 #undef MAX_OPTS
 
-	const LilvNode *ui_bundle_uri = lilv_ui_get_bundle_uri(app->ui);
-	char *ui_plugin_bundle_path = lilv_file_uri_parse(lilv_node_as_string(ui_bundle_uri), NULL);
-	if(ui_plugin_bundle_path)
-	{
-		if(app->ui_descriptor && app->ui_descriptor->instantiate)
-		{
-			atomic_store(&jump_flag, true);
-			if(setjmp(jump_env) == 0)
-			{
-				app->ui_instance = app->ui_descriptor->instantiate(app->ui_descriptor,
-					app->plugin_uri, ui_plugin_bundle_path, _write_function, app,
-					(void *)&app->ui_widget, features);
-			}
-			else
-			{
-				app->ui_instance = NULL;
-			}
-			atomic_store(&jump_flag, false);
-		}
+	// FIXME
+#if 0
+	app->status.ui_instantiate = lv2lint_wrap(app, _wrap_instantiate, (void *)features);
+#else
+	app->status.ui_instantiate = _wrap_instantiate(app, (void *)features);
+#endif
 
-		lilv_free(ui_plugin_bundle_path);
-	}
-
+	// FIXME
 #if 0
 	if(app->ui_instance && app->ui_idle_iface && app->ui_idle_iface->idle)
 	{
@@ -505,15 +563,12 @@ test_x11(app_t *app, bool *flag)
 		}
 	}
 
-	if(app->ui_instance)
-	{
-		if(app->ui_descriptor && app->ui_descriptor->cleanup)
-		{
-			app->ui_descriptor->cleanup(app->ui_instance);
-		}
-
-		app->ui_instance = NULL;
-	}
+	// FIXME
+#if 0
+	app->status.ui_cleanup = lv2lint_wrap(app, _wrap_cleanup, NULL);
+#else
+	app->status.ui_cleanup = _wrap_cleanup(app, NULL);
+#endif
 
 	if(app->ui_widget)
 	{
@@ -558,5 +613,6 @@ jump:
 
 		XCloseDisplay(display);
 		display = NULL;
+		_display = NULL;
 	}
 }
