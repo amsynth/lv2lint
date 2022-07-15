@@ -567,46 +567,86 @@ _free_urids(app_t *app)
 }
 
 static LV2_Worker_Status
-_respond(LV2_Worker_Respond_Handle instance, uint32_t size, const void *data)
+_sched(LV2_Worker_Schedule_Handle instance, uint32_t size, const void *data)
 {
 	app_t *app = instance;
-	void *plughandle = lilv_instance_get_handle(app->instance);
+	void *tar;
 
-	if(app->work_iface && app->work_iface->work_response)
+	if( (tar = varchunk_write_request(app->to_worker, size)) )
 	{
-		return app->work_iface->work_response(plughandle, size, data);
+		memcpy(tar, data, size);
+
+		varchunk_write_advance(app->to_worker, size);
+		return LV2_WORKER_SUCCESS;
 	}
 
-	return LV2_WORKER_ERR_UNKNOWN;
+	return LV2_WORKER_ERR_NO_SPACE;
 }
 
 static LV2_Worker_Status
-_sched(LV2_Worker_Schedule_Handle instance, uint32_t size, const void *data)
+_respond(LV2_Worker_Respond_Handle instance, uint32_t size, const void *data)
 {
-	LV2_Worker_Status status = LV2_WORKER_SUCCESS;
-
-	//FIXME use varchunk
-	(void)instance;
-	(void)size;
-	(void)data;
-#if 0
 	app_t *app = instance;
-	void *plughandle = lilv_instance_get_handle(app->instance);
+	void *tar;
 
-	shm_pause(app->shm);
-
-	if(app->work_iface && app->work_iface->work)
+	if( (tar = varchunk_write_request(app->from_worker, size)) )
 	{
-		status |= app->work_iface->work(plughandle, _respond, app, size, data);
+		memcpy(tar, data, size);
+
+		varchunk_write_advance(app->from_worker, size);
+		return LV2_WORKER_SUCCESS;
 	}
 
-	shm_resume(app->shm);
+	return LV2_WORKER_ERR_NO_SPACE;
+}
+
+static int
+_wrap_work(app_t *app, void *_data __attribute__((unused)))
+{
+	LV2_Worker_Status status = LV2_WORKER_SUCCESS;
+	void *plughandle = lilv_instance_get_handle(app->instance);
+	const void *data;
+	size_t size;
+
+	while( (data = varchunk_read_request(app->to_worker, &size)) )
+	{
+		if(app->work_iface && app->work_iface->work)
+		{
+			status |= app->work_iface->work(plughandle, _respond, app, size, data);
+		}
+
+		varchunk_read_advance(app->to_worker);
+	}
+
+	return status;
+}
+
+static int
+_wrap_work_response(app_t *app, void *_data __attribute__((unused)))
+{
+	LV2_Worker_Status status = LV2_WORKER_SUCCESS;
+	void *plughandle = lilv_instance_get_handle(app->instance);
+	const void *data;
+	size_t size;
+
+	shm_enable(app->shm);
+
+	while( (data = varchunk_read_request(app->from_worker, &size)) )
+	{
+		if(app->work_iface && app->work_iface->work_response)
+		{
+			status |= app->work_iface->work_response(plughandle, size, data);
+		}
+
+		varchunk_read_advance(app->from_worker);
+	}
 
 	if(app->work_iface && app->work_iface->end_run)
 	{
 		status |= app->work_iface->end_run(plughandle);
 	}
-#endif
+
+	app->forbidden.work_response = shm_disable(app->shm);
 
 	return status;
 }
@@ -1900,6 +1940,14 @@ main(int argc, char **argv)
 	if(!mapper)
 		return -1;
 
+	app.to_worker = varchunk_new(0x10000, true);
+	if(!app.to_worker)
+		return -1;
+
+	app.from_worker = varchunk_new(0x10000, true);
+	if(!app.from_worker)
+		return -1;
+
 	_map_uris(&app);
 	lilv_world_load_all(app.world);
 	_load_include_dirs(&app);
@@ -2286,6 +2334,7 @@ main(int argc, char **argv)
 							LilvState *state = lilv_state_new_from_world(app.world, app.map, pset);
 							if(state)
 							{
+								//FIXME wrap or trace
 								lilv_state_restore(state, app.instance, _state_set_value, &app,
 									LV2_STATE_IS_POD | LV2_STATE_IS_PORTABLE, NULL); //FIXME features
 
@@ -2330,7 +2379,13 @@ main(int argc, char **argv)
 
 						app.status.activate = lv2lint_wrap(&app, _wrap_activate, NULL);
 
+						app.status.work = lv2lint_wrap(&app, _wrap_work, NULL);
+						app.status.work_response = _trace(&app, _wrap_work_response, NULL);
+
 						app.status.run = _trace(&app, _wrap_run, NULL);
+
+						app.status.work += lv2lint_wrap(&app, _wrap_work, NULL);
+						app.status.work_response += _trace(&app, _wrap_work_response, NULL);
 
 						app.status.deactivate = lv2lint_wrap(&app, _wrap_deactivate, NULL);
 					}
@@ -2457,6 +2512,8 @@ main(int argc, char **argv)
 	_free_whitelist_symbols(&app);
 	_free_whitelist_libs(&app);
 #endif
+	varchunk_free(app.to_worker);
+	varchunk_free(app.from_worker);
 	mapper_free(mapper);
 
 	shm_detach();

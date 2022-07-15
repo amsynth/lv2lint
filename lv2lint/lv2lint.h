@@ -16,6 +16,8 @@
 
 #include <lilv/lilv.h>
 
+#include <varchunk/varchunk.h>
+
 #include <lv2/worker/worker.h>
 #include <lv2/state/state.h>
 #include <lv2/options/options.h>
@@ -629,6 +631,7 @@ struct _app_t {
 	struct {
 		unsigned connect_port;
 		unsigned run;
+		unsigned work_response;
 	} forbidden;
 	struct {
 		int instantiate;
@@ -639,7 +642,11 @@ struct _app_t {
 		int cleanup;
 		int ui_instantiate;
 		int ui_cleanup;
+		int work;
+		int work_response;
 	} status;
+	varchunk_t *to_worker;
+	varchunk_t *from_worker;
 	bool syscall [SYSCALL_MAX];
 	LilvNode *nodes [STAT_URID_MAX];
 };
