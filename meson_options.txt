@@ -1,0 +1,4 @@
+# SPDX-FileCopyrightText: Hanspeter Portner <dev@open-music-kontrollers.ch>
+# SPDX-License-Identifier: CC0-1.0
+
+option('version', type : 'string', value : '0.1.113')
