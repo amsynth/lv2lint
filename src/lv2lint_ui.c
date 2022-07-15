@@ -342,18 +342,11 @@ _test_show_interface(app_t *app)
 static const ret_t *
 _test_resize_interface(app_t *app)
 {
-	static const ret_t ret_resize_missing = {
+	static const ret_t ret_resize_deprecated = {
 		.lnt = LINT_FAIL,
-		.msg = "lv2:extensionData ui:resize missing",
+		.msg = "lv2:extensionData ui:resize is deprecated",
 		.uri = LV2_UI__resize,
-		.dsc = "This plugin implements the resize extension, but does not list this "
-			"extension data."
-	},
-	ret_resize_not_returned = {
-		.lnt = LINT_FAIL,
-		.msg = "ui:resize not returned by 'extention_data'",
-		.uri = LV2_UI__resize,
-		.dsc = NULL
+		.dsc = "Use native window hints instead."
 	};
 
 	const ret_t *ret = NULL;
@@ -361,13 +354,34 @@ _test_resize_interface(app_t *app)
 	const bool has_resize_extension = lilv_world_ask(app->world,
 		lilv_ui_get_uri(app->ui), NODE(app, CORE__extensionData), NODE(app, UI__resize));
 
-	if(app->ui_resize_iface && !has_resize_extension)
+	if(app->ui_resize_iface || has_resize_extension)
 	{
-		ret = &ret_resize_missing;
+		ret = &ret_resize_deprecated;
 	}
-	else if(has_resize_extension && !app->ui_resize_iface)
+
+	return ret;
+}
+
+static const ret_t *
+_test_resize_feature(app_t *app)
+{
+	static const ret_t ret_resize_deprecated = {
+		.lnt = LINT_FAIL,
+		.msg = "lv2:feature ui:resize is deprecated",
+		.uri = LV2_UI__resize,
+		.dsc = "Use native window hints instead."
+	};
+
+	const ret_t *ret = NULL;
+
+	const bool has_resize_feature = lilv_world_ask(app->world,
+		lilv_ui_get_uri(app->ui), NODE(app, CORE__requiredFeature), NODE(app, UI__resize))
+			||lilv_world_ask(app->world,
+		lilv_ui_get_uri(app->ui), NODE(app, CORE__optionalFeature), NODE(app, UI__resize));
+
+	if(has_resize_feature)
 	{
-		ret = &ret_resize_not_returned;
+		ret = &ret_resize_deprecated;
 	}
 
 	return ret;
@@ -519,6 +533,7 @@ static const test_t tests [] = {
 	{"UI Idle Interface",   _test_idle_interface},
 	{"UI Show Interface",   _test_show_interface},
 	{"UI Resize Interface", _test_resize_interface},
+	{"UI Resize Feature",   _test_resize_feature},
 	{"UI Toolkit",          _test_toolkit},
 #ifdef ENABLE_ONLINE_TESTS
 	{"UI URL",              _test_ui_url},
