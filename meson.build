@@ -82,12 +82,16 @@ srcs = [
   join_paths('src', 'lv2lint_shm.c')
 ]
 
-if cc.has_member('struct ptrace_syscall_info', 'op',
-    prefix : '#include <linux/ptrace.h>')
-  add_project_arguments('-DENABLE_PTRACE_TESTS', language : 'c')
+if cc.has_function('clone', args : '-D_GNU_SOURCE', prefix : '#include <sched.h>')
+  add_project_arguments('-DENABLE_WRAP_TESTS', language : 'c')
 
-  srcs += join_paths('src', 'lv2lint_syscall.c')
-  srcs += join_paths('src', 'lv2lint_syscall_' + cpu_family + '.c')
+  if cc.has_member('struct ptrace_syscall_info', 'op',
+      prefix : '#include <linux/ptrace.h>')
+    add_project_arguments('-DENABLE_PTRACE_TESTS', language : 'c')
+
+    srcs += join_paths('src', 'lv2lint_syscall.c')
+    srcs += join_paths('src', 'lv2lint_syscall_' + cpu_family + '.c')
+  endif
 endif
 
 lib_srcs = [

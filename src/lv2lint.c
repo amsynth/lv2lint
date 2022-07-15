@@ -16,8 +16,10 @@
 #endif
 #include <sys/wait.h>
 #include <sys/ptrace.h>
+#include <sys/mman.h>
 #include <linux/ptrace.h>
 #include <inttypes.h>
+#include <sched.h>
 
 #include <lv2lint/lv2lint.h>
 
@@ -48,6 +50,14 @@
 #endif
 
 #include <mapper.lv2/mapper.h>
+
+#define STACK_SIZE (1024 * 1024)
+
+typedef struct _wrap_data_t {
+	app_t *app;
+	wrap_t wrap;
+	void *data;
+} wrap_data_t;
 
 const char *colors [2][ANSI_COLOR_MAX] = {
 	{
@@ -573,10 +583,15 @@ _respond(LV2_Worker_Respond_Handle instance, uint32_t size, const void *data)
 static LV2_Worker_Status
 _sched(LV2_Worker_Schedule_Handle instance, uint32_t size, const void *data)
 {
+	LV2_Worker_Status status = LV2_WORKER_SUCCESS;
+
+	//FIXME use varchunk
+	(void)instance;
+	(void)size;
+	(void)data;
+#if 0
 	app_t *app = instance;
 	void *plughandle = lilv_instance_get_handle(app->instance);
-
-	LV2_Worker_Status status = LV2_WORKER_SUCCESS;
 
 	shm_pause(app->shm);
 
@@ -591,6 +606,7 @@ _sched(LV2_Worker_Schedule_Handle instance, uint32_t size, const void *data)
 	{
 		status |= app->work_iface->end_run(plughandle);
 	}
+#endif
 
 	return status;
 }
@@ -1334,41 +1350,12 @@ _free_whitelist_libs(app_t *app)
 }
 #endif
 
-static void
-_trace_internal(app_t *app)
-{
-	const size_t nports = lilv_plugin_get_num_ports(app->plugin);
-	const size_t ports_sz = sizeof(port_t) * nports;
-	port_t *ports = alloca(ports_sz);
-	memset(ports, 0x0, ports_sz);
-	shm_enable(app->shm);
-	for(size_t p = 0; p < nports; p++)
-	{
-		const LilvPort *port = lilv_plugin_get_port_by_index(app->plugin, p);
-
-		port_t *tar = &ports[p];
-		tar->seq.atom.type = ATOM__Sequence;
-		if(lilv_port_is_a(app->plugin, port, NODE(app, CORE__InputPort)))
-		{
-			tar->seq.atom.size = sizeof(tar->seq.body);
-		}
-		else if(lilv_port_is_a(app->plugin, port, NODE(app, CORE__OutputPort)))
-		{
-			tar->seq.atom.size = sizeof(tar);
-		}
-		lilv_instance_connect_port(app->instance, p, tar);
-	}
-	app->forbidden.connect_port = shm_disable(app->shm);
-
-	shm_enable(app->shm);
-	lilv_instance_run(app->instance, PORT_NSAMPLES);
-	app->forbidden.run = shm_disable(app->shm);
-}
-
 #ifdef ENABLE_PTRACE_TESTS
-static void
-_trace_child(app_t *app)
+static int
+_trace_child(void *data)
 {
+	wrap_data_t *wd = data;
+
 	const pid_t pid = getpid();
 
 	if(ptrace(PTRACE_TRACEME, 0, NULL, NULL) < 0)
@@ -1379,9 +1366,7 @@ _trace_child(app_t *app)
 
 	kill(pid, SIGSTOP);
 
-	_trace_internal(app);
-
-	_exit(0);
+	return wd->wrap(wd->app, wd->data);
 }
 
 static void
@@ -1494,21 +1479,10 @@ _trace_parent(app_t *app, pid_t kid)
 				_show_info(app, &info);
 			} break;
 
-			case SIGABRT:
-				// fall-through
-			case SIGSEGV:
-			{
-				kill(kid, SIGKILL);
-			} break;
-
-			case SIGCHLD:
-			{
-				// ignore
-			} break;
-
 			default:
 			{
 				fprintf(stderr, "unexpected stop signal: 0x%x\n", WSTOPSIG(status));
+				kill(kid, SIGKILL);
 			} break;
 		}
 
@@ -1517,31 +1491,202 @@ _trace_parent(app_t *app, pid_t kid)
 
 	return 0;
 }
+#endif
+
+#ifdef ENABLE_WRAP_TESTS
+static int
+_wrap_child(void *data)
+{
+	wrap_data_t *wd = data;
+
+	return wd->wrap(wd->app, wd->data);
+}
 
 static int
-_trace(app_t *app)
+_wrap_parent(app_t *app __attribute__((unused)), pid_t kid)
 {
-	const pid_t kid = fork();
+	int status;
 
-	switch(kid)
+	while(true)
 	{
-		case -1:
+		pid_t rc = waitpid(kid, &status, 0);
+
+		if(rc != kid)
 		{
-			fprintf(stderr, "[%s] fork failed: %s\n", __func__, strerror(errno));
-		} return 1;
-		case 0: // child
+			fprintf(stderr, "cannot happen\n");
+			return 1;
+		}
+
+		if(WIFEXITED(status))
 		{
-			_trace_child(app);
-		} break;
-		default: // parent
+			// kid is no more
+			if(WEXITSTATUS(status) == 0)
+			{
+				break;
+			}
+
+			fprintf(stderr, "failed exit\n");
+			return 1;
+		}
+
+		if(WIFSIGNALED(status))
 		{
-			_trace_parent(app, kid);
-		} break;
+			// kid is no more
+			fprintf(stderr, "signaled\n");
+			return 1;
+		}
+
+		if(!WIFSTOPPED(status))
+		{
+			// cannot happen
+			fprintf(stderr, "stop cannot happen\n");
+			return 1;
+		}
+
+		fprintf(stderr, "unexpected stop signal: 0x%x\n", WSTOPSIG(status));
+		return 1;
 	}
 
 	return 0;
 }
+
+static int
+_wrap(app_t *app, wrap_t wrap, void *data, child_t child, parent_t parent)
+{
+	wrap_data_t wd = {
+		.app = app,
+		.wrap = wrap,
+		.data = data
+	};
+
+	char *stack = mmap(NULL, STACK_SIZE, PROT_READ | PROT_WRITE,
+		MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
+
+	if(stack == MAP_FAILED)
+	{
+		return 1;
+	}
+
+	char *stack_top = stack + STACK_SIZE;
+	const pid_t kid = clone(child, stack_top,
+		//CLONE_FILES | CLONE_FS | CLONE_IO | CLONE_VM | SIGCHLD, &wd);
+		CLONE_VM | SIGCHLD, &wd);
+
+	if(kid == -1)
+	{
+		fprintf(stderr, "[%s] clone failed: %s\n", __func__, strerror(errno));
+		return 1;
+	}
+
+	return parent(app, kid);
+}
 #endif
+
+int
+lv2lint_wrap(app_t *app, wrap_t wrap, void *data)
+{
+#ifdef ENABLE_WRAP_TESTS
+	return _wrap(app, wrap, data, _wrap_child, _wrap_parent);
+#else
+	return wrap(app, data);
+#endif
+}
+
+static int
+_trace(app_t *app, wrap_t wrap, void *data)
+{
+#ifdef ENABLE_PTRACE_TESTS
+	return _wrap(app, wrap, data, _trace_child, _trace_parent);
+#else
+	return wrap(app, data);
+#endif
+}
+
+static int
+_wrap_instantiate(app_t *app, void *data)
+{
+	const float param_sample_rate = 48000.f;
+	const LV2_Feature **features = data;
+
+	app->instance = lilv_plugin_instantiate(app->plugin, param_sample_rate, features);
+
+	return 0;
+}
+
+static int
+_wrap_activate(app_t *app, void *data __attribute__((unused)))
+{
+	if(!app->instance)
+	{
+		return 1;
+	}
+
+	lilv_instance_activate(app->instance);
+
+	return 0;
+}
+
+static int
+_wrap_deactivate(app_t *app, void *data __attribute__((unused)))
+{
+	if(!app->instance)
+	{
+		return 1;
+	}
+
+	lilv_instance_deactivate(app->instance);
+
+	return 0;
+}
+
+static int
+_wrap_free(app_t *app, void *data __attribute__((unused)))
+{
+	if(!app->instance)
+	{
+		return 1;
+	}
+
+	lilv_instance_free(app->instance);
+
+	return 0;
+}
+
+static int
+_wrap_connect_port(app_t *app, void *data)
+{
+	dst_t *dst = data;
+
+	if(!app->instance)
+	{
+		return 1;
+	}
+
+	shm_enable(app->shm);
+
+	lilv_instance_connect_port(app->instance, dst->idx, dst->body);
+
+	app->forbidden.connect_port |= shm_disable(app->shm);
+
+	return 0;
+}
+
+static int
+_wrap_run(app_t *app, void *data __attribute__((unused)))
+{
+	if(!app->instance)
+	{
+		return 1;
+	}
+
+	shm_enable(app->shm);
+
+	lilv_instance_run(app->instance, PORT_NSAMPLES);
+
+	app->forbidden.run = shm_disable(app->shm);
+
+	return 0;
+}
 
 int
 main(int argc, char **argv)
@@ -2118,8 +2263,7 @@ main(int argc, char **argv)
 						lilv_node_as_uri(lilv_plugin_get_uri(app.plugin)),
 						colors[app.atty][ANSI_COLOR_RESET]);
 
-					//FIXME run in child process
-					app.instance = lilv_plugin_instantiate(app.plugin, param_sample_rate, features);
+					app.status.instantiate = lv2lint_wrap(&app, _wrap_instantiate, (void *)features);
 					app.descriptor = app.instance
 						? lilv_instance_get_descriptor(app.instance)
 						: NULL;
@@ -2151,18 +2295,44 @@ main(int argc, char **argv)
 							lilv_world_unload_resource(app.world, pset);
 						}
 
-						//FIXME run in child process
-						lilv_instance_activate(app.instance);
+						memset(app.syscall, 0, sizeof(bool)*SYSCALL_MAX); //FIXME
 
-#ifdef ENABLE_PTRACE_TESTS
-						memset(app.syscall, 0, sizeof(bool)*SYSCALL_MAX);
-						_trace(&app);
-#endif
+						const size_t nports = lilv_plugin_get_num_ports(app.plugin);
+						const size_t ports_sz = sizeof(port_t) * nports;
+						port_t *ports = alloca(ports_sz);
+						memset(ports, 0x0, ports_sz);
 
-						_trace_internal(&app);
+						app.status.connect_port = 0;
+						app.forbidden.connect_port = 0;
 
-						//FIXME run in child process
-						lilv_instance_deactivate(app.instance);
+						for(size_t p = 0; p < nports; p++)
+						{
+							const LilvPort *port = lilv_plugin_get_port_by_index(app.plugin, p);
+
+							port_t *tar = &ports[p];
+							tar->seq.atom.type = ATOM__Sequence;
+							if(lilv_port_is_a(app.plugin, port, NODE(&app, CORE__InputPort)))
+							{
+								tar->seq.atom.size = sizeof(tar->seq.body);
+							}
+							else if(lilv_port_is_a(app.plugin, port, NODE(&app, CORE__OutputPort)))
+							{
+								tar->seq.atom.size = sizeof(*tar);
+							}
+
+							dst_t dst = {
+								.idx = p,
+								.body = tar
+							};
+
+							app.status.connect_port += _trace(&app, _wrap_connect_port, &dst);
+						}
+
+						app.status.activate = lv2lint_wrap(&app, _wrap_activate, NULL);
+
+						app.status.run = _trace(&app, _wrap_run, NULL);
+
+						app.status.deactivate = lv2lint_wrap(&app, _wrap_deactivate, NULL);
 					}
 
 					if(!test_plugin(&app))
@@ -2250,8 +2420,7 @@ main(int argc, char **argv)
 
 					if(app.instance)
 					{
-						//FIXME run in child process
-						lilv_instance_free(app.instance);
+						app.status.cleanup = lv2lint_wrap(&app, _wrap_free, NULL);
 						app.instance = NULL;
 						app.descriptor = NULL;
 						app.work_iface = NULL;
