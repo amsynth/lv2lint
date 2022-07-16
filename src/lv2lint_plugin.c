@@ -250,6 +250,26 @@ _test_work_response(app_t *app)
 }
 
 static const ret_t *
+_test_state_restore(app_t *app)
+{
+	static const ret_t ret_crash = {
+		.lnt = LINT_FAIL,
+		.msg = "crashed",
+		.uri = LV2_STATE__State,
+		.dsc = "Well - fix your plugin."
+	};
+
+	const ret_t *ret = NULL;
+
+	if(app->status.state_restore)
+	{
+		ret = &ret_crash;
+	}
+
+	return ret;
+}
+
+static const ret_t *
 _test_activate(app_t *app)
 {
 	static const ret_t ret_crash = {
@@ -1855,6 +1875,7 @@ static const test_t tests [] = {
 	{"Plugin Run",             _test_run},
 	{"Plugin Work",            _test_work},
 	{"Plugin Work Response",   _test_work_response},
+	{"Plugin State Restore",   _test_state_restore},
 	{"Plugin Activate",        _test_activate},
 	{"Plugin Deactivate",      _test_deactivate},
 #ifdef ENABLE_PTRACE_TESTS

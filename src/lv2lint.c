@@ -1654,6 +1654,22 @@ _wrap_instantiate(app_t *app, void *data)
 }
 
 static int
+_wrap_restore(app_t *app, void *data)
+{
+	LilvState *state = data;
+
+	if(!app->instance)
+	{
+		return 1;
+	}
+
+	lilv_state_restore(state, app->instance, _state_set_value, app,
+		LV2_STATE_IS_POD | LV2_STATE_IS_PORTABLE, NULL); //FIXME features
+
+	return 0;
+}
+
+static int
 _wrap_activate(app_t *app, void *data __attribute__((unused)))
 {
 	if(!app->instance)
@@ -2334,10 +2350,7 @@ main(int argc, char **argv)
 							LilvState *state = lilv_state_new_from_world(app.world, app.map, pset);
 							if(state)
 							{
-								//FIXME wrap or trace
-								lilv_state_restore(state, app.instance, _state_set_value, &app,
-									LV2_STATE_IS_POD | LV2_STATE_IS_PORTABLE, NULL); //FIXME features
-
+								app.status.state_restore = lv2lint_wrap(&app, _wrap_restore, state);
 								lilv_state_free(state);
 							}
 

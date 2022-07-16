@@ -644,6 +644,7 @@ struct _app_t {
 		int ui_cleanup;
 		int work;
 		int work_response;
+		int state_restore;
 	} status;
 	varchunk_t *to_worker;
 	varchunk_t *from_worker;
