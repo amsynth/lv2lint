@@ -679,7 +679,7 @@ log_vprintf(void *data, LV2_URID type, const char *fmt,
 		shm_pause(app->shm);
 	}
 
-	if(asprintf(&buf, fmt, args) == -1)
+	if(vasprintf(&buf, fmt, args) == -1)
 	{
 		buf = NULL;
 	}
