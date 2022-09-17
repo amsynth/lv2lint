@@ -996,6 +996,11 @@ test_visibility(app_t *app, const char *path, const char *uri,
 		"__rt_data__end",
 		"__rt_text__start",
 		"__rt_text__end",
+		// C aarch64
+		"__end__",
+		"__bss_start__",
+		"__bss_end__",
+		"_bss_end__",
 		// Rust
 		"__rdl_alloc",
 		"__rdl_alloc_excess",
