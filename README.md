@@ -47,7 +47,7 @@ link to libX11.
 
 ### Build / install
 
-	git clone https://git.open-music-kontrollers.ch.ch/~hp/lv2lint
+	git clone https://git.open-music-kontrollers.ch/~hp/lv2lint
 	cd lv2lint
 	meson -Donline-tests=enabled -Delf-tests=enabled -Dx11-tests=enabled build
 	cd build
